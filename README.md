@@ -13,6 +13,7 @@
 - 🧠 **RAG Memory** — Semantic code search with LanceDB and sentence-transformers
 - 🖥️ **Professional TUI** — Rich.Live dashboard with real-time agent thoughts and execution logs
 - 🔐 **Safety-First Design** — Dynamic risk scoring with mandatory confirmation for destructive actions
+<img width="1408" height="768" alt="images" src="https://github.com/user-attachments/assets/cc16af89-163f-4cd1-8838-78aa92b6e142" />
 
 ---
 
