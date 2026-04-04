@@ -10,6 +10,7 @@ from .provider import OpenRouterProvider, Message
 from .tools import ShellTool, FileSystemTool, SearchMemoryTool, CommandResult
 from .memory import RAGMemory
 from .safety import SafetyMiddleware, SafetyResult
+from .plugins import PluginManager
 
 logger = logging.getLogger("linguclaw.orchestrator")
 
@@ -89,15 +90,25 @@ class AgentResponse:
 
 
 class BaseAgent:
-    """Base class for specialized sub-agents."""
+    """Base class for specialized sub-agents with plugin support."""
     
     def __init__(self, role: AgentRole, provider: OpenRouterProvider, 
-                 system_prompt: str, state: SharedState):
+                 system_prompt: str, state: SharedState,
+                 plugin_manager: Optional['PluginManager'] = None):
         self.role = role
         self.provider = provider
-        self.system_prompt = system_prompt
         self.state = state
+        self.plugin_manager = plugin_manager
         self.history: List[Message] = []
+        
+        # Apply plugin prompt modifications
+        self.system_prompt = self._apply_plugin_modifications(system_prompt)
+    
+    def _apply_plugin_modifications(self, base_prompt: str) -> str:
+        """Apply all AgentPlugin prompt modifications."""
+        if self.plugin_manager:
+            return self.plugin_manager.modify_agent_prompt(base_prompt, {"agent": self.role.value})
+        return base_prompt
     
     async def think(self, context: str, temperature: float = 0.3) -> AgentResponse:
         """Generate agent response based on context."""
@@ -154,7 +165,9 @@ class BaseAgent:
 class PlannerAgent(BaseAgent):
     """Creates structured plans for task execution."""
     
-    def __init__(self, provider: OpenRouterProvider, state: SharedState, memory: Optional[RAGMemory] = None):
+    def __init__(self, provider: OpenRouterProvider, state: SharedState, 
+                 memory: Optional[RAGMemory] = None,
+                 plugin_manager: Optional['PluginManager'] = None):
         system_prompt = """You are the PLANNER agent for LinguClaw.
 Your job is to analyze tasks and create structured execution plans.
 
@@ -167,7 +180,7 @@ PLAN:
 Use SEARCH_CODEBASE to find relevant code before planning.
 Be specific about file paths and expected outcomes.
 """
-        super().__init__(AgentRole.PLANNER, provider, system_prompt, state)
+        super().__init__(AgentRole.PLANNER, provider, system_prompt, state, plugin_manager)
         self.memory = memory
     
     async def create_plan(self, task: str) -> List[PlanStep]:
@@ -221,7 +234,9 @@ class ExecutorAgent(BaseAgent):
     """Executes planned steps using tools."""
     
     def __init__(self, provider: OpenRouterProvider, state: SharedState,
-                 shell: ShellTool, fs: FileSystemTool, search: Optional[SearchMemoryTool] = None):
+                 shell: ShellTool, fs: FileSystemTool, 
+                 search: Optional[SearchMemoryTool] = None,
+                 plugin_manager: Optional['PluginManager'] = None):
         system_prompt = """You are the EXECUTOR agent for LinguClaw.
 Your job is to execute specific steps from a plan using available tools.
 
@@ -233,7 +248,7 @@ ACTION: [tool]: [input]
 
 Be precise. Only execute what was planned.
 """
-        super().__init__(AgentRole.EXECUTOR, provider, system_prompt, state)
+        super().__init__(AgentRole.EXECUTOR, provider, system_prompt, state, plugin_manager)
         self.shell = shell
         self.fs = fs
         self.search = search
@@ -314,7 +329,8 @@ Be precise. Only execute what was planned.
 class ReviewerAgent(BaseAgent):
     """Validates execution results and provides feedback."""
     
-    def __init__(self, provider: OpenRouterProvider, state: SharedState):
+    def __init__(self, provider: OpenRouterProvider, state: SharedState,
+                 plugin_manager: Optional['PluginManager'] = None):
         system_prompt = """You are the REVIEWER agent for LinguClaw.
 Your job is to validate execution results against the planned step.
 
@@ -325,7 +341,7 @@ FEEDBACK: [Specific fix instructions if rejected]
 
 Be strict. Code must compile, tests must pass, files must exist.
 """
-        super().__init__(AgentRole.REVIEWER, provider, system_prompt, state)
+        super().__init__(AgentRole.REVIEWER, provider, system_prompt, state, plugin_manager)
     
     async def validate(self, step: PlanStep, execution_result: Dict) -> AgentResponse:
         """Validate an execution result."""
@@ -365,16 +381,17 @@ Be strict. Code must compile, tests must pass, files must exist.
 
 
 class Orchestrator:
-    """Coordinates Planner, Executor, and Reviewer agents."""
+    """Coordinates Planner, Executor, and Reviewer agents with plugin support."""
     
     def __init__(self, provider: OpenRouterProvider, shell: ShellTool, 
                  fs: FileSystemTool, memory: Optional[RAGMemory] = None,
-                 max_iterations: int = 50):
+                 max_iterations: int = 50, plugin_manager: Optional[PluginManager] = None):
         self.provider = provider
         self.shell = shell
         self.fs = fs
         self.memory = memory
         self.max_iterations = max_iterations
+        self.plugin_manager = plugin_manager
         
         self.state = SharedState()
         self.state.sandbox_active = getattr(shell, 'is_sandboxed', False)
@@ -382,10 +399,10 @@ class Orchestrator:
             self.state.memory_stats = memory.get_stats()
         
         # Initialize sub-agents
-        self.planner = PlannerAgent(provider, self.state, memory)
+        self.planner = PlannerAgent(provider, self.state, memory, plugin_manager)
         self.search_tool = SearchMemoryTool(memory) if memory else None
-        self.executor = ExecutorAgent(provider, self.state, shell, fs, self.search_tool)
-        self.reviewer = ReviewerAgent(provider, self.state)
+        self.executor = ExecutorAgent(provider, self.state, shell, fs, self.search_tool, plugin_manager)
+        self.reviewer = ReviewerAgent(provider, self.state, plugin_manager)
     
     def subscribe(self, callback: Callable):
         """Subscribe to state changes for UI updates."""

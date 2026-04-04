@@ -1,4 +1,3 @@
-"""Cross-platform environment detection."""
 import os
 import platform
 import shutil

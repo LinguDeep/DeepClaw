@@ -1,0 +1,278 @@
+/* Prism Workflow Styles - Append to style.css */
+
+/* Prism Info Panel */
+.prism-info {
+    padding: 0.5rem 0;
+}
+
+.prism-info .info-text {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+    line-height: 1.5;
+}
+
+.facet-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.facet-item {
+    padding: 0.625rem 0.75rem;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border-left: 4px solid;
+    background: var(--bg-primary);
+}
+
+.facet-item.safety {
+    border-left-color: var(--accent-red);
+    color: #f87171;
+}
+
+.facet-item.planning {
+    border-left-color: var(--accent-cyan);
+    color: #2dd4bf;
+}
+
+.facet-item.memory {
+    border-left-color: var(--accent-blue);
+    color: #58a6ff;
+}
+
+.facet-item.execution {
+    border-left-color: var(--accent-yellow);
+    color: #d29922;
+}
+
+.facet-item.validation {
+    border-left-color: var(--accent-green);
+    color: #238636;
+}
+
+/* Branch Tree */
+.branch-tree {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.branch-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem;
+    background: var(--bg-primary);
+    border-radius: 6px;
+    border: 2px solid transparent;
+    transition: all 0.2s;
+}
+
+.branch-item:hover {
+    background: var(--bg-tertiary);
+}
+
+.branch-item.alpha {
+    border-left: 4px solid var(--accent-green);
+}
+
+.branch-item.beta {
+    border-left: 4px solid var(--accent-yellow);
+}
+
+.branch-item.gamma {
+    border-left: 4px solid var(--accent-blue);
+}
+
+.branch-item.active {
+    border-color: var(--accent-cyan);
+    background: rgba(45, 212, 191, 0.1);
+}
+
+.branch-name {
+    font-weight: 500;
+    font-size: 0.875rem;
+}
+
+.branch-status {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
+}
+
+.branch-status.running {
+    background: var(--accent-yellow);
+    color: black;
+}
+
+.branch-status.succeeded {
+    background: var(--accent-green);
+    color: white;
+}
+
+.branch-status.failed {
+    background: var(--accent-red);
+    color: white;
+}
+
+.branch-status.pruned {
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
+    text-decoration: line-through;
+}
+
+/* Workflow Graph */
+.workflow-graph {
+    min-height: 200px;
+    background: var(--bg-primary);
+    border-radius: 6px;
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.workflow-viz {
+    flex: 1;
+}
+
+/* Reflections Panel */
+.reflections-panel .scrollable {
+    max-height: 200px;
+}
+
+.reflection-item {
+    padding: 0.5rem;
+    margin-bottom: 0.5rem;
+    background: var(--bg-primary);
+    border-radius: 4px;
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    border-left: 3px solid var(--accent-cyan);
+}
+
+.reflection-item .facet-name {
+    color: var(--accent-cyan);
+    font-weight: 600;
+    margin-right: 0.5rem;
+}
+
+/* Metrics Panel */
+.metrics-panel .scrollable {
+    max-height: 200px;
+}
+
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+}
+
+.metric {
+    text-align: center;
+    padding: 1rem;
+    background: var(--bg-primary);
+    border-radius: 6px;
+}
+
+.metric-label {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+}
+
+.metric-value {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--accent-cyan);
+}
+
+/* Workflow Graph Nodes */
+.workflow-node {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem 1rem;
+    background: var(--bg-secondary);
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    min-width: 100px;
+}
+
+.workflow-node.facet {
+    border-color: var(--accent-blue);
+    color: var(--accent-blue);
+}
+
+.workflow-node.branch {
+    border-color: var(--accent-cyan);
+    color: var(--accent-cyan);
+}
+
+.workflow-node.merged {
+    border-color: var(--accent-green);
+    color: var(--accent-green);
+    background: rgba(35, 134, 54, 0.1);
+}
+
+.workflow-arrow {
+    color: var(--text-secondary);
+    margin: 0 0.5rem;
+    font-size: 1.25rem;
+}
+
+.workflow-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0.5rem 0;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+/* Facet Result Indicators */
+.facet-result {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.375rem 0.75rem;
+    background: var(--bg-primary);
+    border-radius: 4px;
+    font-size: 0.75rem;
+}
+
+.facet-result.success {
+    color: var(--accent-green);
+}
+
+.facet-result.fail {
+    color: var(--accent-red);
+}
+
+.facet-result .icon {
+    font-size: 1rem;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 1024px) {
+    .metrics-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .workflow-row {
+        flex-direction: column;
+    }
+    
+    .workflow-arrow {
+        transform: rotate(90deg);
+    }
+}

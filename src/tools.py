@@ -28,14 +28,19 @@ class FileResult:
 
 
 class ShellTool:
-    """Docker-sandboxed shell execution with fallback to strict safety mode."""
+    """Docker-sandboxed shell execution with plugin tool support."""
 
     def __init__(self, project_root: str, use_docker: bool = True, 
                  safety: Optional[SafetyMiddleware] = None,
-                 fallback_confirmed: bool = False):
+                 fallback_confirmed: bool = False,
+                 plugin_manager: Optional['PluginManager'] = None):
         self.project_root = Path(project_root).resolve()
         self.project_root.mkdir(parents=True, exist_ok=True)
         self.safety = safety or SafetyMiddleware()
+        self.plugin_manager = plugin_manager
+        
+        # Plugin tools registry
+        self._plugin_tools: Dict[str, Callable] = {}
         
         # Docker sandbox setup
         self.sandbox: Optional[DockerSandbox] = None
@@ -60,6 +65,24 @@ class ShellTool:
                 self._init_fallback(fallback_confirmed)
         else:
             self._init_fallback(fallback_confirmed)
+        
+        # Load plugin tools
+        self._load_plugin_tools()
+    
+    def _load_plugin_tools(self):
+        """Load tools from PluginManager."""
+        if self.plugin_manager:
+            self._plugin_tools = self.plugin_manager.get_all_tools()
+            if self._plugin_tools:
+                logger.info(f"Loaded {len(self._plugin_tools)} plugin tools")
+    
+    def get_plugin_tool(self, name: str) -> Optional[Callable]:
+        """Get a plugin tool by name."""
+        return self._plugin_tools.get(name)
+    
+    def list_plugin_tools(self) -> List[str]:
+        """List all available plugin tool names."""
+        return list(self._plugin_tools.keys())
 
     def _init_fallback(self, confirmed: bool):
         """Initialize strict safety fallback mode."""
@@ -71,7 +94,18 @@ class ShellTool:
         return self._using_docker and self.sandbox is not None
 
     async def run(self, command: str, timeout: float = 60.0) -> CommandResult:
-        """Execute command in Docker container or with strict safety fallback."""
+        """Execute command, shell command, or plugin tool."""
+        
+        # Check if this is a plugin tool call (format: "plugin_name.tool_name args")
+        parts = command.split(None, 1)
+        if parts and parts[0] in self._plugin_tools:
+            tool_name = parts[0]
+            tool_args = parts[1] if len(parts) > 1 else ""
+            try:
+                result = self._plugin_tools[tool_name](tool_args)
+                return CommandResult(str(result), "", 0, sandboxed=False)
+            except Exception as e:
+                return CommandResult("", f"Plugin tool error: {e}", 1, sandboxed=False)
         
         if self.is_sandboxed and self.sandbox:
             # Docker sandboxed execution

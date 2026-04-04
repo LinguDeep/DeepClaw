@@ -293,6 +293,46 @@ def status_command(
     console.print(f"💾 Storage: {memory_dir}")
 
 
+@app.command(name="web")
+def web_command(
+    path: Path = typer.Option(
+        ".", "--path", "-p",
+        help="Project root to serve",
+        exists=True, file_okay=False, dir_okay=True, resolve_path=True
+    ),
+    host: str = typer.Option(
+        "127.0.0.1", "--host", "-h",
+        help="Host to bind to"
+    ),
+    port: int = typer.Option(
+        8080, "--port",
+        help="Port to listen on"
+    ),
+):
+    """Start LinguClaw Web UI server."""
+    console.print("[bold cyan]🌐 Starting LinguClaw Web UI...[/bold cyan]\n")
+    
+    # Check API key
+    if not os.getenv("OPENROUTER_API_KEY"):
+        console.print("[red]Error: OPENROUTER_API_KEY not set[/red]")
+        raise typer.Exit(1)
+    
+    try:
+        from .web import run_web_ui
+        console.print(f"Server will start at: [bold blue]http://{host}:{port}[/bold blue]\n")
+        console.print("Press Ctrl+C to stop\n")
+        
+        run_web_ui(project_root=str(path), host=host, port=port)
+        
+    except ImportError as e:
+        console.print(f"[red]Error: Missing web dependencies[/red]")
+        console.print("[dim]Install with: pip install fastapi uvicorn pydantic[/dim]")
+        raise typer.Exit(1)
+    except KeyboardInterrupt:
+        console.print("\n[yellow]Server stopped[/yellow]")
+        raise typer.Exit(0)
+
+
 def cli_entry():
     """Entry point for console scripts."""
     app()
