@@ -3,7 +3,10 @@ import asyncio
 import logging
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Dict, Callable, List, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .plugins import PluginManager
 
 from .sandbox import DockerSandbox, SandboxConfig, FallbackSafetyMode
 from .safety import SafetyMiddleware
