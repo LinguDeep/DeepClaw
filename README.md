@@ -1,7 +1,7 @@
 # LinguClaw — Codebase-Aware Multi-Agent System
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Python-3.9+-blue.svg" alt="Python 3.9+">
+  <img src="https://img.shields.io/badge/TypeScript-5.0+-blue.svg" alt="TypeScript 5.0+">
   <img src="https://img.shields.io/badge/Docker-Required-green.svg" alt="Docker">
   <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="MIT License">
   <img src="https://img.shields.io/badge/OpenClaw-Plugins-orange.svg" alt="OpenClaw Plugins">
@@ -26,7 +26,8 @@
 
 ### Prerequisites
 
-- Python 3.9+
+- Node.js 18+
+- npm or yarn
 - Docker (for sandboxed execution)
 - OpenRouter API key
 
@@ -38,7 +39,7 @@ git clone https://github.com/yourusername/linguclaw.git
 cd linguclaw
 
 # Install dependencies
-pip install -r requirements.txt
+npm install
 
 # Set your OpenRouter API key
 export OPENROUTER_API_KEY="your-key-here"
@@ -50,23 +51,23 @@ echo "OPENROUTER_API_KEY=your-key-here" > .env
 ### Usage
 
 ```bash
-# Run with full TUI dashboard
-python run.py dev "Refactor the authentication module"
+# Build the project
+npm run build
+
+# Run with CLI
+npm start -- dev "Refactor the authentication module"
 
 # Run in a specific project directory
-python run.py dev --path ./my-project "Add user login feature"
+npm start -- dev --path ./my-project "Add user login feature"
 
-# Disable Docker sandbox (strict safety fallback mode)
-python run.py dev --no-docker "List all Python files"
-
-# Index codebase for RAG memory without running agent
-python run.py index --path ./my-project
+# Disable Docker sandbox
+npm start -- dev --no-docker "List all files"
 
 # Check system status
-python run.py status
+npm start -- status
 
 # Start Web UI server
-python run.py web --port 8080
+npm start -- web --port 8080
 ```
 
 ---
@@ -100,19 +101,18 @@ python run.py web --port 8080
 
 | Module | Purpose |
 |--------|---------|
-| `orchestrator.py` | Coordinates Planner, Executor, Reviewer agents with shared state |
-| `prism.py` | Multi-faceted architecture with reflection and dispatch |
-| `prism_orchestrator.py` | Integration layer connecting Prism to Orchestrator |
-| `alphabeta.py` | Alpha/Beta branching workflow with merge strategies |
-| `plugins.py` | OpenClaw plugin system with error isolation |
-| `ui.py` | Rich.Live TUI dashboard with 3-pane layout |
-| `web.py` | FastAPI Web UI with WebSocket real-time updates |
-| `cli.py` | Typer-based CLI with `dev`, `index`, `status`, `web` commands |
-| `memory.py` | LanceDB vector storage + CodeIndexer for semantic search |
-| `sandbox.py` | Docker container management with resource limits |
-| `tools.py` | Containerized shell execution + file operations + plugin tools |
-| `safety.py` | Risk-scoring engine (0-100) with pattern matching |
-| `provider.py` | OpenRouter API client with token budgeting |
+| `orchestrator.ts` | Coordinates Planner, Executor, Reviewer agents with shared state |
+| `prism.ts` | Multi-faceted architecture with reflection and dispatch |
+| `prism-orchestrator.ts` | Integration layer connecting Prism to Orchestrator |
+| `alphabeta.ts` | Alpha/Beta branching workflow with merge strategies |
+| `plugins.ts` | OpenClaw plugin system with error isolation |
+| `web.ts` | Express.js Web UI with WebSocket real-time updates |
+| `cli.ts` | Commander.js CLI with `dev`, `index`, `status`, `web` commands |
+| `memory.ts` | LanceDB vector storage + CodeIndexer for semantic search |
+| `sandbox.ts` | Docker container management with resource limits |
+| `tools.ts` | Containerized shell execution + file operations + plugin tools |
+| `safety.ts` | Risk-scoring engine (0-100) with pattern matching |
+| `multi-provider.ts` | Multi-provider LLM support (OpenRouter, OpenAI, Anthropic, Ollama, LM Studio) |
 
 ---
 
@@ -254,7 +254,7 @@ Production-ready extensible plugin architecture:
 
 ### 🌐 Web UI
 
-FastAPI-based web interface with Prism workflow visualization:
+Express.js-based web interface with Prism workflow visualization:
 
 - **Dashboard** — Real-time task execution, thoughts, logs
 - **🔮 Prism Tab** — Workflow visualization, branch metrics, reflections
@@ -262,7 +262,7 @@ FastAPI-based web interface with Prism workflow visualization:
 - **Settings Tab** — Model selection, max steps, Docker toggle
 - **WebSocket** — Live updates without page refresh
 
-Access at `http://localhost:8080` after running `python run.py web`.
+Access at `http://localhost:8080` after running `npm start -- web`.
 
 ### � Docker Sandboxing
 
@@ -345,19 +345,18 @@ global:
 ### CLI Options
 
 ```bash
-python run.py dev [TASK] [OPTIONS]
+npm start -- dev [TASK] [OPTIONS]
 
 Options:
   --path PATH           Project root directory [default: .]
-  --model TEXT          OpenRouter model [default: anthropic/claude-3.5-sonnet]
+  --model TEXT          LLM model [default: anthropic/claude-3.5-sonnet]
   --max-budget INTEGER  Token budget [default: 128000]
   --max-steps INTEGER   Max steps [default: 15]
   --no-docker           Disable Docker sandbox
   --force-fallback      Force strict safety mode
-  --no-tui              Disable TUI (plain text)
   --log-dir PATH        Log directory [default: logs]
 
-python run.py web [OPTIONS]
+npm start -- web [OPTIONS]
 
 Options:
   --host TEXT           Host to bind [default: 0.0.0.0]
@@ -370,35 +369,30 @@ Options:
 
 ```
 linguclaw/
-├── run.py              # Entry point
-├── requirements.txt    # Dependencies
+├── package.json        # Dependencies and scripts
+├── package-lock.json   # Lock file
+├── tsconfig.json       # TypeScript configuration
 ├── .gitignore          # Git exclusions
 ├── README.md           # This file
 ├── LICENSE             # MIT License
 ├── src/
-│   ├── __init__.py
-│   ├── cli.py          # Typer CLI
-│   ├── orchestrator.py # Multi-agent coordinator
-│   ├── prism.py        # Prism multi-faceted architecture
-│   ├── prism_orchestrator.py # Prism integration layer
-│   ├── alphabeta.py    # Alpha/Beta branching workflow
-│   ├── plugins.py      # OpenClaw plugin system
-│   ├── web.py          # FastAPI Web UI
-│   ├── ui.py           # TUI dashboard
-│   ├── agent.py        # Legacy ReAct agent
-│   ├── memory.py       # RAG memory system
-│   ├── sandbox.py      # Docker management
-│   ├── tools.py        # Shell/file tools + plugin integration
-│   ├── provider.py     # LLM provider
-│   ├── safety.py       # Risk scoring
-│   ├── platform_info.py # OS detection
-│   ├── config.py       # Settings
-│   └── logger.py       # Structured logging
-├── src/static/         # Web UI assets
-│   ├── style.css       # Main stylesheet
-│   ├── prism.css       # Prism workflow styles
-│   ├── app.js          # Frontend logic
-│   └── prism.js        # Prism visualization
+│   ├── index.ts        # Entry point
+│   ├── cli.ts          # Commander.js CLI
+│   ├── orchestrator.ts # Multi-agent coordinator
+│   ├── types.ts        # TypeScript types and interfaces
+│   ├── multi-provider.ts # Multi-provider LLM support
+│   ├── safety.ts       # Risk scoring
+│   ├── sandbox.ts      # Docker management
+│   ├── tools.ts        # Shell/file tools
+│   ├── memory.ts       # RAG memory system
+│   ├── longterm-memory.ts # SQLite-based persistent storage
+│   ├── skills.ts       # Modular skill system
+│   ├── messaging.ts    # Messaging platform integrations
+│   ├── proactive.ts    # Proactive behavior system
+│   ├── privacy.ts      # Privacy and data control
+│   ├── daemon.ts       # 24/7 daemon mode
+│   └── web.ts          # Express.js Web UI with WebSockets
+├── dist/               # Compiled JavaScript (gitignored)
 └── logs/               # Session logs (gitignored)
 ```
 
@@ -409,39 +403,45 @@ linguclaw/
 ### Running Tests
 
 ```bash
-# Syntax check all modules
-python -m py_compile src/*.py
+# Build the project
+npm run build
 
-# Check imports
-python -c "from src.cli import cli_entry; print('✓ All imports OK')"
+# Run tests
+npm test
+
+# Check TypeScript compilation
+npx tsc --noEmit
 ```
 
 ### Adding Plugins
 
-1. Create a Python file in `~/.linguclaw/plugins/`:
+1. Create a TypeScript file in `~/.linguclaw/plugins/`:
 
-```python
-# ~/.linguclaw/plugins/my_plugin.py
-from src.plugins import ToolPlugin
-from typing import Dict, Callable
+```typescript
+// ~/.linguclaw/plugins/my_plugin.ts
+import { ToolPlugin } from 'linguclaw';
 
-class MyPlugin(ToolPlugin):
-    NAME = "my_plugin"
-    VERSION = "1.0.0"
-    DESCRIPTION = "My custom plugin"
-    AUTHOR = "Your Name"
-    
-    async def initialize(self) -> bool:
-        self.logger.info("My plugin initialized")
-        return True
-    
-    async def shutdown(self) -> None:
-        self.logger.info("My plugin shutdown")
-    
-    def _define_tools(self) -> Dict[str, Callable]:
-        return {
-            "hello": lambda name: f"Hello, {name}!"
-        }
+export class MyPlugin extends ToolPlugin {
+  NAME = "my_plugin";
+  VERSION = "1.0.0";
+  DESCRIPTION = "My custom plugin";
+  AUTHOR = "Your Name";
+  
+  async initialize(): Promise<boolean> {
+    this.logger.info("My plugin initialized");
+    return true;
+  }
+  
+  async shutdown(): Promise<void> {
+    this.logger.info("My plugin shutdown");
+  }
+  
+  _define_tools(): Record<string, Function> {
+    return {
+      hello: (name: string) => `Hello, ${name}!`
+    };
+  }
+}
 ```
 
 2. Enable in `~/.linguclaw/plugins.yaml`:
@@ -455,7 +455,7 @@ plugins:
 3. Use in tasks:
 
 ```bash
-python run.py dev "Run hello world using my_plugin.hello"
+npm start -- dev "Run hello world using my_plugin.hello"
 ```
 
 ---
@@ -468,6 +468,6 @@ MIT License — see [LICENSE](LICENSE) file.
 
 - [Rich](https://github.com/Textualize/rich) for the beautiful TUI components
 - [LanceDB](https://lancedb.github.io/lancedb/) for vector storage
-- [Typer](https://typer.tiangolo.com/) for the CLI framework
-- [FastAPI](https://fastapi.tiangolo.com/) for the Web UI framework
+- [Commander.js](https://github.com/tj/commander.js/) for the CLI framework
+- [Express](https://expressjs.com/) for the Web UI framework
 - [OpenRouter](https://openrouter.ai/) for LLM API access

@@ -1,0 +1,372 @@
+/**
+ * CLI entry point using Commander
+ * TypeScript equivalent of Python cli.py
+ */
+
+import { Command } from 'commander';
+import path from 'path';
+import chalk from 'chalk';
+import dotenv from 'dotenv';
+import { BaseProvider, ProviderManager, ProviderType, createProvider } from './multi-provider';
+import { ShellTool, FileSystemTool } from './tools';
+import { SafetyMiddleware } from './safety';
+import { RAGMemory } from './memory';
+import { Orchestrator } from './orchestrator';
+import { getLogger } from './logger';
+import { SkillManager } from './skills';
+import { getPrivacyManager } from './privacy';
+import { startDaemon, stopDaemon, daemonStatus, restartDaemon } from './daemon';
+import { Message } from './types';
+
+// Load environment variables
+dotenv.config();
+
+const logger = getLogger();
+const program = new Command();
+
+program
+  .name('linguclaw')
+  .description('LinguClaw — Codebase-Aware Multi-Agent System')
+  .version('0.3.0');
+
+// Dev command
+program
+  .command('dev')
+  .description('Start LinguClaw in development mode')
+  .option('-p, --path <path>', 'Project root path', '.')
+  .option('-m, --model <model>', 'LLM model', 'anthropic/claude-3.5-sonnet')
+  .option('-b, --max-budget <budget>', 'Maximum token budget', '128000')
+  .option('-s, --max-steps <steps>', 'Maximum execution steps', '15')
+  .option('--no-docker', 'Disable Docker sandbox')
+  .option('--force-fallback', 'Force strict safety mode')
+  .option('--no-tui', 'Disable TUI dashboard')
+  .option('-l, --log-dir <dir>', 'Log directory', 'logs')
+  .argument('[task]', 'Task description')
+  .action(async (task, options) => {
+    console.log(chalk.bold.cyan('🦀 LinguClaw') + chalk.dim(' — Multi-Agent Codebase Assistant\n'));
+
+    const apiKey = process.env.OPENROUTER_API_KEY;
+    if (!apiKey) {
+      console.log(chalk.bold.red('Error:') + ' OPENROUTER_API_KEY environment variable not set');
+      process.exit(1);
+    }
+
+    if (!task) {
+      console.log(chalk.yellow('No task provided. Exiting.'));
+      process.exit(0);
+    }
+
+    try {
+      // Initialize components
+      const provider = new (await import('./multi-provider')).OpenRouterProvider(apiKey, options.model);
+      const useDocker = !options.noDocker && !options.forceFallback;
+      const shell = new ShellTool(options.path, useDocker);
+      await shell.init();
+      const fs = new FileSystemTool(options.path);
+
+      // Memory
+      const memory = new RAGMemory(options.path);
+      await memory.init();
+
+      // Sandbox status
+      if (shell.isSandboxed) {
+        console.log(chalk.green('🔒 Docker sandbox active') + ' (512MB RAM, 0.5 CPU)');
+      } else {
+        console.log(chalk.yellow('⚠️  Strict safety mode') + ' (Docker unavailable or disabled)');
+      }
+
+      console.log();
+
+      // Initialize orchestrator
+      const orchestrator = new Orchestrator(provider, shell, fs, parseInt(options.maxSteps));
+
+      // Run
+      const result = await orchestrator.run(task);
+      console.log('\n' + chalk.bold.green('Result:') + ' ' + result);
+
+      // Cleanup
+      await shell.stop();
+    } catch (error: any) {
+      console.error(chalk.bold.red('Fatal error:') + ' ' + error.message);
+      process.exit(1);
+    }
+  });
+
+// Index command
+program
+  .command('index')
+  .description('Index the codebase for RAG memory')
+  .option('-p, --path <path>', 'Project path', '.')
+  .option('-f, --force', 'Force re-index', false)
+  .action(async (options) => {
+    console.log(chalk.bold('🧠 Indexing codebase...'));
+    
+    const memory = new RAGMemory(options.path);
+    const initialized = await memory.init();
+    
+    if (!initialized) {
+      console.log(chalk.red('Error: RAG memory unavailable'));
+      console.log(chalk.dim('Install dependencies: npm install vectordb'));
+      process.exit(1);
+    }
+
+    const indexed = await memory.indexProject(options.force);
+    console.log(chalk.green(`✓ Indexed ${indexed} new chunks`));
+  });
+
+// Status command
+program
+  .command('status')
+  .description('Check LinguClaw status')
+  .option('-p, --path <path>', 'Project path', '.')
+  .action(async (options) => {
+    console.log(chalk.bold.cyan('LinguClaw Status\n'));
+    
+    // Docker
+    try {
+      const { default: Docker } = await import('dockerode');
+      const docker = new Docker();
+      await docker.ping();
+      console.log(chalk.green('🔒 Docker: Available'));
+    } catch {
+      console.log(chalk.red('🔒 Docker: Unavailable'));
+    }
+
+    // Memory
+    const memory = new RAGMemory(options.path);
+    const initialized = await memory.init();
+    if (initialized) {
+      const stats = memory.getStats();
+      console.log(chalk.green(`🧠 Memory: Ready (${stats.count} chunks)`));
+    } else {
+      console.log(chalk.red('🧠 Memory: Unavailable'));
+    }
+
+    // API Key
+    const key = process.env.OPENROUTER_API_KEY;
+    if (key) {
+      const masked = key.slice(0, 8) + '...' + key.slice(-4);
+      console.log(chalk.green(`🔑 API Key: ${masked}`));
+    } else {
+      console.log(chalk.red('🔑 API Key: Not set'));
+    }
+  });
+
+// Web command
+program
+  .command('web')
+  .description('Start LinguClaw Web UI server')
+  .option('-p, --path <path>', 'Project root', '.')
+  .option('-h, --host <host>', 'Host to bind', '127.0.0.1')
+  .option('--port <port>', 'Port to listen on', '8080')
+  .action(async (options) => {
+    console.log(chalk.bold.cyan('🌐 Starting LinguClaw Web UI...\n'));
+    
+    if (!process.env.OPENROUTER_API_KEY) {
+      console.log(chalk.red('Error: OPENROUTER_API_KEY not set'));
+      process.exit(1);
+    }
+
+    try {
+      const { runWebUI } = await import('./web');
+      console.log(`Server will start at: ${chalk.bold.blue(`http://${options.host}:${options.port}`)}\n`);
+      await runWebUI(options.path, options.host, parseInt(options.port));
+    } catch (error: any) {
+      console.log(chalk.red('Error: Missing web dependencies'));
+      console.log(chalk.dim('Install with: npm install express'));
+      process.exit(1);
+    }
+  });
+
+// Daemon command
+program
+  .command('daemon <action>')
+  .description('Control the LinguClaw 24/7 daemon')
+  .option('-s, --services <services>', 'Comma-separated services')
+  .action(async (action, options) => {
+    const services = options.services?.split(',');
+    
+    switch (action) {
+      case 'start':
+        console.log(chalk.bold.cyan('🔄 Starting LinguClaw Daemon...'));
+        if (await startDaemon(services)) {
+          console.log(chalk.green('✓ Daemon started successfully'));
+        } else {
+          console.log(chalk.red('✗ Failed to start daemon'));
+          process.exit(1);
+        }
+        break;
+      case 'stop':
+        console.log(chalk.bold.cyan('🛑 Stopping LinguClaw Daemon...'));
+        if (await stopDaemon()) {
+          console.log(chalk.green('✓ Daemon stopped'));
+        } else {
+          console.log(chalk.yellow('Daemon was not running'));
+        }
+        break;
+      case 'restart':
+        console.log(chalk.bold.cyan('🔄 Restarting LinguClaw Daemon...'));
+        if (await restartDaemon()) {
+          console.log(chalk.green('✓ Daemon restarted successfully'));
+        } else {
+          console.log(chalk.red('✗ Failed to restart daemon'));
+          process.exit(1);
+        }
+        break;
+      case 'status':
+        const status = daemonStatus();
+        if (status.running) {
+          console.log(chalk.bold.green('● Daemon is running'));
+          console.log(`  Started: ${status.started_at || 'N/A'}`);
+          console.log(`  Uptime: ${status.uptime_seconds} seconds`);
+          console.log(`  Tasks: ${status.tasks_processed} processed`);
+          console.log(`  Services: ${status.active_services?.join(', ') || 'none'}`);
+        } else {
+          console.log(chalk.bold.red('○ Daemon is not running'));
+        }
+        break;
+      default:
+        console.log(chalk.red(`Unknown action: ${action}`));
+        process.exit(1);
+    }
+  });
+
+// Skills command
+program
+  .command('skills <action>')
+  .description('Manage and execute skills')
+  .argument('[skillName]', 'Skill name for execute')
+  .option('-p, --params <params>', 'JSON params for skill')
+  .action(async (action, skillName, options) => {
+    const manager = new SkillManager();
+    manager.loadBuiltinSkills();
+
+    if (action === 'list') {
+      const skills = manager.listSkills();
+      console.log(chalk.bold.cyan('Available Skills:'));
+      for (const skill of skills) {
+        console.log(`  • ${chalk.bold(skill.name)} (${skill.type})`);
+        console.log(`    ${skill.description}`);
+      }
+    } else if (action === 'execute') {
+      if (!skillName) {
+        console.log(chalk.red('Skill name required'));
+        process.exit(1);
+      }
+      const params = options.params ? JSON.parse(options.params) : {};
+      const result = await manager.execute(skillName, params);
+      if (result.success) {
+        console.log(chalk.green('✓ Success:') + ' ' + result.output);
+      } else {
+        console.log(chalk.red('✗ Error:') + ' ' + result.error);
+      }
+    }
+  });
+
+// Privacy command
+program
+  .command('privacy <action>')
+  .description('Privacy and data control')
+  .action(async (action) => {
+    const manager = getPrivacyManager();
+
+    switch (action) {
+      case 'settings':
+        const settings = manager.getSettings();
+        console.log(chalk.bold.cyan('Privacy Settings:'));
+        console.log(`  Offline Mode: ${settings.offline_mode}`);
+        console.log(`  Prefer Local Models: ${settings.prefer_local_models}`);
+        console.log(`  Encrypt Memory: ${settings.encrypt_memory}`);
+        break;
+      case 'report':
+        const report = manager.getPrivacyReport();
+        console.log(chalk.bold.cyan('Privacy Report:'));
+        console.log(`  Data Stored Locally: ${report.settings_summary.data_stored_locally}`);
+        console.log(`  Offline Capable: ${report.settings_summary.offline_capable}`);
+        console.log('\nRecommendations:');
+        for (const rec of report.recommendations) {
+          console.log(`  • ${rec}`);
+        }
+        break;
+      case 'export':
+        const output = path.join(process.env.HOME || '~', '.linguclaw', 'data_export.json');
+        if (manager.exportData(output)) {
+          console.log(chalk.green(`✓ Data exported to ${output}`));
+        }
+        break;
+      default:
+        console.log(chalk.red(`Unknown action: ${action}`));
+    }
+  });
+
+// Agent command
+program
+  .command('agent')
+  .description('Start LinguClaw AI Agent')
+  .option('-m, --mode <mode>', 'Mode: interactive, headless', 'interactive')
+  .option('-p, --provider <provider>', 'LLM provider: auto, openrouter, openai, ollama', 'auto')
+  .action(async (options) => {
+    console.log(chalk.bold.cyan(`🤖 Starting LinguClaw Agent (${options.mode} mode)...\n`));
+
+    const manager = new ProviderManager();
+    let provider: BaseProvider | null;
+
+    if (options.provider === 'auto') {
+      provider = manager.createFromEnv();
+    } else {
+      const providerMap: Record<string, [ProviderType, Record<string, any>]> = {
+        openrouter: [ProviderType.OPENROUTER, { api_key: process.env.OPENROUTER_API_KEY }],
+        openai: [ProviderType.OPENAI, { api_key: process.env.OPENAI_API_KEY }],
+        ollama: [ProviderType.OLLAMA, {}],
+      };
+      const [type, kwargs] = providerMap[options.provider] || providerMap.openrouter;
+      provider = createProvider(type, kwargs);
+    }
+
+    if (!provider) {
+      console.log(chalk.red('No LLM provider available'));
+      process.exit(1);
+    }
+
+    console.log(chalk.green(`✓ Using provider: ${provider.model}`));
+
+    if (options.mode === 'interactive') {
+      console.log('\n' + chalk.dim("Type 'exit' to quit\n"));
+      
+      const readline = await import('readline');
+      const rl = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout,
+      });
+
+      const messages: Message[] = [];
+
+      const askQuestion = () => {
+        rl.question(chalk.bold('You: '), async (input) => {
+          if (input.toLowerCase() === 'exit') {
+            rl.close();
+            console.log('\n' + chalk.yellow('Goodbye!'));
+            return;
+          }
+
+          messages.push({ role: 'user', content: input });
+          const response = await provider!.complete(messages);
+
+          if (response.error) {
+            console.log(chalk.red('Error:') + ' ' + response.error);
+          } else {
+            console.log(chalk.bold('Agent:') + ' ' + response.content + '\n');
+            messages.push({ role: 'assistant', content: response.content });
+          }
+
+          askQuestion();
+        });
+      };
+
+      askQuestion();
+    }
+  });
+
+export function cliEntry(): void {
+  program.parse();
+}
