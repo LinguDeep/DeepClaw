@@ -1,5 +1,6 @@
 """Structured logging with optional Rich colorization."""
 import logging
+import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
@@ -36,7 +37,7 @@ def setup_logger(name: str = "linguclaw", log_dir: str = "logs", level: int = lo
     fh.setLevel(logging.DEBUG)
     fh.setFormatter(logging.Formatter("%(asctime)s | %(levelname)-8s | %(name)s | %(message)s", datefmt="%Y-%m-%d %H:%M:%S"))
     logger.addHandler(fh)
-    ch = logging.StreamHandler()
+    ch = logging.StreamHandler(sys.stdout)
     ch.setLevel(logging.WARNING)
     logger.addHandler(ch)
     return logger

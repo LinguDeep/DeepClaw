@@ -1,9 +1,14 @@
 """Typer-based CLI entry point for LinguClaw."""
 import asyncio
+import io
 import os
 import sys
 from pathlib import Path
 from typing import Optional
+
+# Force UTF-8 encoding for stdout/stderr
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
 
 try:
     from dotenv import load_dotenv
