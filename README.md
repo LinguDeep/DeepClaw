@@ -20,8 +20,8 @@
 - 🔐 **Safety-First Design** — Dynamic risk scoring with mandatory confirmation for destructive actions
 
 ---
+<img width="2038" height="512" alt="Gemini_Generated_Image_h22oa1h22oa1h22o" src="https://github.com/user-attachments/assets/9826e4f3-a61b-4c8f-86da-a5f2a8025905" />
 
-<img width="2038" height="512" alt="Gemini_Generated_Image_h22oa1h22oa1h22o" src="https://github.com/user-attachments/assets/5a6abd85-c58b-4a8a-8088-0b7ea0ec8a8d" />
 
 
 ## Quick Start
