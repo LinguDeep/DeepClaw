@@ -3,43 +3,46 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LinguClaw Dashboard</title>
+<title>LinguClaw</title>
 <style>
-:root{--bg0:#0a0e17;--bg1:#0f1520;--bg2:#151c2b;--bg3:#1e2738;--border:#2a3548;--accent:#2563eb;--accent2:#1d4ed8;--accent3:#3b82f6;--glow:rgba(37,99,235,.25);--green:#22c55e;--red:#ef4444;--yellow:#f59e0b;--cyan:#06b6d4;--orange:#f97316;--text:#e8edf5;--dim:#94a3b8;--muted:#64748b;--r:10px;--r2:14px}
+:root{--bg0:#0a0a0b;--bg1:#121214;--bg2:#1a1a1c;--bg3:#222224;--border:#2e2e30;--accent:#5b5bd6;--accent2:#4a4ac2;--accent3:#6c6ce0;--glow:rgba(91,91,214,.15);--green:#4ade80;--red:#f87171;--yellow:#fbbf24;--cyan:#22d3ee;--orange:#fb923c;--text:#f0f0f1;--dim:#9ca3af;--muted:#6b7280;--r:8px;--r2:12px}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Inter','SF Pro Display',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg0);color:var(--text);height:100vh;overflow:hidden;display:flex;flex-direction:column}
 ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
 ::selection{background:var(--accent);color:#fff}
+/* Smooth view transitions */
+.view{flex:1;display:flex;flex-direction:column;overflow:hidden;opacity:0;transform:translateX(-8px);transition:opacity .3s ease,transform .3s ease;position:absolute;width:100%;height:100%;pointer-events:none}
+.view.active{opacity:1;transform:translateX(0);position:relative;pointer-events:all}
+.main{flex:1;position:relative;overflow:hidden;background:var(--bg0)}
 .top{display:flex;align-items:center;justify-content:space-between;height:52px;padding:0 20px;background:linear-gradient(180deg,var(--bg1),var(--bg0));border-bottom:1px solid var(--border);flex-shrink:0}
 .top-left{display:flex;align-items:center;gap:10px}
-.logo{font-size:26px;line-height:1;filter:drop-shadow(0 0 8px var(--glow))}
-.brand{font-weight:700;font-size:16px;letter-spacing:-.3px}.brand span{color:var(--accent3)}
+.logo{width:28px;height:28px;color:var(--accent3);opacity:.9}
+.brand{font-weight:700;font-size:15px;letter-spacing:-.3px;color:var(--dim)}.brand span{color:var(--text)}
 .top-right{display:flex;align-items:center;gap:8px}
 .badge{display:flex;align-items:center;gap:5px;padding:4px 12px;background:var(--bg2);border:1px solid var(--border);border-radius:16px;font-size:11px;color:var(--dim);font-weight:500}
-.dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}.dot.on{background:var(--green);box-shadow:0 0 8px rgba(34,197,94,.6)}.dot.off{background:var(--red);box-shadow:0 0 8px rgba(239,68,68,.4)}
+.dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}.dot.on{background:var(--green)}.dot.off{background:var(--red)}
 .wrap{display:flex;flex:1;overflow:hidden}
 .side{width:230px;background:var(--bg1);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0}
 .nav{padding:12px 10px}
-.ni{display:flex;align-items:center;gap:9px;padding:9px 12px;border-radius:8px;cursor:pointer;font-size:13px;color:var(--dim);transition:all .15s;margin-bottom:2px;user-select:none;font-weight:500}
+.ni{display:flex;align-items:center;gap:9px;padding:9px 12px;border-radius:8px;cursor:pointer;font-size:13px;color:var(--dim);transition:background .15s ease,color .15s ease;margin-bottom:2px;user-select:none;font-weight:500;border:1px solid transparent}
 .ni:hover{background:var(--bg2);color:var(--text)}
-.ni.a{background:var(--accent);color:#fff;box-shadow:0 2px 12px var(--glow)}
-.ni .ic{width:20px;text-align:center;font-size:15px}
+.ni.a{background:var(--bg3);color:var(--text);border-color:var(--border)}
+.ni .ic{width:18px;height:18px;flex-shrink:0;opacity:.6}
+.ni.a .ic,.ni:hover .ic{opacity:1}
 .ni .cnt{margin-left:auto;font-size:10px;background:var(--bg3);padding:1px 6px;border-radius:8px;color:var(--muted)}
-.ni.a .cnt{background:rgba(255,255,255,.2);color:#fff}
+.ni.a .cnt{background:var(--accent);color:#fff}
 .sep{height:1px;background:var(--border);margin:10px 14px}
 .nav-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);padding:6px 14px 4px}
 .side-info{padding:10px 14px;margin-top:auto;border-top:1px solid var(--border);background:var(--bg0)}
 .si-row{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:4px}
 .si-val{color:var(--dim);font-weight:500}
-.main{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--bg0)}
-.view{display:none;flex:1;flex-direction:column;overflow:hidden}.view.active{display:flex}
 .panel-head{padding:16px 20px;border-bottom:1px solid var(--border);background:var(--bg1)}
 .panel-head h2{font-size:16px;font-weight:600;display:flex;align-items:center;gap:8px}
 .panel-head p{font-size:12px;color:var(--muted);margin-top:2px}
-.btn{padding:8px 16px;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;transition:all .15s;display:inline-flex;align-items:center;gap:6px}
+.btn{padding:8px 16px;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;transition:all .2s ease;display:inline-flex;align-items:center;gap:6px}
 .btn:disabled{opacity:.4;cursor:default}
-.btn-p{background:var(--accent);color:#fff}.btn-p:hover:not(:disabled){background:var(--accent2);box-shadow:0 2px 12px var(--glow)}
-.btn-g{background:transparent;color:var(--dim);border:1px solid var(--border)}.btn-g:hover{color:var(--text);background:var(--bg2)}
+.btn-p{background:var(--accent);color:#fff}.btn-p:hover:not(:disabled){background:var(--accent2);transform:translateY(-1px);box-shadow:0 4px 12px var(--glow)}
+.btn-g{background:transparent;color:var(--dim);border:1px solid var(--border)}.btn-g:hover{color:var(--text);background:var(--bg2);border-color:var(--accent);transform:translateY(-1px)}
 .btn-d{background:rgba(239,68,68,.1);color:var(--red);border:1px solid rgba(239,68,68,.2)}.btn-d:hover{background:rgba(239,68,68,.2)}
 .btn-sm{padding:5px 10px;font-size:11px;border-radius:6px}
 .inp{padding:9px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none;transition:border .15s;width:100%}
@@ -49,9 +52,10 @@ select.inp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns
 .lbl{display:block;font-size:11px;color:var(--dim);margin-bottom:4px;font-weight:600;letter-spacing:.3px}
 .toast{position:fixed;top:16px;right:16px;padding:10px 16px;border-radius:8px;font-size:13px;font-weight:500;z-index:9999;opacity:0;transform:translateY(-8px);transition:all .25s;pointer-events:none}
 .toast.show{opacity:1;transform:translateY(0)}.toast.ok{background:#0d2818;color:var(--green);border:1px solid rgba(34,197,94,.3)}.toast.err{background:#2a0f0f;color:var(--red);border:1px solid rgba(239,68,68,.3)}.toast.info{background:#0f1b2d;color:var(--accent3);border:1px solid rgba(59,130,246,.3)}
-.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);z-index:100;align-items:center;justify-content:center}
-.modal-bg.open{display:flex}
-.modal{background:var(--bg1);border:1px solid var(--border);border-radius:var(--r2);padding:24px;width:90%;max-width:480px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);z-index:100;align-items:center;justify-content:center;opacity:0;transition:opacity .2s ease}
+.modal-bg.open{display:flex;opacity:1}
+.modal{background:var(--bg1);border:1px solid var(--border);border-radius:var(--r2);padding:24px;width:90%;max-width:480px;box-shadow:0 20px 60px rgba(0,0,0,.5);transform:scale(.95) translateY(10px);transition:transform .25s ease,opacity .25s ease;opacity:0}
+.modal-bg.open .modal{transform:scale(1) translateY(0);opacity:1}
 .modal h3{font-size:16px;margin-bottom:16px;display:flex;align-items:center;gap:8px}
 .modal .fld{margin-bottom:12px}
 .modal .acts{display:flex;gap:8px;justify-content:flex-end;margin-top:20px}
@@ -59,10 +63,23 @@ select.inp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns
 .chat-box{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:12px}
 .msg{max-width:72%;padding:12px 16px;border-radius:var(--r2);font-size:13px;line-height:1.6;white-space:pre-wrap;word-break:break-word;animation:mi .2s ease}
 @keyframes mi{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
-.msg.user{align-self:flex-end;background:var(--accent);color:#fff;border-bottom-right-radius:4px}
+.msg.user{align-self:flex-end;background:var(--bg3);color:var(--text);border:1px solid var(--border);border-bottom-right-radius:4px}
 .msg.bot{align-self:flex-start;background:var(--bg2);color:var(--text);border-bottom-left-radius:4px;border:1px solid var(--border)}
-.msg .mt{font-size:10px;color:var(--muted);margin-top:6px}
-.msg.err{color:var(--red);background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.15)}
+.msg.action{align-self:flex-start;background:rgba(22,163,74,.06);color:var(--text);border-bottom-left-radius:4px;border:1px solid rgba(22,163,74,.25)}
+.msg.err{color:var(--red);background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.2);align-self:flex-start}
+.msg.info{color:var(--accent3);background:rgba(37,99,235,.06);border:1px solid rgba(37,99,235,.2);align-self:flex-start}
+.msg-head{display:flex;align-items:center;gap:6px;margin-bottom:6px;font-size:11px;flex-wrap:wrap}
+.msg-who{font-weight:700;font-size:12px}
+.msg.user .msg-who{color:var(--dim)}
+.msg.bot .msg-who{color:var(--dim)}
+.msg.action .msg-who{color:#16a34a}
+.msg.err .msg-who{color:var(--red)}
+.msg-time{color:var(--muted);font-size:10px;margin-left:auto}
+.msg-model{font-size:9px;color:var(--muted);background:var(--bg0);padding:1px 6px;border-radius:4px}
+.msg-badge{font-size:9px;padding:2px 8px;border-radius:4px;font-weight:700;text-transform:uppercase;letter-spacing:.3px}
+.msg-badge.ok{background:rgba(22,163,74,.15);color:#16a34a}
+.msg-badge.fail{background:rgba(239,68,68,.15);color:var(--red)}
+.msg-body{font-size:13px;line-height:1.6}
 .chat-bar{display:flex;gap:8px;padding:14px 20px;border-top:1px solid var(--border);background:var(--bg1)}
 .typing{display:none;padding:4px 20px;font-size:12px;color:var(--muted);align-items:center;gap:6px}
 .typing.show{display:flex}
@@ -83,16 +100,17 @@ select.inp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns
 .skills-head{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--bg1)}
 .skills-head h2{font-size:16px;font-weight:600;display:flex;align-items:center;gap:8px}
 .skills-body{flex:1;overflow-y:auto;padding:16px 20px;display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;align-content:start}
-.sk{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:16px;transition:all .15s;position:relative}
-.sk:hover{border-color:var(--accent);transform:translateY(-1px);box-shadow:0 4px 20px rgba(0,0,0,.3)}
+.sk{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:16px;transition:transform .25s ease,box-shadow .25s ease,border-color .25s ease,background .25s ease;position:relative}
+.sk:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.3)}
 .sk-top{display:flex;align-items:center;gap:8px;margin-bottom:6px}
-.sk-ic{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px}
-.sk-ic.builtin{background:rgba(37,99,235,.15)}.sk-ic.plugin{background:rgba(249,115,22,.15)}.sk-ic.integration{background:rgba(6,182,212,.15)}.sk-ic.api{background:rgba(139,92,246,.15)}.sk-ic.shell{background:rgba(34,197,94,.15)}
+.sk-ic{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;background:var(--bg3);color:var(--dim)}
+.sk-ic svg{width:16px;height:16px}
 .sk-name{font-weight:600;font-size:14px}.sk-type{font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px}
 .sk-desc{font-size:12px;color:var(--dim);margin-bottom:10px;line-height:1.5}
 .sk-foot{display:flex;align-items:center;justify-content:space-between}
 .sk-st{font-size:11px;font-weight:600;display:flex;align-items:center;gap:4px}
 .sk-st.on{color:var(--green)}.sk-st.off{color:var(--muted)}
+.sv{width:16px;height:16px;display:inline-block;vertical-align:middle}
 .sk-st .sd{width:6px;height:6px;border-radius:50%;background:currentColor}
 .sk-del{position:absolute;top:8px;right:8px;display:none}
 .sk:hover .sk-del{display:block}
@@ -100,7 +118,8 @@ select.inp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns
 .sched-body{flex:1;overflow-y:auto;padding:16px 20px}
 .job{display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);margin-bottom:8px;transition:border .15s}
 .job:hover{border-color:var(--accent)}
-.job-ic{width:36px;height:36px;border-radius:10px;background:rgba(37,99,235,.15);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.job-ic{width:34px;height:34px;border-radius:8px;background:var(--bg3);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--dim)}
+.job-ic svg{width:16px;height:16px}
 .job-info{flex:1;min-width:0}
 .job-name{font-weight:600;font-size:13px}.job-meta{font-size:11px;color:var(--muted);margin-top:2px;display:flex;gap:10px}
 .job-cmd{font-size:11px;color:var(--dim);margin-top:4px;font-family:monospace;background:var(--bg0);padding:4px 8px;border-radius:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -129,12 +148,68 @@ select.inp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns
 .sa{display:flex;gap:8px;margin-top:16px}
 .es{text-align:center;padding:60px 20px;color:var(--muted)}.es .ei{font-size:40px;margin-bottom:12px;opacity:.5}.es p{font-size:13px;margin-bottom:16px}
 @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+/* Home Dashboard */
+.home-wrap{flex:1;overflow-y:auto;padding:20px}
+.home-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:16px;max-width:1400px;margin:0 auto}
+.home-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:16px;transition:transform .2s ease,box-shadow .2s ease,background .2s ease}
+.home-card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.4);background:var(--bg3)}
+.home-card h3{font-size:13px;font-weight:600;color:var(--dim);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.home-card h3 svg{width:14px;height:14px;opacity:.7}
+/* Operations Overview */
+.ops-card{grid-column:span 12;display:flex;align-items:center;gap:16px;padding:20px}
+.ops-status{width:48px;height:48px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;color:var(--green)}
+.ops-status svg{width:24px;height:24px}
+.ops-info{flex:1}
+.ops-info h2{font-size:18px;font-weight:600;margin-bottom:4px}
+.ops-info p{font-size:13px;color:var(--dim)}
+.ops-stats{display:flex;gap:24px}
+.ops-stat{text-align:center}
+.ops-stat .val{font-size:20px;font-weight:700;color:var(--text)}
+.ops-stat .lbl{font-size:11px;color:var(--muted);text-transform:uppercase}
+.ops-actions{display:flex;gap:8px}
+/* System Health Cards */
+.health-card{grid-column:span 3}
+.health-card.h-wide{grid-column:span 6}
+.health-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.health-h .title{font-size:14px;font-weight:600}
+.health-h .status{font-size:11px;padding:2px 8px;border-radius:4px;font-weight:600}
+.health-h .status.ok{background:rgba(52,211,153,.1);color:var(--green)}
+.health-h .status.warn{background:rgba(251,191,36,.1);color:var(--yellow)}
+.health-h .status.err{background:rgba(248,113,113,.1);color:var(--red)}
+.health-body{font-size:12px;color:var(--dim);line-height:1.6}
+.health-body .big{font-size:24px;font-weight:700;color:var(--text);margin-bottom:4px}
+.health-body .detail{display:flex;align-items:center;gap:6px;margin-top:4px}
+.health-body .detail svg{width:12px;height:12px;opacity:.5}
+/* Activity Feed */
+.activity-card{grid-column:span 4}
+.act-list{max-height:240px;overflow-y:auto}
+.act-item{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)}
+.act-item:last-child{border-bottom:none}
+.act-icon{width:28px;height:28px;border-radius:6px;background:var(--bg3);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.act-icon svg{width:14px;height:14px;color:var(--dim)}
+.act-content{flex:1;min-width:0}
+.act-title{font-size:12px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.act-meta{font-size:11px;color:var(--muted);margin-top:2px}
+/* Topology */
+.topo-card{grid-column:span 8}
+.topo-vis{height:200px;background:var(--bg3);border-radius:var(--r);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.topo-node{position:absolute;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;font-size:12px;font-weight:500}
+.topo-node.center{top:50%;left:50%;transform:translate(-50%,-50%);border-color:var(--accent);background:rgba(99,102,241,.1)}
+.topo-line{position:absolute;background:var(--border)}
+/* Quick Actions */
+.quick-card{grid-column:span 4}
+.quick-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.quick-btn{padding:12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:all .15s;text-align:left}
+.quick-btn:hover{background:var(--bg2);border-color:var(--accent)}
+.quick-btn svg{width:16px;height:16px;color:var(--dim);margin-bottom:6px}
+.quick-btn .lbl{font-size:12px;font-weight:500;color:var(--text)}
+.quick-btn .sub{font-size:11px;color:var(--muted);margin-top:2px}
 </style>
 </head>
 <body>
 <div id="toast" class="toast"></div>
 <div class="top">
-  <div class="top-left"><div class="logo">&#129438;</div><div class="brand">Lingu<span>Claw</span></div></div>
+  <div class="top-left"><svg class="logo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 3c-1.5 0-2.7.5-3.5 1.3C7.7 5.1 7 6.3 7 8c0 1.3.4 2.4 1 3.2V13c0 1.5-.5 2.5-1.2 3.2-.4.4-.4 1 0 1.4.4.4 1 .4 1.4 0 .9-.9 1.5-2.2 1.7-3.7.5.2 1 .3 1.6.3h.9c.6 0 1.1-.1 1.6-.3.2 1.5.8 2.8 1.7 3.7.4.4 1 .4 1.4 0 .4-.4.4-1 0-1.4-.7-.7-1.2-1.7-1.2-3.2v-1.8c.6-.8 1-1.9 1-3.2 0-1.7-.7-2.9-1.5-3.7C14.7 3.5 13.5 3 12 3z"/><path d="M5 9c-1.5 0-3 .5-4 1.5C.5 11.5 0 12.5 0 14c0 1.5.5 2.5 1.2 3.2.4.4 1 .4 1.4 0 .4-.4.4-1 0-1.4-.4-.4-.6-1-.6-1.8 0-.8.3-1.4.7-1.8.4-.4 1-.6 1.8-.6"/><path d="M19 9c1.5 0 3 .5 4 1.5.5.5 1 1.5 1 3 0 1.5-.5 2.5-1.2 3.2-.4.4-1 .4-1.4 0-.4-.4-.4-1 0-1.4.4-.4.6-1 .6-1.8 0-.8-.3-1.4-.7-1.8-.4-.4-1-.6-1.8-.6"/><path d="M4 20c-.8 0-1.5.5-1.8 1.2-.2.5.1 1.1.6 1.3.5.2 1.1-.1 1.3-.6.1-.2.3-.4.6-.4.3 0 .5.2.6.4.2.5.8.8 1.3.6.5-.2.8-.8.6-1.3C7 20.5 6.3 20 5.5 20H4z"/><path d="M16 20c-.8 0-1.5.5-1.8 1.2-.2.5.1 1.1.6 1.3.5.2 1.1-.1 1.3-.6.1-.2.3-.4.6-.4.3 0 .5.2.6.4.2.5.8.8 1.3.6.5-.2.8-.8.6-1.3-.3-.7-1-1.2-1.8-1.2h-1.5z"/></svg><div class="brand">Lingu<span>Claw</span></div></div>
   <div class="top-right">
     <div class="badge" id="modelBadge">loading...</div>
     <div class="badge"><div class="dot on" id="wsDot"></div><span id="wsLabel">Connected</span></div>
@@ -144,47 +219,158 @@ select.inp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns
   <div class="side">
     <div class="nav">
       <div class="nav-label">Main</div>
-      <div class="ni a" data-v="chat"><span class="ic">&#128172;</span> Chat</div>
-      <div class="ni" data-v="task"><span class="ic">&#9889;</span> Tasks</div>
-      <div class="ni" data-v="memory"><span class="ic">&#129504;</span> Memory <span class="cnt" id="cntMem">0</span></div>
+      <div class="ni a" data-v="home"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> Home</div>
+      <div class="ni" data-v="inbox"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 17H2a3 3 0 0 0 3-3V9a7 7 0 0 1 14 0v5a3 3 0 0 0 3 3zm-8.27 4a2 2 0 0 1-3.46 0"/></svg> Inbox <span class="cnt" id="cntInbox" style="display:none">0</span></div>
+      <div class="ni" data-v="chat"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Chat</div>
+      <div class="ni" data-v="task"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg> Tasks</div>
+      <div class="ni" data-v="memory"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg> Memory <span class="cnt" id="cntMem">0</span></div>
       <div class="sep"></div>
       <div class="nav-label">Tools</div>
-      <div class="ni" data-v="skills"><span class="ic">&#128268;</span> Skills <span class="cnt" id="cntSk">0</span></div>
-      <div class="ni" data-v="sched"><span class="ic">&#128338;</span> Scheduler <span class="cnt" id="cntJob">0</span></div>
-      <div class="ni" data-v="browser"><span class="ic">&#127760;</span> Browser</div>
+      <div class="ni" data-v="skills"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg> Skills <span class="cnt" id="cntSk">0</span></div>
+      <div class="ni" data-v="sched"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Scheduler <span class="cnt" id="cntJob">0</span></div>
+      <div class="ni" data-v="browser"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg> Browser</div>
       <div class="sep"></div>
-      <div class="ni" data-v="settings"><span class="ic">&#9881;&#65039;</span> Settings</div>
+      <div class="ni" data-v="settings"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> Settings</div>
     </div>
     <div class="side-info">
-      <div class="si-row"><span>&#128640; Provider</span><span class="si-val" id="siProv">-</span></div>
-      <div class="si-row"><span>&#128338; Uptime</span><span class="si-val" id="siUp">0s</span></div>
-      <div class="si-row"><span>&#128279; Clients</span><span class="si-val" id="siConn">0</span></div>
+      <div class="si-row"><span>Provider</span><span class="si-val" id="siProv">-</span></div>
+      <div class="si-row"><span>Uptime</span><span class="si-val" id="siUp">0s</span></div>
+      <div class="si-row"><span>Connections</span><span class="si-val" id="siConn">0</span></div>
     </div>
   </div>
   <div class="main">
-    <!-- CHAT -->
-    <div class="view active" id="v-chat">
-      <div class="chat-box" id="chatBox">
-        <div class="msg bot">&#129438; Hello! I'm <strong>LinguClaw</strong>, your personal AI assistant. I can chat, run tasks, browse the web, manage files, schedule jobs, and much more!</div>
+    <!-- HOME -->
+    <div class="view active" id="v-home">
+      <div class="home-wrap">
+        <div class="home-grid">
+          <!-- Operations Overview -->
+          <div class="home-card ops-card">
+            <div class="ops-status"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+            <div class="ops-info">
+              <h2>Operations Overview</h2>
+              <p>System operational. All services running normally.</p>
+            </div>
+            <div class="ops-stats">
+              <div class="ops-stat"><div class="val" id="hSess">0</div><div class="lbl">Sessions</div></div>
+              <div class="ops-stat"><div class="val" id="hAlerts">0</div><div class="lbl">Alerts</div></div>
+              <div class="ops-stat"><div class="val" id="hTasks">0</div><div class="lbl">Tasks</div></div>
+            </div>
+            <div class="ops-actions">
+              <button class="btn btn-p" onclick="switchView('chat')">New Session</button>
+              <button class="btn btn-g" onclick="switchView('task')">Run Task</button>
+            </div>
+          </div>
+          <!-- System Health Cards -->
+          <div class="home-card health-card">
+            <div class="health-h"><span class="title">Gateway</span><span class="status ok">Online</span></div>
+            <div class="health-body">
+              <div class="big" id="hUptime">0m</div>
+              <div class="detail"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Uptime</div>
+            </div>
+          </div>
+          <div class="home-card health-card">
+            <div class="health-h"><span class="title">LLM Provider</span><span class="status ok" id="hProvStatus">Active</span></div>
+            <div class="health-body">
+              <div class="big" id="hModel">-</div>
+              <div class="detail"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Model ready</div>
+            </div>
+          </div>
+          <div class="home-card health-card">
+            <div class="health-h"><span class="title">Scheduler</span><span class="status ok" id="hSchedStatus">Active</span></div>
+            <div class="health-body">
+              <div class="big" id="hJobs">0</div>
+              <div class="detail"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Jobs scheduled</div>
+            </div>
+          </div>
+          <div class="home-card health-card">
+            <div class="health-h"><span class="title">Memory</span><span class="status ok">Healthy</span></div>
+            <div class="health-body">
+              <div class="big" id="hMem">0</div>
+              <div class="detail"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg> Entries stored</div>
+            </div>
+          </div>
+          <!-- Skills Status -->
+          <div class="home-card health-card h-wide">
+            <div class="health-h"><span class="title">Active Integrations</span><span class="status ok" id="hSkillsStatus">0/0</span></div>
+            <div class="health-body" style="display:flex;gap:16px;flex-wrap:wrap" id="hSkillsList">
+              <span style="color:var(--muted)">No integrations configured</span>
+            </div>
+          </div>
+          <!-- Recent Activity -->
+          <div class="home-card activity-card">
+            <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> Recent Activity</h3>
+            <div class="act-list" id="hActivity">
+              <div class="act-item">
+                <div class="act-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+                <div class="act-content"><div class="act-title">System initialized</div><div class="act-meta">Just now</div></div>
+              </div>
+            </div>
+          </div>
+          <!-- Quick Actions -->
+          <div class="home-card quick-card">
+            <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> Quick Actions</h3>
+            <div class="quick-grid">
+              <div class="quick-btn" onclick="switchView('chat')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                <div class="lbl">New Chat</div>
+                <div class="sub">Start conversation</div>
+              </div>
+              <div class="quick-btn" onclick="switchView('task')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+                <div class="lbl">Run Task</div>
+                <div class="sub">Execute command</div>
+              </div>
+              <div class="quick-btn" onclick="switchView('browser')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/></svg>
+                <div class="lbl">Browse</div>
+                <div class="sub">Web automation</div>
+              </div>
+              <div class="quick-btn" onclick="openModal('emailMod')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                <div class="lbl">Send Email</div>
+                <div class="sub">Compose message</div>
+              </div>
+            </div>
+          </div>
+          <!-- System Topology -->
+          <div class="home-card topo-card">
+            <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> System Topology</h3>
+            <div class="topo-vis">
+              <div class="topo-node center">LinguClaw</div>
+              <div class="topo-node" style="top:20%;left:20%">Chat</div>
+              <div class="topo-node" style="top:20%;right:20%">Browser</div>
+              <div class="topo-node" style="bottom:20%;left:20%">Memory</div>
+              <div class="topo-node" style="bottom:20%;right:20%">Scheduler</div>
+              <div class="topo-node" style="top:50%;left:10%">Tasks</div>
+              <div class="topo-node" style="top:50%;right:10%">Skills</div>
+            </div>
+          </div>
+        </div>
       </div>
-      <div class="typing" id="typing"><span>&#129438; Thinking</span><span class="dots"><span></span><span></span><span></span></span></div>
+    </div>
+    <!-- CHAT -->
+    <div class="view" id="v-chat">
+      <div class="chat-box" id="chatBox">
+        <div class="msg bot"><div class="msg-head"><span class="msg-who">LinguClaw</span></div><div class="msg-body">Hello. I'm your personal AI assistant. I can chat, send messages, browse the web, manage files, schedule jobs, and more. How can I help?</div></div>
+      </div>
+      <div class="typing" id="typing"><span>Processing</span><span class="dots"><span></span><span></span><span></span></span></div>
       <div class="chat-bar">
         <input class="inp" id="chatIn" placeholder="Ask me anything..." style="flex:1" onkeydown="if(event.key==='Enter'&&!event.shiftKey)sendChat()">
-        <button class="btn btn-p" id="chatBtn" onclick="sendChat()">&#10148; Send</button>
+        <button class="btn btn-p" id="chatBtn" onclick="sendChat()">Send</button>
       </div>
     </div>
     <!-- TASKS -->
     <div class="view" id="v-task">
-      <div class="panel-head"><h2>&#9889; Task Runner</h2><p>Planner &#8594; Executor &#8594; Reviewer multi-agent pipeline</p></div>
+      <div class="panel-head"><h2>Task Runner</h2><p>Planner &rarr; Executor &rarr; Reviewer pipeline</p></div>
       <div style="display:flex;gap:8px;padding:14px 20px;border-bottom:1px solid var(--border);background:var(--bg1)">
         <input class="inp" id="taskIn" placeholder="Describe a task..." style="flex:1" onkeydown="if(event.key==='Enter')runTask()">
-        <button class="btn btn-p" id="taskBtn" onclick="runTask()">&#9654; Run</button>
+        <button class="btn btn-p" id="taskBtn" onclick="runTask()">Run</button>
       </div>
-      <div class="task-out" id="taskOut"><span style="color:var(--muted)">&#8593; Type a task above and press Run.</span></div>
+      <div class="task-out" id="taskOut"><span style="color:var(--muted)">Type a task above and press Run.</span></div>
     </div>
     <!-- MEMORY -->
     <div class="view" id="v-memory">
-      <div class="panel-head"><h2>&#129504; Memory</h2><p id="memStats">Persistent memory store</p></div>
+      <div class="panel-head"><h2>Memory</h2><p id="memStats">Persistent memory store</p></div>
       <div class="mem-list" id="memList"></div>
       <div class="mem-bar">
         <input class="inp" id="memKey" placeholder="Key" style="max-width:130px">
@@ -195,91 +381,114 @@ select.inp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns
     </div>
     <!-- SKILLS -->
     <div class="view" id="v-skills">
-      <div class="skills-head"><h2>&#128268; Skills &amp; Integrations</h2><button class="btn btn-p btn-sm" onclick="openModal('skMod')">+ New Skill</button></div>
+      <div class="skills-head"><h2>Skills &amp; Integrations</h2><button class="btn btn-p btn-sm" onclick="openModal('skMod')">+ New Skill</button></div>
       <div class="skills-body" id="skGrid"></div>
     </div>
     <!-- SCHEDULER -->
     <div class="view" id="v-sched">
-      <div class="skills-head"><h2>&#128338; Scheduler</h2><button class="btn btn-p btn-sm" onclick="openModal('jobMod')">+ New Job</button></div>
+      <div class="skills-head"><h2>Scheduler</h2><button class="btn btn-p btn-sm" onclick="openModal('jobMod')">+ New Job</button></div>
       <div class="sched-body" id="jobList"></div>
     </div>
     <!-- BROWSER -->
     <div class="view" id="v-browser">
       <div class="brow-bar">
-        <div class="url-w"><span class="ui">&#127760;</span><input id="browUrl" placeholder="Enter URL or search query..." onkeydown="if(event.key==='Enter')browGo()"></div>
+        <div class="url-w"><svg class="ui" style="width:14px;height:14px;flex-shrink:0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg><input id="browUrl" placeholder="Enter URL or search query..." onkeydown="if(event.key==='Enter')browGo()"></div>
         <button class="btn btn-p" onclick="browGo()">Go</button>
       </div>
       <div class="brow-tools" style="flex-wrap:wrap">
-        <button class="btn btn-g btn-sm" onclick="browSS()">&#128247; Screenshot</button>
-        <button class="btn btn-g btn-sm" onclick="browSumm()">&#129302; AI Summarize</button>
-        <button class="btn btn-g btn-sm" onclick="browSearch()">&#128269; AI Search</button>
+        <button class="btn btn-g btn-sm" onclick="browSS()">Screenshot</button>
+        <button class="btn btn-g btn-sm" onclick="browSumm()">Summarize</button>
+        <button class="btn btn-g btn-sm" onclick="browSearch()">Search</button>
         <span style="width:1px;height:20px;background:var(--border);margin:0 2px"></span>
         <input class="inp" id="browAsk" placeholder="Ask about this page... or describe data to extract" style="flex:1;padding:5px 10px;font-size:11px" onkeydown="if(event.key==='Enter')browAskQ()">
         <button class="btn btn-p btn-sm" onclick="browAskQ()">Ask AI</button>
-        <button class="btn btn-g btn-sm" onclick="browSmartEx()">&#9889; Extract</button>
+        <button class="btn btn-g btn-sm" onclick="browSmartEx()">Extract</button>
       </div>
       <div style="display:flex;gap:6px;padding:4px 20px;border-bottom:1px solid var(--border);background:var(--bg1)">
         <button class="btn btn-g btn-sm" onclick="browEx()">CSS Select</button>
         <input class="inp" id="browSel" placeholder="h1, .content, #main" style="flex:1;padding:4px 8px;font-size:11px">
       </div>
-      <div class="brow-body" id="browOut"><div class="es"><div class="ei">&#127760;</div><p>Enter a URL to browse, or type a search query.<br>AI can summarize pages, answer questions, and extract data for you.</p>
+      <div class="brow-body" id="browOut"><div class="es"><p>Enter a URL to browse, or type a search query.<br>AI can summarize pages, answer questions, and extract data.</p>
         <div style="display:flex;gap:6px;justify-content:center;margin-top:12px;flex-wrap:wrap">
-          <button class="btn btn-g btn-sm" onclick="document.getElementById('browUrl').value='https://news.ycombinator.com';browGo()">&#128240; Hacker News</button>
-          <button class="btn btn-g btn-sm" onclick="document.getElementById('browUrl').value='https://github.com/trending';browGo()">&#128187; GitHub Trending</button>
-          <button class="btn btn-g btn-sm" onclick="document.getElementById('browUrl').value='https://en.wikipedia.org/wiki/Special:Random';browGo()">&#128218; Random Wiki</button>
+          <button class="btn btn-g btn-sm" onclick="document.getElementById('browUrl').value='https://news.ycombinator.com';browGo()">Hacker News</button>
+          <button class="btn btn-g btn-sm" onclick="document.getElementById('browUrl').value='https://github.com/trending';browGo()">GitHub Trending</button>
+          <button class="btn btn-g btn-sm" onclick="document.getElementById('browUrl').value='https://en.wikipedia.org/wiki/Special:Random';browGo()">Random Wiki</button>
         </div>
       </div></div>
     </div>
+    <!-- INBOX -->
+    <div class="view" id="v-inbox">
+      <div class="panel-head"><h2>Inbox</h2><p>Incoming messages from email and messaging platforms</p></div>
+      <div style="display:flex;gap:8px;padding:14px 20px;border-bottom:1px solid var(--border);background:var(--bg1)">
+        <button class="btn btn-p" onclick="checkMail()">Check Mail</button>
+        <button class="btn btn-g" onclick="markAllRead()">Mark All Read</button>
+        <span style="flex:1"></span>
+        <span id="inboxStats" style="font-size:12px;color:var(--muted);align-self:center">0 unread</span>
+      </div>
+      <div class="mem-list" id="inboxList"></div>
+    </div>
     <!-- SETTINGS -->
     <div class="view" id="v-settings">
-      <div class="panel-head"><h2>&#9881;&#65039; Settings</h2><p>LLM provider, model, and system configuration</p></div>
+      <div class="panel-head"><h2>Settings</h2><p>LLM provider, model, and system configuration</p></div>
       <div class="settings-body">
-        <div class="sc"><h3>&#129302; LLM Provider</h3>
+        <div class="sc"><h3>LLM Provider</h3>
           <div class="sr"><div class="sf"><label class="lbl">Provider</label><select class="inp" id="sP"><option value="openrouter">OpenRouter</option><option value="openai">OpenAI</option><option value="anthropic">Anthropic</option><option value="ollama">Ollama</option><option value="lmstudio">LM Studio</option></select></div><div class="sf"><label class="lbl">Model</label><input class="inp" id="sM" placeholder="openai/gpt-3.5-turbo"></div></div>
           <div class="sf"><label class="lbl">API Key</label><input class="inp" type="password" id="sK" placeholder="Enter new API key..."><div class="sh">Leave empty to keep current key.</div></div>
           <div class="sr"><div class="sf"><label class="lbl">Max Tokens</label><input class="inp" type="number" id="sMT" min="100" max="8000"></div><div class="sf"><label class="lbl">Temperature</label><input class="inp" type="number" id="sT" min="0" max="2" step="0.1"></div></div>
         </div>
-        <div class="sc"><h3>&#128736;&#65039; System</h3>
+        <div class="sc"><h3>System</h3>
           <div class="sr"><div class="sf"><label class="lbl">Max Steps</label><input class="inp" type="number" id="sSt" min="1" max="50"></div><div class="sf"><label class="lbl">Log Level</label><select class="inp" id="sL"><option value="debug">Debug</option><option value="info">Info</option><option value="warn">Warning</option><option value="error">Error</option></select></div></div>
           <div class="sf"><label class="lbl">Safety Mode</label><select class="inp" id="sSf"><option value="strict">Strict</option><option value="balanced">Balanced</option><option value="permissive">Permissive</option></select></div>
-          <div class="sa"><button class="btn btn-p" onclick="saveSett()">&#128190; Save</button><button class="btn btn-g" onclick="resetSett()">&#8634; Reset</button></div>
+          <div class="sa"><button class="btn btn-p" onclick="saveSett()">Save</button><button class="btn btn-g" onclick="resetSett()">Reset</button></div>
         </div>
       </div>
     </div>
   </div>
 </div>
 <!-- SKILL MODAL -->
-<div class="modal-bg" id="skMod"><div class="modal"><h3>&#128268; Add New Skill</h3>
+<div class="modal-bg" id="skMod"><div class="modal"><h3>Add New Skill</h3>
   <div class="fld"><label class="lbl">Skill Name</label><input class="inp" id="skN" placeholder="e.g. weather"></div>
   <div class="fld"><label class="lbl">Description</label><input class="inp" id="skD" placeholder="Fetch weather information"></div>
   <div class="fld"><label class="lbl">Type</label><select class="inp" id="skT"><option value="plugin">Plugin</option><option value="api">API</option><option value="shell">Shell</option><option value="javascript">JavaScript</option></select></div>
   <div class="fld"><label class="lbl">Command / Endpoint</label><input class="inp" id="skC" placeholder="curl wttr.in/London"></div>
-  <div class="acts"><button class="btn btn-g" onclick="closeModal('skMod')">Cancel</button><button class="btn btn-p" onclick="addSk()">&#10003; Add</button></div>
+  <div class="acts"><button class="btn btn-g" onclick="closeModal('skMod')">Cancel</button><button class="btn btn-p" onclick="addSk()">Add</button></div>
 </div></div>
 <!-- JOB MODAL -->
-<div class="modal-bg" id="jobMod"><div class="modal"><h3>&#128338; New Scheduled Job</h3>
+<div class="modal-bg" id="jobMod"><div class="modal"><h3>New Scheduled Job</h3>
   <div class="fld"><label class="lbl">Job Name</label><input class="inp" id="jN" placeholder="e.g. Backup"></div>
   <div class="fld"><label class="lbl">Type</label><select class="inp" id="jT"><option value="interval">Interval</option><option value="cron">Cron</option><option value="once">One-time</option><option value="reminder">Reminder</option></select></div>
   <div class="fld"><label class="lbl">Schedule</label><input class="inp" id="jS" placeholder="30m, 1h, */5 * * * *"><div class="sh">Interval: 30s,5m,1h,1d | Cron: */5 * * * *</div></div>
   <div class="fld"><label class="lbl">Command</label><input class="inp" id="jC" placeholder="ls -la /tmp"></div>
-  <div class="acts"><button class="btn btn-g" onclick="closeModal('jobMod')">Cancel</button><button class="btn btn-p" onclick="addJob()">&#10003; Create</button></div>
+  <div class="acts"><button class="btn btn-g" onclick="closeModal('jobMod')">Cancel</button><button class="btn btn-p" onclick="addJob()">Create</button></div>
 </div></div>
 <!-- INTEGRATION CONFIG MODAL -->
-<div class="modal-bg" id="intMod"><div class="modal"><h3 id="intModTitle">&#128268; Configure Integration</h3>
+<div class="modal-bg" id="intMod"><div class="modal"><h3 id="intModTitle">Configure Integration</h3>
   <div id="intFields"></div>
-  <div class="acts"><button class="btn btn-g" onclick="closeModal('intMod')">Cancel</button><button class="btn btn-d btn-sm" onclick="delIntCfg()" id="intDelBtn" style="display:none">Remove Config</button><button class="btn btn-p" onclick="saveIntCfg()">&#10003; Save</button></div>
+  <div class="acts"><button class="btn btn-g" onclick="closeModal('intMod')">Cancel</button><button class="btn btn-d btn-sm" onclick="delIntCfg()" id="intDelBtn" style="display:none">Remove</button><button class="btn btn-p" onclick="saveIntCfg()">Save</button></div>
+</div></div>
+<!-- EMAIL COMPOSE MODAL -->
+<div class="modal-bg" id="emailMod"><div class="modal"><h3>Compose Email</h3>
+  <div class="fld"><label class="lbl">To</label><input class="inp" id="emTo" placeholder="recipient@example.com"></div>
+  <div class="fld"><label class="lbl">Subject</label><input class="inp" id="emSubj" placeholder="Email subject"></div>
+  <div class="fld"><label class="lbl">Message</label><textarea class="inp" id="emBody" rows="6" placeholder="Write your message here..." style="resize:vertical;font-family:inherit"></textarea></div>
+  <div id="emStatus" style="display:none;padding:8px 12px;border-radius:8px;font-size:12px;margin-bottom:10px"></div>
+  <div class="acts"><button class="btn btn-g" onclick="closeModal('emailMod')">Cancel</button><button class="btn btn-p" id="emSendBtn" onclick="sendEmail()">Send</button></div>
 </div></div>
 <script>
 function esc(s){if(!s)return'';var d=document.createElement('div');d.textContent=String(s);return d.innerHTML}
 function toast(m,t){var e=document.getElementById('toast');e.textContent=m;e.className='toast show '+(t||'info');clearTimeout(e._t);e._t=setTimeout(function(){e.className='toast'},3000)}
 function openModal(id){document.getElementById(id).classList.add('open')}
 function closeModal(id){document.getElementById(id).classList.remove('open')}
+function switchView(v){
+  document.querySelectorAll('.ni').forEach(function(x){x.classList.remove('a')});
+  document.querySelector('.ni[data-v="'+v+'"]').classList.add('a');
+  document.querySelectorAll('.view').forEach(function(x){x.classList.remove('active')});
+  document.getElementById('v-'+v).classList.add('active');
+  if(v==='memory')loadMem();if(v==='skills')loadSk();if(v==='sched')loadJobs();if(v==='settings')loadSett();if(v==='inbox')loadInbox();
+}
 // NAV
 document.querySelectorAll('.ni[data-v]').forEach(function(n){n.addEventListener('click',function(){
-  document.querySelectorAll('.ni').forEach(function(x){x.classList.remove('a')});n.classList.add('a');
-  document.querySelectorAll('.view').forEach(function(v){v.classList.remove('active')});
-  var t=document.getElementById('v-'+n.dataset.v);if(t)t.classList.add('active');
-  var v=n.dataset.v;if(v==='memory')loadMem();if(v==='skills')loadSk();if(v==='sched')loadJobs();if(v==='settings')loadSett();
+  switchView(n.dataset.v);
 })});
 // CHAT
 var cBusy=0;
@@ -287,24 +496,40 @@ function sendChat(){var i=document.getElementById('chatIn'),m=i.value.trim();if(
   addMsg('user',m);document.getElementById('typing').classList.add('show');
   fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:m})})
   .then(function(r){return r.json()}).then(function(d){document.getElementById('typing').classList.remove('show');cBusy=0;document.getElementById('chatBtn').disabled=false;
-    if(d.reply)addMsg('bot',d.reply,d.model);else addMsg('err','No response');
-  }).catch(function(e){document.getElementById('typing').classList.remove('show');cBusy=0;document.getElementById('chatBtn').disabled=false;addMsg('err','Error: '+e.message)});}
-function addMsg(t,tx,mod){var b=document.getElementById('chatBox'),d=document.createElement('div');d.className='msg '+t;d.textContent=tx;
-  if(mod&&t==='bot'){var m=document.createElement('div');m.className='mt';m.textContent=mod;d.appendChild(m)}b.appendChild(d);b.scrollTop=b.scrollHeight}
+    if(d.error){addMsg('err',d.error);return}
+    if(d.actionExecuted){addMsg('action',d.reply,d.model)}
+    else if(d.reply){addMsg('bot',d.reply,d.model)}
+    else{addMsg('err','No response from AI')}
+  }).catch(function(e){document.getElementById('typing').classList.remove('show');cBusy=0;document.getElementById('chatBtn').disabled=false;addMsg('err','Connection error: '+e.message)});}
+function addMsg(t,tx,mod){var b=document.getElementById('chatBox'),d=document.createElement('div');d.className='msg '+t;
+  var now=new Date(),ts=now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0');
+  if(t==='user'){
+    d.innerHTML='<div class="msg-head"><span class="msg-who">You</span><span class="msg-time">'+ts+'</span></div><div class="msg-body">'+esc(tx)+'</div>';
+  }else if(t==='bot'){
+    d.innerHTML='<div class="msg-head"><span class="msg-who">LinguClaw</span>'+(mod?'<span class="msg-model">'+esc(mod)+'</span>':'')+'<span class="msg-time">'+ts+'</span></div><div class="msg-body">'+esc(tx)+'</div>';
+  }else if(t==='action'){
+    var isOk=tx.indexOf('✅')>=0;
+    d.innerHTML='<div class="msg-head"><span class="msg-who">LinguClaw</span><span class="msg-badge '+(isOk?'ok':'fail')+'">'+(isOk?'Executed':'Failed')+'</span>'+(mod?'<span class="msg-model">'+esc(mod)+'</span>':'')+'<span class="msg-time">'+ts+'</span></div><div class="msg-body">'+esc(tx)+'</div>';
+  }else if(t==='err'){
+    d.innerHTML='<div class="msg-head"><span class="msg-who">Error</span><span class="msg-time">'+ts+'</span></div><div class="msg-body">'+esc(tx)+'</div>';
+  }else if(t==='info'){
+    d.innerHTML='<div class="msg-head"><span class="msg-who">Info</span><span class="msg-time">'+ts+'</span></div><div class="msg-body">'+esc(tx)+'</div>';
+  }
+  b.appendChild(d);b.scrollTop=b.scrollHeight}
 // TASKS
 var tBusy=0;
 function runTask(){var i=document.getElementById('taskIn'),t=i.value.trim();if(!t||tBusy)return;tBusy=1;document.getElementById('taskBtn').disabled=true;
-  var o=document.getElementById('taskOut');o.innerHTML='<span style="color:var(--accent3)">&#128196; Task: '+esc(t)+'</span>\n\n';
+  var o=document.getElementById('taskOut');o.innerHTML='<span style="color:var(--accent3)">Task: '+esc(t)+'</span>\n\n';
   fetch('/api/task',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({task:t,max_steps:15})})
-  .then(function(r){return r.json()}).then(function(d){if(d.error){o.innerHTML+='<span style="color:var(--red)">&#10060; '+esc(d.error)+'</span>\n';tBusy=0;document.getElementById('taskBtn').disabled=false}
-    else o.innerHTML+='<span style="color:var(--green)">&#9989; Queued (ID: '+d.task_id+')</span>\n'})
-  .catch(function(e){o.innerHTML+='<span style="color:var(--red)">&#10060; '+esc(e.message)+'</span>\n';tBusy=0;document.getElementById('taskBtn').disabled=false})}
+  .then(function(r){return r.json()}).then(function(d){if(d.error){o.innerHTML+='<span style="color:var(--red)">Error: '+esc(d.error)+'</span>\n';tBusy=0;document.getElementById('taskBtn').disabled=false}
+    else o.innerHTML+='<span style="color:var(--green)">Queued (ID: '+d.task_id+')</span>\n'})
+  .catch(function(e){o.innerHTML+='<span style="color:var(--red)">Error: '+esc(e.message)+'</span>\n';tBusy=0;document.getElementById('taskBtn').disabled=false})}
 // MEMORY
 function loadMem(){fetch('/api/memory').then(function(r){return r.json()}).then(function(d){
   var en=d.entries||d||[],st=d.stats||{},tot=st.total_entries||en.length;
   document.getElementById('memStats').innerHTML='Persistent memory &mdash; <strong>'+tot+'</strong> entries';document.getElementById('cntMem').textContent=tot;
-  var h='';if(!en.length)h='<div class="es"><div class="ei">&#129504;</div><p>No memories stored yet.</p></div>';
-  for(var i=0;i<en.length;i++){var e=en[i];h+='<div class="mi2"><span class="mk">'+esc(e.key)+'</span><span class="mv">'+esc(typeof e.value==='string'?e.value:JSON.stringify(e.value))+'</span><span class="mc">'+esc(e.category||'general')+'</span><button class="btn btn-d btn-sm" onclick="delMem(\''+esc(e.key)+'\')">&#128465;</button></div>'}
+  var h='';if(!en.length)h='<div class="es"><p>No memories stored yet.</p></div>';
+  for(var i=0;i<en.length;i++){var e=en[i];h+='<div class="mi2"><span class="mk">'+esc(e.key)+'</span><span class="mv">'+esc(typeof e.value==='string'?e.value:JSON.stringify(e.value))+'</span><span class="mc">'+esc(e.category||'general')+'</span><button class="btn btn-d btn-sm" onclick="delMem(\''+esc(e.key)+'\')">Delete</button></div>'}
   document.getElementById('memList').innerHTML=h}).catch(function(){document.getElementById('memList').innerHTML='<div class="es"><p>Failed to load.</p></div>'})}
 function addMem(){var k=document.getElementById('memKey').value.trim(),v=document.getElementById('memVal').value.trim(),c=document.getElementById('memCat').value.trim()||'general';
   if(!k||!v){toast('Key and value required','err');return}
@@ -316,10 +541,12 @@ var cSk=JSON.parse(localStorage.getItem('lc_skills')||'[]');
 var _skData=[];
 function loadSk(){fetch('/api/skills').then(function(r){return r.json()}).then(function(sk){
   _skData=sk;var all=sk.concat(cSk);document.getElementById('cntSk').textContent=all.length;
-  var ic={shell:'&#128187;',filesystem:'&#128193;',browser:'&#127760;',email:'&#9993;',scheduler:'&#128338;',memory:'&#129504;',telegram:'&#9992;',discord:'&#127918;',slack:'&#128172;',whatsapp:'&#128172;'};
+  var svI='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">';
+  var ic={shell:svI+'<polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>',filesystem:svI+'<path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>',browser:svI+'<circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/></svg>',email:svI+'<path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>',scheduler:svI+'<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',memory:svI+'<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>',telegram:svI+'<line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>',discord:svI+'<path d="M18 8a3 3 0 0 0-3-3H9a3 3 0 0 0-3 3v8a3 3 0 0 0 3 3h6a3 3 0 0 0 3-3z"/><circle cx="10" cy="12" r="1"/><circle cx="14" cy="12" r="1"/></svg>',slack:svI+'<rect x="13" y="2" width="3" height="8" rx="1.5"/><rect x="8" y="14" width="3" height="8" rx="1.5"/><rect x="2" y="8" width="8" height="3" rx="1.5"/><rect x="14" y="13" width="8" height="3" rx="1.5"/></svg>',whatsapp:svI+'<path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>'};
   var h='';for(var i=0;i<all.length;i++){var s=all[i],tp=s.type||'plugin',on=s.enabled!==false,isC=s._custom,hasCfg=s.configFields&&s.configFields.length>0;
-    h+='<div class="sk"><div class="sk-top"><div class="sk-ic '+esc(tp)+'">'+(ic[s.name]||'&#128268;')+'</div><div><div class="sk-name">'+esc(s.name)+'</div><div class="sk-type">'+esc(tp)+'</div></div></div><div class="sk-desc">'+esc(s.description)+'</div><div class="sk-foot"><div class="sk-st '+(on?'on':'off')+'"><span class="sd"></span> '+(on?'Active':'Inactive')+'</div><div style="display:flex;gap:4px">'+(hasCfg?'<button class="btn btn-p btn-sm" onclick="openIntCfg(\''+esc(s.name)+'\')">&#9881; Configure</button>':'')+(isC?'<button class="btn btn-d btn-sm" onclick="delSk('+i+','+sk.length+')">Delete</button>':'')+'</div></div>'+(isC?'<button class="btn btn-d btn-sm sk-del" onclick="delSk('+i+','+sk.length+')">&#10005;</button>':'')+'</div>'}
-  document.getElementById('skGrid').innerHTML=h||'<div class="es"><div class="ei">&#128268;</div><p>No skills found.</p></div>'})}
+    var isEmail=s.name==='email'&&on;
+    h+='<div class="sk"><div class="sk-top"><div class="sk-ic">'+(ic[s.name]||ic['shell'])+'</div><div><div class="sk-name">'+esc(s.name)+'</div><div class="sk-type">'+esc(tp)+'</div></div></div><div class="sk-desc">'+esc(s.description)+'</div><div class="sk-foot"><div class="sk-st '+(on?'on':'off')+'"><span class="sd"></span> '+(on?'Active':'Inactive')+'</div><div style="display:flex;gap:4px">'+(isEmail?'<button class="btn btn-g btn-sm" onclick="openModal(\'emailMod\')">Send</button>':'')+(hasCfg?'<button class="btn btn-p btn-sm" onclick="openIntCfg(\''+esc(s.name)+'\')">Configure</button>':'')+(isC?'<button class="btn btn-d btn-sm" onclick="delSk('+i+','+sk.length+')">Delete</button>':'')+'</div></div>'+(isC?'<button class="btn btn-d btn-sm sk-del" onclick="delSk('+i+','+sk.length+')">x</button>':'')+'</div>'}
+  document.getElementById('skGrid').innerHTML=h||'<div class="es"><p>No skills available.</p></div>'})}
 function openAddSk(){openModal('skMod')}
 function addSk(){var n=document.getElementById('skN').value.trim(),d=document.getElementById('skD').value.trim(),t=document.getElementById('skT').value,c=document.getElementById('skC').value.trim();
   if(!n){toast('Skill name required','err');return}
@@ -332,7 +559,7 @@ function delSk(idx,srvLen){var ci=idx-srvLen;if(ci>=0&&ci<cSk.length){var nm=cSk
 var _cfgName='';
 function openIntCfg(name){_cfgName=name;
   var sk=_skData.find(function(s){return s.name===name});if(!sk||!sk.configFields)return;
-  document.getElementById('intModTitle').innerHTML='&#128268; Configure '+esc(name.charAt(0).toUpperCase()+name.slice(1));
+  document.getElementById('intModTitle').textContent='Configure '+name.charAt(0).toUpperCase()+name.slice(1);
   fetch('/api/skills/config/'+encodeURIComponent(name)).then(function(r){return r.json()}).then(function(d){
     var cfg=d.config||{};document.getElementById('intDelBtn').style.display=d.hasConfig?'inline-flex':'none';
     var h='';for(var i=0;i<sk.configFields.length;i++){var f=sk.configFields[i];
@@ -344,13 +571,31 @@ function saveIntCfg(){var sk=_skData.find(function(s){return s.name===_cfgName})
   .then(function(r){return r.json()}).then(function(d){if(d.success){toast(_cfgName+' configured','ok');closeModal('intMod');loadSk()}else toast(d.error||'Error','err')})}
 function delIntCfg(){if(!confirm('Remove '+_cfgName+' configuration?'))return;
   fetch('/api/skills/config/'+encodeURIComponent(_cfgName),{method:'DELETE'}).then(function(){toast(_cfgName+' config removed','ok');closeModal('intMod');loadSk()})}
+// EMAIL SEND
+function sendEmail(){var to=document.getElementById('emTo').value.trim(),subj=document.getElementById('emSubj').value.trim(),body=document.getElementById('emBody').value;
+  if(!to||!subj){toast('To and Subject required','err');return}
+  var st=document.getElementById('emStatus');st.style.display='block';st.style.background='rgba(37,99,235,.1)';st.style.color='var(--accent)';st.textContent='Sending...';
+  document.getElementById('emSendBtn').disabled=true;
+  fetch('/api/email/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({to:to,subject:subj,body:body})})
+  .then(function(r){return r.json()}).then(function(d){
+    document.getElementById('emSendBtn').disabled=false;
+    if(d.success){st.style.background='rgba(22,163,74,.1)';st.style.color='#16a34a';st.textContent=d.message;
+      document.getElementById('emTo').value='';document.getElementById('emSubj').value='';document.getElementById('emBody').value='';
+      toast('Email sent!','ok');setTimeout(function(){closeModal('emailMod');st.style.display='none'},2000)}
+    else{st.style.background='rgba(239,68,68,.1)';st.style.color='var(--red)';st.textContent=d.error}
+  }).catch(function(e){document.getElementById('emSendBtn').disabled=false;st.style.background='rgba(239,68,68,.1)';st.style.color='var(--red)';st.textContent=e.message})}
+function testEmail(){toast('Sending test email...','info');
+  fetch('/api/skills/test/email',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({})})
+  .then(function(r){return r.json()}).then(function(d){
+    if(d.success)toast(d.message,'ok');else toast(d.error||'Failed','err')
+  }).catch(function(e){toast(e.message,'err')})}
 // SCHEDULER
 function loadJobs(){fetch('/api/scheduler/jobs').then(function(r){return r.json()}).then(function(jobs){
   document.getElementById('cntJob').textContent=jobs.length;
-  if(!jobs.length){document.getElementById('jobList').innerHTML='<div class="es"><div class="ei">&#128338;</div><p>No scheduled jobs yet.</p><button class="btn btn-p" onclick="openModal(\'jobMod\')">+ Create first job</button></div>';return}
-  var h='';var icons={interval:'&#128257;',cron:'&#128338;',once:'&#9200;',reminder:'&#128276;'};
-  for(var i=0;i<jobs.length;i++){var j=jobs[i];
-    h+='<div class="job"><div class="job-ic">'+(icons[j.type]||'&#128338;')+'</div><div class="job-info"><div class="job-name">'+esc(j.name)+'</div><div class="job-meta"><span>'+esc(j.type)+'</span><span>&#128338; '+esc(j.schedule)+'</span><span>'+(j.enabled?'&#9989; Active':'&#9940; Paused')+'</span>'+(j.runCount?'<span>&#128260; '+j.runCount+'x</span>':'')+'</div><div class="job-cmd">'+esc(j.command)+'</div></div><div class="job-acts"><button class="btn btn-g btn-sm" onclick="togJob(\''+j.id+'\')">'+(j.enabled?'Pause':'Resume')+'</button><button class="btn btn-d btn-sm" onclick="delJob(\''+j.id+'\')">&#128465;</button></div></div>'}
+  if(!jobs.length){document.getElementById('jobList').innerHTML='<div class="es"><p>No scheduled jobs.</p><button class="btn btn-p" onclick="openModal(\'jobMod\')">+ Create job</button></div>';return}
+  var clkSvg='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>';
+  var h='';for(var i=0;i<jobs.length;i++){var j=jobs[i];
+    h+='<div class="job"><div class="job-ic">'+clkSvg+'</div><div class="job-info"><div class="job-name">'+esc(j.name)+'</div><div class="job-meta"><span>'+esc(j.type)+'</span><span>'+esc(j.schedule)+'</span><span>'+(j.enabled?'Active':'Paused')+'</span>'+(j.runCount?'<span>'+j.runCount+'x</span>':'')+'</div><div class="job-cmd">'+esc(j.command)+'</div></div><div class="job-acts"><button class="btn btn-g btn-sm" onclick="togJob(\''+j.id+'\')">'+(j.enabled?'Pause':'Resume')+'</button><button class="btn btn-d btn-sm" onclick="delJob(\''+j.id+'\')">Delete</button></div></div>'}
   document.getElementById('jobList').innerHTML=h})}
 function openAddJob(){openModal('jobMod')}
 function addJob(){var n=document.getElementById('jN').value.trim(),t=document.getElementById('jT').value,s=document.getElementById('jS').value.trim(),c=document.getElementById('jC').value.trim();
@@ -361,33 +606,33 @@ function togJob(id){fetch('/api/scheduler/jobs/'+id+'/toggle',{method:'POST'}).t
 function delJob(id){fetch('/api/scheduler/jobs/'+id,{method:'DELETE'}).then(function(){toast('Deleted','ok');loadJobs()})}
 // BROWSER
 var _browLoaded=false;
-function browLoading(msg){document.getElementById('browOut').innerHTML='<div style="color:var(--muted);padding:40px;text-align:center"><div style="font-size:24px;margin-bottom:8px;animation:spin 1s linear infinite;display:inline-block">&#9881;</div><br>'+esc(msg||'Loading...')+'</div>'}
+function browLoading(msg){document.getElementById('browOut').innerHTML='<div style="color:var(--muted);padding:40px;text-align:center"><svg style="width:20px;height:20px;animation:spin 1s linear infinite;margin-bottom:8px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg><br>'+esc(msg||'Loading...')+'</div>'}
 function browGo(ss){var u=document.getElementById('browUrl').value.trim();if(!u)return;
   browLoading(ss?'Taking screenshot...':'Loading page...');
   var ep=ss?'/api/browser/screenshot':'/api/browser/browse';
   fetch(ep,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url:u})})
   .then(function(r){return r.json()}).then(function(d){
-    if(!d.success){document.getElementById('browOut').innerHTML='<div style="color:var(--red);padding:20px">&#10060; '+esc(d.error||'Error')+'</div>';return}
+    if(!d.success){document.getElementById('browOut').innerHTML='<div style="color:var(--red);padding:20px">'+esc(d.error||'Error')+'</div>';return}
     _browLoaded=true;var h='<div class="brow-t">'+esc(d.title||'')+'</div><div class="brow-u">'+esc(d.url)+'</div>';
     if(d.screenshot)h+='<img src="data:image/png;base64,'+d.screenshot+'" style="max-width:100%;border-radius:8px;border:1px solid var(--border);margin-bottom:12px">';
     if(d.content)h+='<div class="brow-c">'+esc(d.content)+'</div>';
     if(d.links&&d.links.length){h+='<div class="brow-l"><h4>Links ('+d.links.length+')</h4>';
       for(var i=0;i<Math.min(d.links.length,30);i++)h+='<a onclick="document.getElementById(\'browUrl\').value=\''+esc(d.links[i].href).replace(/'/g,"\\'")+'\';browGo();return false">'+esc(d.links[i].text||d.links[i].href)+'</a>';h+='</div>'}
-    document.getElementById('browOut').innerHTML=h}).catch(function(e){document.getElementById('browOut').innerHTML='<div style="color:var(--red);padding:20px">&#10060; '+esc(e.message)+'</div>'})}
+    document.getElementById('browOut').innerHTML=h}).catch(function(e){document.getElementById('browOut').innerHTML='<div style="color:var(--red);padding:20px">'+esc(e.message)+'</div>'})}
 function browSS(){browGo(true)}
 function browEx(){var s=document.getElementById('browSel').value.trim();if(!s){toast('Enter a CSS selector','err');return}
   browLoading('Extracting by CSS: '+s);
   fetch('/api/browser/extract',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({selector:s})})
   .then(function(r){return r.json()}).then(function(d){
     if(!d.success){toast(d.error||'Error','err');return}
-    document.getElementById('browOut').innerHTML='<div class="brow-t">&#128269; CSS Extract: '+esc(s)+'</div><div class="brow-c">'+esc(JSON.stringify(d.data,null,2))+'</div>'})
+    document.getElementById('browOut').innerHTML='<div class="brow-t">CSS Extract: '+esc(s)+'</div><div class="brow-c">'+esc(JSON.stringify(d.data,null,2))+'</div>'})
   .catch(function(e){toast(e.message,'err')})}
 function browSumm(){if(!_browLoaded){toast('Browse a page first','err');return}
   browLoading('AI is summarizing the page...');
   fetch('/api/browser/summarize',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({})})
   .then(function(r){return r.json()}).then(function(d){
     if(d.error){document.getElementById('browOut').innerHTML='<div style="color:var(--red);padding:20px">'+esc(d.error)+'</div>';return}
-    var h='<div class="brow-t">&#129302; AI Summary</div>';
+    var h='<div class="brow-t">AI Summary</div>';
     if(d.title)h+='<div class="brow-u">'+esc(d.title)+' &mdash; <span style="color:var(--muted);font-size:10px">'+esc(d.model||'')+'</span></div>';
     h+='<div style="font-size:13px;line-height:1.7;color:var(--text);white-space:pre-wrap;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px">'+esc(d.summary)+'</div>';
     document.getElementById('browOut').innerHTML=h}).catch(function(e){toast(e.message,'err')})}
@@ -397,7 +642,7 @@ function browAskQ(){var q=document.getElementById('browAsk').value.trim();if(!q)
   fetch('/api/browser/ask',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:q})})
   .then(function(r){return r.json()}).then(function(d){
     if(d.error){document.getElementById('browOut').innerHTML='<div style="color:var(--red);padding:20px">'+esc(d.error)+'</div>';return}
-    var h='<div class="brow-t">&#128172; Q&A about '+esc(d.title||'page')+'</div>';
+    var h='<div class="brow-t">Q&A — '+esc(d.title||'page')+'</div>';
     h+='<div style="margin:10px 0;padding:10px 14px;background:rgba(37,99,235,.1);border:1px solid rgba(37,99,235,.2);border-radius:8px;font-size:13px;color:var(--accent3)"><strong>Q:</strong> '+esc(d.question)+'</div>';
     h+='<div style="font-size:13px;line-height:1.7;color:var(--text);white-space:pre-wrap;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px">'+esc(d.answer)+'</div>';
     h+='<div style="font-size:10px;color:var(--muted);margin-top:6px">'+esc(d.model||'')+'</div>';
@@ -408,7 +653,7 @@ function browSmartEx(){var q=document.getElementById('browAsk').value.trim();if(
   fetch('/api/browser/smart-extract',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:q})})
   .then(function(r){return r.json()}).then(function(d){
     if(d.error){document.getElementById('browOut').innerHTML='<div style="color:var(--red);padding:20px">'+esc(d.error)+'</div>';return}
-    var h='<div class="brow-t">&#9889; AI Extracted: '+esc(d.prompt)+'</div>';
+    var h='<div class="brow-t">Extracted: '+esc(d.prompt)+'</div>';
     if(d.title)h+='<div class="brow-u">from '+esc(d.title)+'</div>';
     h+='<div style="font-size:13px;line-height:1.7;color:var(--text);white-space:pre-wrap;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px;font-family:monospace">'+esc(d.extracted)+'</div>';
     h+='<div style="font-size:10px;color:var(--muted);margin-top:6px">'+esc(d.model||'')+'</div>';
@@ -418,7 +663,7 @@ function browSearch(){var q=document.getElementById('browUrl').value.trim();if(!
   fetch('/api/browser/search',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:q})})
   .then(function(r){return r.json()}).then(function(d){
     if(d.error){document.getElementById('browOut').innerHTML='<div style="color:var(--red);padding:20px">'+esc(d.error)+'</div>';return}
-    _browLoaded=true;var h='<div class="brow-t">&#128269; Search: '+esc(d.query)+'</div>';
+    _browLoaded=true;var h='<div class="brow-t">Search: '+esc(d.query)+'</div>';
     if(d.answer)h+='<div style="font-size:13px;line-height:1.7;color:var(--text);white-space:pre-wrap;background:var(--bg2);border:1px solid rgba(37,99,235,.2);border-radius:10px;padding:16px;margin:12px 0">'+esc(d.answer)+'</div>';
     if(d.model)h+='<div style="font-size:10px;color:var(--muted);margin-bottom:12px">'+esc(d.model)+'</div>';
     if(d.links&&d.links.length){h+='<div class="brow-l"><h4>Sources ('+d.links.length+')</h4>';
@@ -437,24 +682,80 @@ function saveSett(){var d={llm:{provider:document.getElementById('sP').value,mod
 function resetSett(){if(!confirm('Reset all settings?'))return;
   fetch('/api/settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({llm:{provider:'openrouter',model:'openai/gpt-3.5-turbo',maxTokens:1000,temperature:0.7},system:{maxSteps:15,logLevel:'info',safetyMode:'balanced'}})})
   .then(function(){loadSett();toast('Reset complete','ok')})}
+// INBOX
+function loadInbox(){
+  fetch('/api/inbox/messages?limit=50').then(function(r){return r.json()}).then(function(d){
+    var msgs=d.messages||[],unread=d.unread||0;
+    document.getElementById('cntInbox').textContent=unread;document.getElementById('cntInbox').style.display=unread?'inline':'none';
+    document.getElementById('inboxStats').textContent=unread+' unread';
+    var h='';
+    if(!msgs.length){h='<div class="es"><p>No messages yet.</p><button class="btn btn-p" onclick="checkMail()">Check Mail Now</button></div>';}
+    for(var i=0;i<msgs.length;i++){var m=msgs[i];
+      h+='<div class="mi2" style="'+(m.read?'opacity:.7':'border-left:3px solid var(--accent)')+'">';
+      h+='<div style="flex:1;min-width:0">';
+      h+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">';
+      h+='<span style="font-size:10px;padding:2px 6px;background:'+(m.platform==='email'?'var(--accent)':m.platform==='telegram'?'#0088cc':m.platform==='discord'?'#7289da':'var(--bg3)')+';color:#fff;border-radius:4px;font-weight:600">'+esc(m.platform)+'</span>';
+      h+='<span style="font-weight:600;font-size:13px">'+esc(m.from)+'</span>';
+      h+='<span style="margin-left:auto;font-size:11px;color:var(--muted)">'+esc(m.timestamp?new Date(m.timestamp).toLocaleString():'')+'</span>';
+      h+='</div>';
+      h+='<div style="font-weight:500;margin-bottom:2px">'+esc(m.subject||'(no subject)')+'</div>';
+      h+='<div style="font-size:12px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(m.body||'')+'</div>';
+      h+='</div>';
+      h+='<div style="display:flex;flex-direction:column;gap:4px;margin-left:8px">';
+      if(!m.read)h+='<button class="btn btn-g btn-sm" onclick="markRead(\''+m.id+'\')">Mark Read</button>';
+      h+='<button class="btn btn-d btn-sm" onclick="delMsg(\''+m.id+'\')">Delete</button>';
+      h+='</div>';
+      h+='</div>';
+    }
+    document.getElementById('inboxList').innerHTML=h;
+  }).catch(function(){document.getElementById('inboxList').innerHTML='<div class="es"><p>Failed to load inbox.</p></div>';});}
+function checkMail(){toast('Checking for new emails...','info');fetch('/api/inbox/check',{method:'POST'}).then(function(r){return r.json()}).then(function(d){if(d.checked){toast('Checked '+d.checked+' folders','ok');loadInbox()}else toast(d.error||'Check failed','err')}).catch(function(e){toast(e.message,'err')});}
+function markRead(id){fetch('/api/inbox/messages/'+id+'/read',{method:'POST'}).then(function(){loadInbox();});}
+function markAllRead(){fetch('/api/inbox/mark-all-read',{method:'POST'}).then(function(){toast('All messages marked read','ok');loadInbox();});}
+function delMsg(id){fetch('/api/inbox/messages/'+id,{method:'DELETE'}).then(function(){loadInbox();});}
 // WEBSOCKET
 try{var ws=new WebSocket('ws://'+location.host);
   ws.onopen=function(){document.getElementById('wsDot').className='dot on';document.getElementById('wsLabel').textContent='Connected'};
   ws.onclose=function(){document.getElementById('wsDot').className='dot off';document.getElementById('wsLabel').textContent='Disconnected'};
   ws.onerror=function(){document.getElementById('wsDot').className='dot off';document.getElementById('wsLabel').textContent='Error'};
   ws.onmessage=function(ev){var m=JSON.parse(ev.data),o=document.getElementById('taskOut');
-    if(m.type==='state_update')o.innerHTML+='<span style="color:var(--yellow)">&#9881; '+esc(m.payload.task)+'</span>\n';
+    if(m.type==='state_update')o.innerHTML+='<span style="color:var(--yellow)">'+esc(m.payload.task)+'</span>\n';
     else if(m.type==='log')o.innerHTML+='<span style="color:var(--dim)">'+esc(m.payload)+'</span>\n';
-    else if(m.type==='complete'){o.innerHTML+='\n<span style="color:var(--green)">&#9989; Complete</span>\n'+esc(m.payload.result||'')+'\n';tBusy=0;document.getElementById('taskBtn').disabled=false}
-    else if(m.type==='error'){o.innerHTML+='<span style="color:var(--red)">&#10060; '+esc(m.payload.error)+'</span>\n';tBusy=0;document.getElementById('taskBtn').disabled=false}
+    else if(m.type==='complete'){o.innerHTML+='\n<span style="color:var(--green)">Complete</span>\n'+esc(m.payload.result||'')+'\n';tBusy=0;document.getElementById('taskBtn').disabled=false}
+    else if(m.type==='error'){o.innerHTML+='<span style="color:var(--red)">Error: '+esc(m.payload.error)+'</span>\n';tBusy=0;document.getElementById('taskBtn').disabled=false}
     o.scrollTop=o.scrollHeight};
   setInterval(function(){if(ws&&ws.readyState===1)ws.send('{"type":"ping"}')},30000)}catch(e){}
 // STATUS
-function poll(){fetch('/api/system/status').then(function(r){return r.json()}).then(function(s){
-  document.getElementById('cntMem').textContent=s.memory.entries;document.getElementById('cntJob').textContent=s.scheduler.jobs;
-  document.getElementById('siProv').textContent=s.provider||'-';document.getElementById('siConn').textContent=s.connections;
-  var u=Math.floor(s.uptime),h=Math.floor(u/3600),m=Math.floor((u%3600)/60);
-  document.getElementById('siUp').textContent=h>0?h+'h '+m+'m':m+'m '+(u%60)+'s'}).catch(function(){})}
+function loadHome(){
+  fetch('/api/system/status').then(function(r){return r.json()}).then(function(s){
+    document.getElementById('hUptime').textContent=document.getElementById('siUp').textContent;
+    document.getElementById('hMem').textContent=s.memory.entries;
+    document.getElementById('hJobs').textContent=s.scheduler.jobs;
+    document.getElementById('hTasks').textContent=s.scheduler.jobs;
+    document.getElementById('hSess').textContent=s.chat.messages||'0';
+    document.getElementById('hAlerts').textContent='0';
+    document.getElementById('cntMem').textContent=s.memory.entries;
+    document.getElementById('cntJob').textContent=s.scheduler.jobs;
+    document.getElementById('siProv').textContent=s.provider||'-';
+    document.getElementById('siConn').textContent=s.connections;
+    var u=Math.floor(s.uptime),h=Math.floor(u/3600),m=Math.floor((u%3600)/60);
+    document.getElementById('siUp').textContent=h>0?h+'h '+m+'m':m+'m '+(u%60)+'s';
+  }).catch(function(){});
+  fetch('/api/settings').then(function(r){return r.json()}).then(function(s){
+    document.getElementById('hModel').textContent=s.llm.model?s.llm.model.split('/').pop():'-';
+    document.getElementById('modelBadge').textContent=s.llm.model||'?';
+  }).catch(function(){});
+  fetch('/api/skills').then(function(r){return r.json()}).then(function(sk){
+    var en=sk.filter(function(s){return s.enabled!==false});
+    var cfg=sk.filter(function(s){return s.configFields&&s.configFields.length>0});
+    document.getElementById('hSkillsStatus').textContent=en.length+'/'+sk.length;
+    var h='',svI='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">';
+    var icons={email:svI+'<path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>',telegram:svI+'<line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>',discord:svI+'<path d="M18 8a3 3 0 0 0-3-3H9a3 3 0 0 0-3 3v8a3 3 0 0 0 3 3h6a3 3 0 0 0 3-3z"/><circle cx="10" cy="12" r="1"/><circle cx="14" cy="12" r="1"/></svg>',slack:svI+'<rect x="13" y="2" width="3" height="8" rx="1.5"/><rect x="8" y="14" width="3" height="8" rx="1.5"/><rect x="2" y="8" width="8" height="3" rx="1.5"/><rect x="14" y="13" width="8" height="3" rx="1.5"/></svg>',whatsapp:svI+'<path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>'};
+    for(var i=0;i<cfg.length;i++){var skl=cfg[i];if(skl.enabled!==false)h+='<div style="display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--bg3);border-radius:6px;font-size:12px">'+(icons[skl.name]||'')+'<span>'+skl.name+'</span></div>';}
+    if(h)document.getElementById('hSkillsList').innerHTML=h;
+  }).catch(function(){});
+}
+function poll(){loadHome();}
 poll();setInterval(poll,15000);loadSett();
 </script>
 </body>

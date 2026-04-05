@@ -17,6 +17,9 @@ import { BrowserAutomation } from './browser';
 import { TaskScheduler } from './scheduler';
 import { getConfig, loadEnvConfig } from './config';
 import { getLogger } from './logger';
+import { InboxManager } from './inbox';
+import { EmailReceiver } from './email-receiver';
+import { MessagingHub, TelegramBot, DiscordBot, SlackBot, WhatsAppBot } from './messaging';
 
 const logger = getLogger();
 
@@ -43,6 +46,9 @@ export class WebUIManager {
   browser: BrowserAutomation;
   chatHistory: { role: string; content: string; timestamp: string }[];
   private providerManager: ProviderManager;
+  inbox: InboxManager;
+  emailReceiver: EmailReceiver;
+  messagingHub: MessagingHub;
 
   constructor(projectRoot: string, host: string = '0.0.0.0', port: number = 8080) {
     this.projectRoot = projectRoot;
@@ -58,6 +64,9 @@ export class WebUIManager {
     this.browser = new BrowserAutomation();
     this.chatHistory = [];
     this.providerManager = new ProviderManager();
+    this.inbox = new InboxManager(this.memory);
+    this.emailReceiver = new EmailReceiver(this.inbox);
+    this.messagingHub = new MessagingHub();
   }
 
   /**
@@ -71,6 +80,9 @@ export class WebUIManager {
     // Setup routes
     this.setupRoutes();
     this.setupWebSocket();
+
+    // Start email receivers if configured
+    this.startEmailReceivers();
 
     // Start server
     return new Promise((resolve, reject) => {
@@ -175,30 +187,145 @@ export class WebUIManager {
     });
 
     // ============ CHAT API ============
+    // Helper: execute a messaging action from parsed JSON
+    const execMessagingAction = async (action: any): Promise<{ success: boolean; message: string }> => {
+      const platform = (action.platform || '').toLowerCase();
+      try {
+        if (platform === 'email') {
+          const ints = loadIntegrations(); const cfg = ints['email'] || {};
+          const host = cfg.host || process.env.EMAIL_HOST || 'smtp.gmail.com';
+          const port = parseInt(cfg.port || process.env.EMAIL_PORT || '587', 10);
+          const username = cfg.username || process.env.EMAIL_USERNAME;
+          const password = cfg.password || process.env.EMAIL_PASSWORD;
+          if (!username || !password) return { success: false, message: 'Email not configured. Go to Skills → Email → Configure.' };
+          const nodemailer = require('nodemailer');
+          const transporter = nodemailer.createTransport({ host, port, secure: port === 465, auth: { user: username, pass: password } });
+          await transporter.sendMail({ from: `LinguClaw <${username}>`, to: action.to, subject: action.subject || 'Message from LinguClaw', text: action.body || '', html: action.body ? `<div style="font-family:sans-serif">${(action.body || '').replace(/\n/g, '<br>')}</div>` : '' });
+          return { success: true, message: `✅ Email sent to ${action.to}` };
+        } else if (platform === 'telegram') {
+          const ints = loadIntegrations(); const cfg = ints['telegram'] || {};
+          const token = cfg.botToken || process.env.TELEGRAM_BOT_TOKEN;
+          const chatId = action.chatId || cfg.chatId || process.env.TELEGRAM_CHAT_ID;
+          if (!token) return { success: false, message: 'Telegram not configured.' };
+          if (!chatId) return { success: false, message: 'Telegram Chat ID not set.' };
+          const https = require('https');
+          const pd = JSON.stringify({ chat_id: chatId, text: action.message || action.body, parse_mode: 'HTML' });
+          const result: any = await new Promise((resolve, reject) => { const r = https.request({ hostname: 'api.telegram.org', path: `/bot${token}/sendMessage`, method: 'POST', headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(pd) } }, (resp: any) => { let d = ''; resp.on('data', (c: any) => d += c); resp.on('end', () => { try { resolve(JSON.parse(d)); } catch { resolve({ ok: false }); } }); }); r.on('error', reject); r.write(pd); r.end(); });
+          return result.ok ? { success: true, message: `✅ Telegram message sent` } : { success: false, message: 'Telegram error: ' + (result.description || 'unknown') };
+        } else if (platform === 'discord') {
+          const ints = loadIntegrations(); const cfg = ints['discord'] || {};
+          const token = cfg.botToken || process.env.DISCORD_BOT_TOKEN;
+          if (!token) return { success: false, message: 'Discord not configured.' };
+          if (!action.channelId) return { success: false, message: 'Discord channelId required.' };
+          const https = require('https');
+          const pd = JSON.stringify({ content: action.message || action.body });
+          const result: any = await new Promise((resolve, reject) => { const r = https.request({ hostname: 'discord.com', path: `/api/v10/channels/${action.channelId}/messages`, method: 'POST', headers: { 'Authorization': `Bot ${token}`, 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(pd) } }, (resp: any) => { let d = ''; resp.on('data', (c: any) => d += c); resp.on('end', () => { try { resolve(JSON.parse(d)); } catch { resolve({}); } }); }); r.on('error', reject); r.write(pd); r.end(); });
+          return result.id ? { success: true, message: `✅ Discord message sent` } : { success: false, message: 'Discord error: ' + (result.message || 'unknown') };
+        } else if (platform === 'slack') {
+          const ints = loadIntegrations(); const cfg = ints['slack'] || {};
+          const token = cfg.botToken || process.env.SLACK_BOT_TOKEN;
+          const channel = action.channel || cfg.channel || '#general';
+          if (!token) return { success: false, message: 'Slack not configured.' };
+          const https = require('https');
+          const pd = JSON.stringify({ channel, text: action.message || action.body });
+          const result: any = await new Promise((resolve, reject) => { const r = https.request({ hostname: 'slack.com', path: '/api/chat.postMessage', method: 'POST', headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(pd) } }, (resp: any) => { let d = ''; resp.on('data', (c: any) => d += c); resp.on('end', () => { try { resolve(JSON.parse(d)); } catch { resolve({ ok: false }); } }); }); r.on('error', reject); r.write(pd); r.end(); });
+          return result.ok ? { success: true, message: `✅ Slack message sent to ${channel}` } : { success: false, message: 'Slack error: ' + (result.error || 'unknown') };
+        } else if (platform === 'whatsapp') {
+          const ints = loadIntegrations(); const cfg = ints['whatsapp'] || {};
+          const sid = cfg.accountSid || process.env.TWILIO_ACCOUNT_SID;
+          const authToken = cfg.authToken || process.env.TWILIO_AUTH_TOKEN;
+          const from = cfg.phoneNumber || process.env.TWILIO_PHONE_NUMBER;
+          if (!sid || !authToken || !from) return { success: false, message: 'WhatsApp not configured.' };
+          if (!action.to) return { success: false, message: 'WhatsApp "to" phone number required.' };
+          const https = require('https');
+          const pd = `To=whatsapp:${action.to}&From=whatsapp:${from}&Body=${encodeURIComponent(action.message || action.body || '')}`;
+          const auth = Buffer.from(`${sid}:${authToken}`).toString('base64');
+          const result: any = await new Promise((resolve, reject) => { const r = https.request({ hostname: 'api.twilio.com', path: `/2010-04-01/Accounts/${sid}/Messages.json`, method: 'POST', headers: { 'Authorization': `Basic ${auth}`, 'Content-Type': 'application/x-www-form-urlencoded', 'Content-Length': Buffer.byteLength(pd) } }, (resp: any) => { let d = ''; resp.on('data', (c: any) => d += c); resp.on('end', () => { try { resolve(JSON.parse(d)); } catch { resolve({}); } }); }); r.on('error', reject); r.write(pd); r.end(); });
+          return result.sid ? { success: true, message: `✅ WhatsApp message sent to ${action.to}` } : { success: false, message: 'WhatsApp error: ' + (result.message || 'unknown') };
+        }
+        return { success: false, message: 'Unknown platform: ' + platform };
+      } catch (e: any) { return { success: false, message: e.message }; }
+    };
+
     this.app.post('/api/chat', async (req: Request, res: Response) => {
       const { message } = req.body;
       if (!message) { res.status(400).json({ error: 'message required' }); return; }
       try {
         const provider = this.providerManager.createFromEnv();
-        if (!provider) { res.status(500).json({ error: 'No LLM provider' }); return; }
+        if (!provider) { res.status(500).json({ error: 'No LLM provider configured. Go to Settings to add your API key.' }); return; }
         this.chatHistory.push({ role: 'user', content: message, timestamp: new Date().toISOString() });
-        // Build context from recent chat + memory
+
+        // Build context
         const recentMemories = this.memory.search(message, undefined, 5);
         const memCtx = recentMemories.length > 0 ? '\nRelevant memories: ' + recentMemories.map((m: any) => m.value).join('; ') : '';
-        const sysPrompt = 'You are LinguClaw, a personal AI assistant. You can perform tasks, browse the web, manage files, schedule jobs, and more. Be helpful, concise, and proactive.' + memCtx;
+
+        // Inbox context - show unread messages to AI
+        const unreadMessages = this.inbox.getUnread();
+        let inboxCtx = '';
+        if (unreadMessages.length > 0) {
+          inboxCtx = `\n\n📬 INBOX: You have ${unreadMessages.length} unread message(s).\nRecent unread:\n` + 
+            unreadMessages.slice(0, 3).map((m: any, i: number) => 
+              `${i + 1}. [${m.platform}] From: ${m.from} | Subject: ${m.subject || '(no subject)'} | Body: ${(m.body || '').substring(0, 100)}...`
+            ).join('\n');
+        } else {
+          inboxCtx = '\n\n📬 INBOX: No unread messages.';
+        }
+
+        // Check which integrations are configured
+        const ints = loadIntegrations();
+        const available: string[] = [];
+        if (ints['email'] && ints['email'].username) available.push('email');
+        if (ints['telegram'] && ints['telegram'].botToken) available.push('telegram');
+        if (ints['discord'] && ints['discord'].botToken) available.push('discord');
+        if (ints['slack'] && ints['slack'].botToken) available.push('slack');
+        if (ints['whatsapp'] && ints['whatsapp'].accountSid) available.push('whatsapp');
+
+        const toolsInfo = available.length > 0 ? `\n\nYou have these messaging integrations configured: ${available.join(', ')}.\n\nMESSAGING RULES — follow these strictly:\n1. When the user asks to send a message, FIRST check what information is missing (to, subject, body for email; message for telegram, etc).\n2. If the user provides all details including body/content, use what they provided.\n3. If the user says things like "send an email to John about the meeting", generate a suitable email body content intelligently.\n4. Once you have ALL required info, show a PREVIEW of what will be sent. Format it clearly like:\n   📧 Email Preview:\n   To: user@example.com\n   Subject: Hello\n   Body: Your message text here\n\n   Then ask: "Should I send this?"\n5. When the user CONFIRMS (says yes, send it, go, gönder, tamam, etc), THEN respond with ONLY the JSON action object:\n   {"action":"send","platform":"email","to":"user@example.com","subject":"Hello","body":"Message text"}\n   {"action":"send","platform":"telegram","message":"Hello!"}\n   {"action":"send","platform":"discord","channelId":"123","message":"Hello!"}\n   {"action":"send","platform":"slack","channel":"#general","message":"Hello!"}\n   {"action":"send","platform":"whatsapp","to":"+1234567890","message":"Hello!"}\n6. The JSON must be the ONLY content in your response — no extra text.\n7. For everything else (questions, conversation), respond normally in natural language.` : '\n\nNo messaging integrations are configured yet. If the user asks to send messages, tell them to configure integrations in the Skills panel first.';
+
+        const sysPrompt = 'You are LinguClaw 🦀, a powerful personal AI assistant. You can send emails, Telegram/Discord/Slack/WhatsApp messages, browse the web, manage files, schedule jobs, and more. Be helpful and conversational. When a user wants to send a message, always ask for missing details, show a preview, and wait for confirmation before sending.' + memCtx + inboxCtx + toolsInfo;
+
         const messages: Message[] = [
           { role: 'system', content: sysPrompt },
           ...this.chatHistory.slice(-20).map(m => ({ role: m.role as 'user' | 'assistant', content: m.content })),
         ];
         const response = await provider.complete(messages, 0.7, 2048);
         if (response.error) { res.json({ reply: 'Error: ' + response.error }); return; }
-        const reply = response.content || 'No response';
+        let reply = response.content || 'No response';
+
+        // Check if the LLM returned a JSON action
+        let actionExecuted = false;
+        try {
+          const trimmed = reply.trim();
+          if (trimmed.startsWith('{') && trimmed.includes('"action"')) {
+            const action = JSON.parse(trimmed);
+            if (action.action === 'send' && action.platform) {
+              const result = await execMessagingAction(action);
+              // Build a detailed summary of what was sent
+              let details = '';
+              if (action.platform === 'email') {
+                details = `\n\n📧 Email Details:\nTo: ${action.to}\nSubject: ${action.subject || 'Message from LinguClaw'}\nBody: ${action.body || '(empty)'}`;
+              } else if (action.platform === 'telegram') {
+                details = `\n\n📨 Telegram Message:\n${action.message || action.body}`;
+              } else if (action.platform === 'discord') {
+                details = `\n\n💬 Discord Message (Channel: ${action.channelId}):\n${action.message || action.body}`;
+              } else if (action.platform === 'slack') {
+                details = `\n\n💬 Slack Message (${action.channel || '#general'}):\n${action.message || action.body}`;
+              } else if (action.platform === 'whatsapp') {
+                details = `\n\n📱 WhatsApp Message (To: ${action.to}):\n${action.message || action.body}`;
+              }
+              reply = result.message + details;
+              actionExecuted = true;
+            }
+          }
+        } catch { /* not JSON, use as normal reply */ }
+
         this.chatHistory.push({ role: 'assistant', content: reply, timestamp: new Date().toISOString() });
+
         // Auto-save important info to memory
-        if (message.toLowerCase().includes('remember') || message.toLowerCase().includes('hatirla')) {
+        if (message.toLowerCase().includes('remember') || message.toLowerCase().includes('hatırla') || message.toLowerCase().includes('hatirla')) {
           this.memory.store('chat_' + Date.now(), message, 'chat');
         }
-        res.json({ reply, model: response.model });
+        res.json({ reply, model: response.model, actionExecuted });
       } catch (error: any) {
         res.json({ reply: 'Error: ' + error.message });
       }
@@ -407,38 +534,205 @@ export class WebUIManager {
 
     this.app.get('/api/skills', (_req: Request, res: Response) => {
       res.json([
-        { name: 'shell', description: 'Execute shell commands', type: 'builtin', enabled: true },
-        { name: 'filesystem', description: 'Read/write files', type: 'builtin', enabled: true },
-        { name: 'browser', description: 'Browse websites & extract data', type: 'builtin', enabled: this.browser.isAvailable },
-        { name: 'scheduler', description: 'Schedule background tasks', type: 'builtin', enabled: true },
-        { name: 'memory', description: 'Persistent memory storage', type: 'builtin', enabled: true },
-        { name: 'email', description: 'Send emails via SMTP', type: 'integration', enabled: isIntEnabled('email', 'EMAIL_USERNAME'),
+        // Built-in skills
+        { name: 'shell', description: 'Execute shell commands', type: 'builtin', enabled: true, category: 'system' },
+        { name: 'filesystem', description: 'Read/write files', type: 'builtin', enabled: true, category: 'system' },
+        { name: 'browser', description: 'Browse websites & extract data', type: 'builtin', enabled: this.browser.isAvailable, category: 'system' },
+        { name: 'scheduler', description: 'Schedule background tasks', type: 'builtin', enabled: true, category: 'system' },
+        { name: 'memory', description: 'Persistent memory storage', type: 'builtin', enabled: true, category: 'system' },
+        { name: 'inbox', description: 'Track and reply to messages', type: 'builtin', enabled: true, category: 'system' },
+        
+        // Messaging - Mainstream
+        { name: 'email', description: 'Send/receive emails via IMAP', type: 'integration', enabled: isIntEnabled('email', 'EMAIL_USERNAME'), category: 'messaging',
           configFields: [
-            { key: 'host', label: 'SMTP Host', placeholder: 'smtp.gmail.com' },
-            { key: 'port', label: 'SMTP Port', placeholder: '587' },
+            { key: 'host', label: 'IMAP Host', placeholder: 'imap.gmail.com' },
+            { key: 'port', label: 'IMAP Port', placeholder: '993' },
             { key: 'username', label: 'Email', placeholder: 'you@gmail.com' },
             { key: 'password', label: 'App Password', placeholder: '••••••••', secret: true },
+            { key: 'folders', label: 'Folders to Monitor', placeholder: 'INBOX, Sent, Drafts, Trash' },
+            { key: 'useIdle', label: 'Real-time IDLE', placeholder: 'true' },
+            { key: 'pollInterval', label: 'Poll Interval (minutes)', placeholder: '1' },
           ]},
-        { name: 'telegram', description: 'Telegram bot integration', type: 'integration', enabled: isIntEnabled('telegram', 'TELEGRAM_BOT_TOKEN'),
+        { name: 'telegram', description: 'Telegram bot integration', type: 'integration', enabled: isIntEnabled('telegram', 'TELEGRAM_BOT_TOKEN'), category: 'messaging',
           configFields: [
             { key: 'botToken', label: 'Bot Token', placeholder: '123456:ABC-DEF...', secret: true },
             { key: 'chatId', label: 'Chat ID (optional)', placeholder: '123456789' },
           ]},
-        { name: 'discord', description: 'Discord bot integration', type: 'integration', enabled: isIntEnabled('discord', 'DISCORD_BOT_TOKEN'),
+        { name: 'discord', description: 'Discord bot integration', type: 'integration', enabled: isIntEnabled('discord', 'DISCORD_BOT_TOKEN'), category: 'messaging',
           configFields: [
             { key: 'botToken', label: 'Bot Token', placeholder: 'MTIz...', secret: true },
             { key: 'guildId', label: 'Server ID (optional)', placeholder: '123456789' },
           ]},
-        { name: 'slack', description: 'Slack bot integration', type: 'integration', enabled: isIntEnabled('slack', 'SLACK_BOT_TOKEN'),
+        { name: 'slack', description: 'Slack bot integration', type: 'integration', enabled: isIntEnabled('slack', 'SLACK_BOT_TOKEN'), category: 'messaging',
           configFields: [
             { key: 'botToken', label: 'Bot Token', placeholder: 'xoxb-...', secret: true },
             { key: 'channel', label: 'Channel', placeholder: '#general' },
           ]},
-        { name: 'whatsapp', description: 'WhatsApp via Twilio', type: 'integration', enabled: isIntEnabled('whatsapp', 'TWILIO_ACCOUNT_SID'),
+        { name: 'whatsapp', description: 'WhatsApp via Twilio', type: 'integration', enabled: isIntEnabled('whatsapp', 'TWILIO_ACCOUNT_SID'), category: 'messaging',
           configFields: [
             { key: 'accountSid', label: 'Account SID', placeholder: 'AC...', secret: true },
             { key: 'authToken', label: 'Auth Token', placeholder: '••••••••', secret: true },
             { key: 'phoneNumber', label: 'Twilio Phone', placeholder: '+1234567890' },
+          ]},
+        
+        // Messaging - Privacy & Enterprise
+        { name: 'signal', description: 'Signal via signal-cli', type: 'integration', enabled: isIntEnabled('signal', 'SIGNAL_CLI_PATH'), category: 'messaging',
+          configFields: [
+            { key: 'cliPath', label: 'signal-cli Path', placeholder: '/usr/bin/signal-cli' },
+            { key: 'phoneNumber', label: 'Your Phone Number', placeholder: '+1234567890' },
+          ]},
+        { name: 'imessage', description: 'iMessage via BlueBubbles', type: 'integration', enabled: isIntEnabled('imessage', 'BLUEBUBBLES_URL'), category: 'messaging',
+          configFields: [
+            { key: 'url', label: 'BlueBubbles URL', placeholder: 'http://localhost:1234' },
+            { key: 'password', label: 'Password', placeholder: '••••••••', secret: true },
+          ]},
+        { name: 'teams', description: 'Microsoft Teams integration', type: 'integration', enabled: isIntEnabled('teams', 'MS_TEAMS_WEBHOOK'), category: 'messaging',
+          configFields: [
+            { key: 'webhookUrl', label: 'Webhook URL', placeholder: 'https://outlook.office.com/webhook/...', secret: true },
+            { key: 'tenantId', label: 'Tenant ID (optional)', placeholder: '...' },
+          ]},
+        { name: 'matrix', description: 'Matrix protocol integration', type: 'integration', enabled: isIntEnabled('matrix', 'MATRIX_HOMESERVER'), category: 'messaging',
+          configFields: [
+            { key: 'homeserver', label: 'Homeserver URL', placeholder: 'https://matrix.org' },
+            { key: 'userId', label: 'User ID', placeholder: '@user:matrix.org' },
+            { key: 'accessToken', label: 'Access Token', placeholder: '••••••••', secret: true },
+          ]},
+        { name: 'nostr', description: 'Nostr NIP-04 messages', type: 'integration', enabled: isIntEnabled('nostr', 'NOSTR_PRIVATE_KEY'), category: 'messaging',
+          configFields: [
+            { key: 'privateKey', label: 'Private Key (nsec)', placeholder: 'nsec1...', secret: true },
+            { key: 'relay', label: 'Relay URL', placeholder: 'wss://relay.damus.io' },
+          ]},
+        { name: 'zalo', description: 'Zalo bot integration', type: 'integration', enabled: isIntEnabled('zalo', 'ZALO_APP_ID'), category: 'messaging',
+          configFields: [
+            { key: 'appId', label: 'App ID', placeholder: '123456' },
+            { key: 'appSecret', label: 'App Secret', placeholder: '••••••••', secret: true },
+            { key: 'accessToken', label: 'Access Token', placeholder: '••••••••', secret: true },
+          ]},
+        
+        // AI Models - Cloud
+        { name: 'openai', description: 'OpenAI GPT-4, o1, GPT-5', type: 'integration', enabled: isIntEnabled('openai', 'OPENAI_API_KEY'), category: 'ai',
+          configFields: [
+            { key: 'apiKey', label: 'API Key', placeholder: 'sk-...', secret: true },
+            { key: 'model', label: 'Model', placeholder: 'gpt-4o' },
+          ]},
+        { name: 'anthropic', description: 'Anthropic Claude 3.5/4', type: 'integration', enabled: isIntEnabled('anthropic', 'ANTHROPIC_API_KEY'), category: 'ai',
+          configFields: [
+            { key: 'apiKey', label: 'API Key', placeholder: 'sk-ant-...', secret: true },
+            { key: 'model', label: 'Model', placeholder: 'claude-3-5-sonnet' },
+          ]},
+        { name: 'google', description: 'Google Gemini 1.5/2.5', type: 'integration', enabled: isIntEnabled('google', 'GOOGLE_API_KEY'), category: 'ai',
+          configFields: [
+            { key: 'apiKey', label: 'API Key', placeholder: 'AIza...', secret: true },
+            { key: 'model', label: 'Model', placeholder: 'gemini-1.5-pro' },
+          ]},
+        { name: 'xai', description: 'xAI Grok', type: 'integration', enabled: isIntEnabled('xai', 'XAI_API_KEY'), category: 'ai',
+          configFields: [
+            { key: 'apiKey', label: 'API Key', placeholder: 'xai-...', secret: true },
+            { key: 'model', label: 'Model', placeholder: 'grok-2' },
+          ]},
+        { name: 'mistral', description: 'Mistral AI models', type: 'integration', enabled: isIntEnabled('mistral', 'MISTRAL_API_KEY'), category: 'ai',
+          configFields: [
+            { key: 'apiKey', label: 'API Key', placeholder: '••••••••', secret: true },
+            { key: 'model', label: 'Model', placeholder: 'mistral-large' },
+          ]},
+        { name: 'deepseek', description: 'DeepSeek V3 & R1', type: 'integration', enabled: isIntEnabled('deepseek', 'DEEPSEEK_API_KEY'), category: 'ai',
+          configFields: [
+            { key: 'apiKey', label: 'API Key', placeholder: 'sk-...', secret: true },
+            { key: 'model', label: 'Model', placeholder: 'deepseek-chat' },
+          ]},
+        { name: 'perplexity', description: 'Perplexity Search-augmented', type: 'integration', enabled: isIntEnabled('perplexity', 'PERPLEXITY_API_KEY'), category: 'ai',
+          configFields: [
+            { key: 'apiKey', label: 'API Key', placeholder: 'pplx-...', secret: true },
+            { key: 'model', label: 'Model', placeholder: 'sonar' },
+          ]},
+        
+        // AI Local
+        { name: 'ollama', description: 'Ollama local models', type: 'integration', enabled: isIntEnabled('ollama', 'OLLAMA_URL'), category: 'ai',
+          configFields: [
+            { key: 'url', label: 'Ollama URL', placeholder: 'http://localhost:11434' },
+            { key: 'model', label: 'Model', placeholder: 'llama3.1' },
+          ]},
+        { name: 'lmstudio', description: 'LM Studio local models', type: 'integration', enabled: isIntEnabled('lmstudio', 'LMSTUDIO_URL'), category: 'ai',
+          configFields: [
+            { key: 'url', label: 'LM Studio URL', placeholder: 'http://localhost:1234' },
+            { key: 'model', label: 'Model', placeholder: 'local-model' },
+          ]},
+        
+        // Productivity & Workspace
+        { name: 'notion', description: 'Notion pages & databases', type: 'integration', enabled: isIntEnabled('notion', 'NOTION_TOKEN'), category: 'productivity',
+          configFields: [
+            { key: 'token', label: 'Integration Token', placeholder: 'secret_...', secret: true },
+            { key: 'databaseId', label: 'Database ID (optional)', placeholder: '...' },
+          ]},
+        { name: 'trello', description: 'Trello boards & cards', type: 'integration', enabled: isIntEnabled('trello', 'TRELLO_API_KEY'), category: 'productivity',
+          configFields: [
+            { key: 'apiKey', label: 'API Key', placeholder: '••••••••', secret: true },
+            { key: 'token', label: 'Token', placeholder: '••••••••', secret: true },
+            { key: 'boardId', label: 'Board ID', placeholder: '...' },
+          ]},
+        { name: 'github', description: 'GitHub repos, issues, PRs', type: 'integration', enabled: isIntEnabled('github', 'GITHUB_TOKEN'), category: 'productivity',
+          configFields: [
+            { key: 'token', label: 'Personal Access Token', placeholder: 'ghp_...', secret: true },
+            { key: 'owner', label: 'Default Owner', placeholder: 'username' },
+            { key: 'repo', label: 'Default Repo', placeholder: 'repo-name' },
+          ]},
+        { name: 'obsidian', description: 'Obsidian vault access', type: 'integration', enabled: isIntEnabled('obsidian', 'OBSIDIAN_VAULT_PATH'), category: 'productivity',
+          configFields: [
+            { key: 'vaultPath', label: 'Vault Path', placeholder: '/home/user/Obsidian' },
+          ]},
+        { name: 'apple-notes', description: 'Apple Notes (macOS)', type: 'integration', enabled: isIntEnabled('apple-notes', 'APPLE_NOTES_ENABLED'), category: 'productivity',
+          configFields: [
+            { key: 'enabled', label: 'Enabled', placeholder: 'true' },
+          ]},
+        
+        // Smart Home & Media
+        { name: 'home-assistant', description: 'Home Assistant hub', type: 'integration', enabled: isIntEnabled('home-assistant', 'HASS_URL'), category: 'smart-home',
+          configFields: [
+            { key: 'url', label: 'Home Assistant URL', placeholder: 'http://homeassistant:8123' },
+            { key: 'token', label: 'Long-Lived Access Token', placeholder: '••••••••', secret: true },
+          ]},
+        { name: 'hue', description: 'Philips Hue lighting', type: 'integration', enabled: isIntEnabled('hue', 'HUE_BRIDGE_IP'), category: 'smart-home',
+          configFields: [
+            { key: 'bridgeIp', label: 'Bridge IP', placeholder: '192.168.1.100' },
+            { key: 'username', label: 'API Key', placeholder: '••••••••', secret: true },
+          ]},
+        { name: 'spotify', description: 'Spotify control', type: 'integration', enabled: isIntEnabled('spotify', 'SPOTIFY_CLIENT_ID'), category: 'smart-home',
+          configFields: [
+            { key: 'clientId', label: 'Client ID', placeholder: '...' },
+            { key: 'clientSecret', label: 'Client Secret', placeholder: '••••••••', secret: true },
+            { key: 'refreshToken', label: 'Refresh Token', placeholder: '••••••••', secret: true },
+          ]},
+        { name: 'sonos', description: 'Sonos multi-room audio', type: 'integration', enabled: isIntEnabled('sonos', 'SONOS_IP'), category: 'smart-home',
+          configFields: [
+            { key: 'ip', label: 'Speaker IP', placeholder: '192.168.1.101' },
+          ]},
+        
+        // Utilities
+        { name: 'weather', description: 'Weather forecasts', type: 'integration', enabled: isIntEnabled('weather', 'OPENWEATHER_API_KEY'), category: 'utility',
+          configFields: [
+            { key: 'apiKey', label: 'OpenWeather API Key', placeholder: '••••••••', secret: true },
+            { key: 'city', label: 'Default City', placeholder: 'London' },
+          ]},
+        { name: 'webhooks', description: 'HTTP webhook triggers', type: 'integration', enabled: isIntEnabled('webhooks', 'WEBHOOK_SECRET'), category: 'utility',
+          configFields: [
+            { key: 'secret', label: 'Webhook Secret', placeholder: '••••••••', secret: true },
+            { key: 'port', label: 'Port', placeholder: '8081' },
+          ]},
+        { name: 'image-gen', description: 'AI Image Generation', type: 'integration', enabled: isIntEnabled('image-gen', 'IMAGE_API_KEY'), category: 'utility',
+          configFields: [
+            { key: 'provider', label: 'Provider', placeholder: 'openai, stability, replicate' },
+            { key: 'apiKey', label: 'API Key', placeholder: '••••••••', secret: true },
+          ]},
+        { name: '1password', description: '1Password secrets', type: 'integration', enabled: isIntEnabled('1password', 'OP_SERVICE_ACCOUNT_TOKEN'), category: 'utility',
+          configFields: [
+            { key: 'serviceAccountToken', label: 'Service Account Token', placeholder: 'ops_...', secret: true },
+            { key: 'vault', label: 'Vault Name', placeholder: 'Private' },
+          ]},
+        { name: 'gmail', description: 'Gmail Pub/Sub triggers', type: 'integration', enabled: isIntEnabled('gmail', 'GMAIL_REFRESH_TOKEN'), category: 'utility',
+          configFields: [
+            { key: 'clientId', label: 'Client ID', placeholder: '...' },
+            { key: 'clientSecret', label: 'Client Secret', placeholder: '••••••••', secret: true },
+            { key: 'refreshToken', label: 'Refresh Token', placeholder: '••••••••', secret: true },
           ]},
       ]);
     });
@@ -476,6 +770,349 @@ export class WebUIManager {
         saveIntegrations(ints);
         res.json({ success: true });
       } catch (e: any) { res.status(500).json({ error: e.message }); }
+    });
+
+    // ============ DIRECT EMAIL API ============
+    this.app.post('/api/email/send', async (req: Request, res: Response) => {
+      try {
+        const { to, subject, body } = req.body;
+        if (!to || !subject) { res.status(400).json({ error: 'to and subject are required' }); return; }
+        const ints = loadIntegrations();
+        const cfg = ints['email'] || {};
+        const host = cfg.host || process.env.EMAIL_HOST || 'smtp.gmail.com';
+        const port = parseInt(cfg.port || process.env.EMAIL_PORT || '587', 10);
+        const username = cfg.username || process.env.EMAIL_USERNAME;
+        const password = cfg.password || process.env.EMAIL_PASSWORD;
+        if (!username || !password) { res.status(400).json({ error: 'Email not configured. Go to Skills → Email → Configure first.' }); return; }
+        const nodemailer = require('nodemailer');
+        const transporter = nodemailer.createTransport({ host, port, secure: port === 465, auth: { user: username, pass: password } });
+        await transporter.sendMail({
+          from: `LinguClaw <${username}>`,
+          to,
+          subject,
+          text: body || '',
+          html: body ? `<div style="font-family:sans-serif;line-height:1.6">${body.replace(/\n/g, '<br>')}</div>` : ''
+        });
+        res.json({ success: true, message: `Email sent to ${to}` });
+      } catch (e: any) {
+        const msg = e.message || '';
+        let hint = '';
+        if (msg.includes('EAUTH') || msg.includes('Invalid login')) hint = ' — Check credentials. For Gmail use App Password.';
+        else if (msg.includes('ECONNREFUSED')) hint = ' — Cannot connect to SMTP server.';
+        res.status(500).json({ error: 'Send failed: ' + msg + hint });
+      }
+    });
+
+    // ============ TELEGRAM API ============
+    this.app.post('/api/telegram/send', async (req: Request, res: Response) => {
+      try {
+        const { chatId, message } = req.body;
+        if (!message) { res.status(400).json({ error: 'message required' }); return; }
+        const ints = loadIntegrations();
+        const cfg = ints['telegram'] || {};
+        const token = cfg.botToken || process.env.TELEGRAM_BOT_TOKEN;
+        const target = chatId || cfg.chatId || process.env.TELEGRAM_CHAT_ID;
+        if (!token) { res.status(400).json({ error: 'Telegram not configured. Go to Skills → Telegram → Configure.' }); return; }
+        if (!target) { res.status(400).json({ error: 'Chat ID required. Set it in Skills → Telegram → Configure or provide chatId.' }); return; }
+        const https = require('https');
+        const postData = JSON.stringify({ chat_id: target, text: message, parse_mode: 'HTML' });
+        const result: any = await new Promise((resolve, reject) => {
+          const r = https.request({ hostname: 'api.telegram.org', path: `/bot${token}/sendMessage`, method: 'POST', headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(postData) } }, (resp: any) => {
+            let d = ''; resp.on('data', (c: any) => d += c); resp.on('end', () => { try { resolve(JSON.parse(d)); } catch { resolve({ ok: false, description: d }); } });
+          }); r.on('error', reject); r.write(postData); r.end();
+        });
+        if (result.ok) res.json({ success: true, message: `Telegram message sent to ${target}` });
+        else res.status(500).json({ error: 'Telegram error: ' + (result.description || JSON.stringify(result)) });
+      } catch (e: any) { res.status(500).json({ error: e.message }); }
+    });
+
+    // ============ DISCORD API ============
+    this.app.post('/api/discord/send', async (req: Request, res: Response) => {
+      try {
+        const { channelId, message } = req.body;
+        if (!message) { res.status(400).json({ error: 'message required' }); return; }
+        const ints = loadIntegrations();
+        const cfg = ints['discord'] || {};
+        const token = cfg.botToken || process.env.DISCORD_BOT_TOKEN;
+        if (!token) { res.status(400).json({ error: 'Discord not configured. Go to Skills → Discord → Configure.' }); return; }
+        if (!channelId) { res.status(400).json({ error: 'channelId required.' }); return; }
+        const https = require('https');
+        const postData = JSON.stringify({ content: message });
+        const result: any = await new Promise((resolve, reject) => {
+          const r = https.request({ hostname: 'discord.com', path: `/api/v10/channels/${channelId}/messages`, method: 'POST', headers: { 'Authorization': `Bot ${token}`, 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(postData) } }, (resp: any) => {
+            let d = ''; resp.on('data', (c: any) => d += c); resp.on('end', () => { try { resolve(JSON.parse(d)); } catch { resolve({ error: d }); } });
+          }); r.on('error', reject); r.write(postData); r.end();
+        });
+        if (result.id) res.json({ success: true, message: `Discord message sent to channel ${channelId}` });
+        else res.status(500).json({ error: 'Discord error: ' + (result.message || JSON.stringify(result)) });
+      } catch (e: any) { res.status(500).json({ error: e.message }); }
+    });
+
+    // ============ SLACK API ============
+    this.app.post('/api/slack/send', async (req: Request, res: Response) => {
+      try {
+        const { channel, message } = req.body;
+        if (!message) { res.status(400).json({ error: 'message required' }); return; }
+        const ints = loadIntegrations();
+        const cfg = ints['slack'] || {};
+        const token = cfg.botToken || process.env.SLACK_BOT_TOKEN;
+        const target = channel || cfg.channel || '#general';
+        if (!token) { res.status(400).json({ error: 'Slack not configured. Go to Skills → Slack → Configure.' }); return; }
+        const https = require('https');
+        const postData = JSON.stringify({ channel: target, text: message });
+        const result: any = await new Promise((resolve, reject) => {
+          const r = https.request({ hostname: 'slack.com', path: '/api/chat.postMessage', method: 'POST', headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(postData) } }, (resp: any) => {
+            let d = ''; resp.on('data', (c: any) => d += c); resp.on('end', () => { try { resolve(JSON.parse(d)); } catch { resolve({ ok: false, error: d }); } });
+          }); r.on('error', reject); r.write(postData); r.end();
+        });
+        if (result.ok) res.json({ success: true, message: `Slack message sent to ${target}` });
+        else res.status(500).json({ error: 'Slack error: ' + (result.error || JSON.stringify(result)) });
+      } catch (e: any) { res.status(500).json({ error: e.message }); }
+    });
+
+    // ============ WHATSAPP API (Twilio) ============
+    this.app.post('/api/whatsapp/send', async (req: Request, res: Response) => {
+      try {
+        const { to, message } = req.body;
+        if (!to || !message) { res.status(400).json({ error: 'to and message required' }); return; }
+        const ints = loadIntegrations();
+        const cfg = ints['whatsapp'] || {};
+        const sid = cfg.accountSid || process.env.TWILIO_ACCOUNT_SID;
+        const authToken = cfg.authToken || process.env.TWILIO_AUTH_TOKEN;
+        const from = cfg.phoneNumber || process.env.TWILIO_PHONE_NUMBER;
+        if (!sid || !authToken || !from) { res.status(400).json({ error: 'WhatsApp not configured. Go to Skills → WhatsApp → Configure.' }); return; }
+        const https = require('https');
+        const postData = `To=whatsapp:${to}&From=whatsapp:${from}&Body=${encodeURIComponent(message)}`;
+        const auth = Buffer.from(`${sid}:${authToken}`).toString('base64');
+        const result: any = await new Promise((resolve, reject) => {
+          const r = https.request({ hostname: 'api.twilio.com', path: `/2010-04-01/Accounts/${sid}/Messages.json`, method: 'POST', headers: { 'Authorization': `Basic ${auth}`, 'Content-Type': 'application/x-www-form-urlencoded', 'Content-Length': Buffer.byteLength(postData) } }, (resp: any) => {
+            let d = ''; resp.on('data', (c: any) => d += c); resp.on('end', () => { try { resolve(JSON.parse(d)); } catch { resolve({ error: d }); } });
+          }); r.on('error', reject); r.write(postData); r.end();
+        });
+        if (result.sid) res.json({ success: true, message: `WhatsApp message sent to ${to}` });
+        else res.status(500).json({ error: 'WhatsApp error: ' + (result.message || JSON.stringify(result)) });
+      } catch (e: any) { res.status(500).json({ error: e.message }); }
+    });
+
+    // ============ INBOX API ============
+    // Use the class inbox instance (this.inbox) that was created in constructor
+
+    // Get unread messages
+    this.app.get('/api/inbox/unread', (_req: Request, res: Response) => {
+      res.json(this.inbox.getUnread());
+    });
+
+    // Get all messages (paginated)
+    this.app.get('/api/inbox/messages', (req: Request, res: Response) => {
+      const limit = parseInt(req.query.limit as string) || 50;
+      const offset = parseInt(req.query.offset as string) || 0;
+      res.json({
+        messages: this.inbox.getMessages(limit, offset),
+        unread: this.inbox.getUnreadCount()
+      });
+    });
+
+    // Get message threads
+    this.app.get('/api/inbox/threads', (_req: Request, res: Response) => {
+      res.json(this.inbox.getThreads());
+    });
+
+    // Get single thread
+    this.app.get('/api/inbox/threads/:id', (req: Request, res: Response) => {
+      const thread = this.inbox.getThread(req.params.id);
+      if (!thread) { res.status(404).json({ error: 'Thread not found' }); return; }
+      res.json(thread);
+    });
+
+    // Mark message as read
+    this.app.post('/api/inbox/messages/:id/read', (req: Request, res: Response) => {
+      this.inbox.markAsRead(req.params.id);
+      res.json({ success: true });
+    });
+
+    // Mark thread as read
+    this.app.post('/api/inbox/threads/:id/read', (req: Request, res: Response) => {
+      this.inbox.markThreadAsRead(req.params.id);
+      res.json({ success: true });
+    });
+
+    // Get unread counts
+    this.app.get('/api/inbox/counts', (_req: Request, res: Response) => {
+      res.json({
+        total: this.inbox.getUnreadCount(),
+        byPlatform: this.inbox.getUnreadByPlatform()
+      });
+    });
+
+    // Receive incoming message (webhook endpoint)
+    this.app.post('/api/inbox/receive', async (req: Request, res: Response) => {
+      try {
+        const { platform, from, to, subject, body, threadId, inReplyTo } = req.body;
+        if (!platform || !from || !to || !body) {
+          res.status(400).json({ error: 'platform, from, to, body required' });
+          return;
+        }
+
+        // Store message
+        const msg = this.inbox.addMessage({
+          platform,
+          from,
+          to,
+          subject,
+          body,
+          threadId,
+          inReplyTo
+        });
+
+        if (!msg) {
+          res.status(409).json({ error: 'Duplicate message' });
+          return;
+        }
+
+        // AI Analysis of incoming message
+        try {
+          const provider = this.providerManager.createFromEnv();
+          if (provider) {
+            const analysisMessages: Message[] = [
+              { role: 'system', content: 'You are an assistant that analyzes incoming messages and provides a brief summary and suggested reply. Respond in JSON format: { "summary": "...", "suggestedReply": "..." }' },
+              { role: 'user', content: `Analyze this ${platform} message from ${from}${subject ? ` about "${subject}"` : ''}:
+
+${body}
+
+Provide a brief summary and suggested reply.` }
+            ];
+            const response = await provider.complete(analysisMessages, 0.3, 500);
+            if (response.content) {
+              try {
+                const analysis = JSON.parse(response.content);
+                this.inbox.setAnalysis(msg.id, analysis.summary, analysis.suggestedReply);
+              } catch {
+                // If not valid JSON, store raw response as analysis
+                this.inbox.setAnalysis(msg.id, response.content.substring(0, 200), undefined);
+              }
+            }
+          }
+        } catch (e) {
+          // AI analysis failed, but message is still stored
+          logger.warn('AI analysis failed for incoming message:', e);
+        }
+
+        // Broadcast to WebSocket clients
+        this.broadcast({
+          type: 'inbox_new',
+          payload: { message: msg, unreadCount: this.inbox.getUnreadCount() }
+        });
+
+        res.json({ success: true, id: msg.id });
+      } catch (e: any) { res.status(500).json({ error: e.message }); }
+    });
+
+    // Poll for new messages (for platforms that support polling)
+    this.app.post('/api/inbox/poll/:platform', async (req: Request, res: Response) => {
+      const platform = req.params.platform;
+      try {
+        // This would integrate with platform-specific APIs to poll for new messages
+        // For now, return success - actual implementation would vary by platform
+        res.json({ success: true, polled: platform, newMessages: 0 });
+      } catch (e: any) { res.status(500).json({ error: e.message }); }
+    });
+
+    // Reply to a message (chat command integration)
+    this.app.post('/api/inbox/reply', async (req: Request, res: Response) => {
+      try {
+        const { threadId, message, platform, to } = req.body;
+        if (!threadId || !message) {
+          res.status(400).json({ error: 'threadId and message required' });
+          return;
+        }
+
+        // Get thread to find recipient
+        const thread = this.inbox.getThread(threadId);
+        if (!thread) { res.status(404).json({ error: 'Thread not found' }); return; }
+
+        // Send reply via appropriate platform
+        const targetPlatform = platform || thread.platform;
+        const targetTo = to || thread.participants.find((p: string) => p !== 'me') || thread.participants[0];
+
+        // Execute messaging action
+        const action = {
+          action: 'send',
+          platform: targetPlatform,
+          to: targetTo,
+          message,
+          channelId: req.body.channelId,
+          channel: req.body.channel
+        };
+        const result = await execMessagingAction(action);
+
+        // Add sent message to thread
+        this.inbox.addMessage({
+          platform: targetPlatform,
+          from: 'me',
+          to: targetTo,
+          body: message,
+          threadId
+        });
+
+        res.json(result);
+      } catch (e: any) { res.status(500).json({ error: e.message }); }
+    });
+
+    // Mark all messages as read
+    this.app.post('/api/inbox/mark-all-read', (_req: Request, res: Response) => {
+      const messages = this.inbox.getMessages(1000);
+      messages.forEach(m => {
+        if (!m.read) this.inbox.markAsRead(m.id);
+      });
+      res.json({ success: true, marked: messages.filter(m => !m.read).length });
+    });
+
+    // Delete message
+    this.app.delete('/api/inbox/messages/:id', (req: Request, res: Response) => {
+      // Note: InboxManager doesn't have delete method, we'll add a simple version
+      this.inbox['messages'] = this.inbox['messages'].filter((m: any) => m.id !== req.params.id);
+      this.inbox['saveToMemory']();
+      res.json({ success: true });
+    });
+
+    // Manual check for new emails
+    this.app.post('/api/inbox/check', async (_req: Request, res: Response) => {
+      try {
+        // Trigger IMAP poll if configured
+        const integrationsPath = path.join(require('os').homedir(), '.linguclaw', 'integrations.json');
+        let ints: Record<string, any> = {};
+        try {
+          ints = JSON.parse(require('fs').readFileSync(integrationsPath, 'utf8'));
+        } catch { /* no integrations */ }
+        
+        const emailCfg = ints['email'];
+        if (!emailCfg || !emailCfg.host) {
+          res.status(400).json({ error: 'Email not configured' });
+          return;
+        }
+        
+        // Trigger manual poll via email receiver
+        const folders = emailCfg.folders ? emailCfg.folders.split(',').map((f: string) => f.trim()) : ['INBOX'];
+        
+        // Force a poll by stopping and restarting
+        this.emailReceiver.stop();
+        setTimeout(() => {
+          this.emailReceiver.startIMAP({
+            host: emailCfg.host,
+            port: parseInt(emailCfg.port || '993', 10),
+            username: emailCfg.username,
+            password: emailCfg.password,
+            tls: true,
+            pollInterval: 1,
+            folders: folders,
+            useIdle: false // Use polling for manual check
+          });
+        }, 100);
+        
+        res.json({ success: true, checked: folders.length, folders });
+      } catch (e: any) {
+        res.status(500).json({ error: e.message });
+      }
     });
 
     // Serve main HTML - use static dashboard or fallback to inline
@@ -558,6 +1195,151 @@ export class WebUIManager {
         ws.send(data);
       }
     }
+  }
+
+  /**
+   * Start email and messaging receivers - all messages go to inbox
+   */
+  private startEmailReceivers(): void {
+    const integrationsPath = path.join(require('os').homedir(), '.linguclaw', 'integrations.json');
+    let ints: Record<string, any> = {};
+    try {
+      ints = JSON.parse(require('fs').readFileSync(integrationsPath, 'utf8'));
+    } catch { /* no integrations yet */ }
+
+    // Check for IMAP email configuration
+    const emailCfg = ints['email'];
+    if (emailCfg && emailCfg.host && emailCfg.username && emailCfg.password) {
+      logger.info('Starting IMAP email receiver for ' + emailCfg.username);
+      
+      // Parse folders (comma-separated list)
+      const folders = emailCfg.folders ? emailCfg.folders.split(',').map((f: string) => f.trim()) : ['INBOX'];
+      
+      this.emailReceiver.startIMAP({
+        host: emailCfg.host,
+        port: parseInt(emailCfg.port || '993', 10),
+        username: emailCfg.username,
+        password: emailCfg.password,
+        tls: true,
+        pollInterval: parseFloat(emailCfg.pollInterval || '1'),
+        folders: folders,
+        useIdle: emailCfg.useIdle !== 'false' // Default true for real-time
+      });
+    }
+
+    // Check for Gmail API configuration
+    const gmailCfg = ints['gmail'];
+    if (gmailCfg && gmailCfg.clientId && gmailCfg.clientSecret && gmailCfg.refreshToken) {
+      logger.info('Starting Gmail API receiver');
+      this.emailReceiver.startGmail({
+        clientId: gmailCfg.clientId,
+        clientSecret: gmailCfg.clientSecret,
+        refreshToken: gmailCfg.refreshToken
+      });
+    }
+
+    // ========== TELEGRAM ==========
+    const telegramCfg = ints['telegram'];
+    if (telegramCfg && telegramCfg.botToken) {
+      logger.info('Starting Telegram bot');
+      const telegramBot = new TelegramBot(telegramCfg.botToken);
+      if (telegramCfg.chatId) {
+        telegramBot.allowChats([parseInt(telegramCfg.chatId)]);
+      }
+      // Route incoming messages to inbox
+      telegramBot.onMessage((msg: any) => {
+        const inboxMsg = this.inbox.addMessage({
+          platform: 'telegram',
+          from: msg.from || 'unknown',
+          to: 'me',
+          subject: msg.subject || `Telegram from ${msg.from}`,
+          body: msg.body || msg.message || '',
+          threadId: msg.chatId || msg.from
+        });
+        // Broadcast to WebSocket clients
+        this.broadcast({
+          type: 'inbox_new',
+          payload: { message: inboxMsg, unreadCount: this.inbox.getUnreadCount() }
+        });
+        return null;
+      });
+      this.messagingHub.addPlatform(telegramBot);
+      telegramBot.start();
+    }
+
+    // ========== DISCORD ==========
+    const discordCfg = ints['discord'];
+    if (discordCfg && discordCfg.botToken) {
+      logger.info('Starting Discord bot');
+      const discordBot = new DiscordBot(discordCfg.botToken);
+      discordBot.onMessage((msg: any) => {
+        const inboxMsg = this.inbox.addMessage({
+          platform: 'discord',
+          from: msg.from || 'unknown',
+          to: 'me',
+          subject: msg.subject || `Discord from ${msg.from}`,
+          body: msg.body || msg.message || '',
+          threadId: msg.channelId || msg.from
+        });
+        this.broadcast({
+          type: 'inbox_new',
+          payload: { message: inboxMsg, unreadCount: this.inbox.getUnreadCount() }
+        });
+        return null;
+      });
+      this.messagingHub.addPlatform(discordBot);
+      discordBot.start();
+    }
+
+    // ========== SLACK ==========
+    const slackCfg = ints['slack'];
+    if (slackCfg && slackCfg.botToken) {
+      logger.info('Starting Slack bot');
+      const slackBot = new SlackBot(slackCfg.botToken);
+      slackBot.onMessage((msg: any) => {
+        const inboxMsg = this.inbox.addMessage({
+          platform: 'slack',
+          from: msg.from || 'unknown',
+          to: 'me',
+          subject: msg.subject || `Slack from ${msg.from}`,
+          body: msg.body || msg.message || '',
+          threadId: msg.channel || msg.from
+        });
+        this.broadcast({
+          type: 'inbox_new',
+          payload: { message: inboxMsg, unreadCount: this.inbox.getUnreadCount() }
+        });
+        return null;
+      });
+      this.messagingHub.addPlatform(slackBot);
+      slackBot.start();
+    }
+
+    // ========== WHATSAPP ==========
+    const whatsappCfg = ints['whatsapp'];
+    if (whatsappCfg && whatsappCfg.accountSid && whatsappCfg.authToken) {
+      logger.info('Starting WhatsApp (Twilio)');
+      const whatsappBot = new WhatsAppBot('twilio');
+      whatsappBot.onMessage((msg: any) => {
+        const inboxMsg = this.inbox.addMessage({
+          platform: 'whatsapp',
+          from: msg.from || 'unknown',
+          to: 'me',
+          subject: msg.subject || `WhatsApp from ${msg.from}`,
+          body: msg.body || msg.message || '',
+          threadId: msg.from
+        });
+        this.broadcast({
+          type: 'inbox_new',
+          payload: { message: inboxMsg, unreadCount: this.inbox.getUnreadCount() }
+        });
+        return null;
+      });
+      this.messagingHub.addPlatform(whatsappBot);
+      whatsappBot.start();
+    }
+
+    logger.info('All messaging receivers started - messages will appear in inbox');
   }
 
   /**
@@ -934,7 +1716,7 @@ function saveSettings() {
     },
     system: {
       maxSteps: parseInt(document.getElementById('settingMaxSteps').value),
-      logLevel: document.getElementById('settingLogLevel').value,
+      logLevel: document.getElementById('settingLogLevel').value,f
       safetyMode: document.getElementById('settingSafetyMode').value
     }
   };

@@ -51,7 +51,7 @@ export function setupLogger(
 
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
   
-  // File handler
+  // Session log file in logs/ directory
   logger.add(new winston.transports.File({
     filename: path.join(logDir, `session_${timestamp}.log`),
     level: 'debug',
@@ -59,7 +59,24 @@ export function setupLogger(
       winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
       winston.format.printf(({ level, message, timestamp, ...meta }) => {
         return `${timestamp} | ${level.padEnd(8)} | ${name} | ${message}`;
-      })
+      }),
+    ),
+  }));
+
+  // Persistent log file in ~/.linguclaw/linguclaw.log
+  const homeDir = require('os').homedir();
+  const linguclawDir = path.join(homeDir, '.linguclaw');
+  if (!fs.existsSync(linguclawDir)) {
+    fs.mkdirSync(linguclawDir, { recursive: true });
+  }
+  logger.add(new winston.transports.File({
+    filename: path.join(linguclawDir, 'linguclaw.log'),
+    level: 'debug',
+    format: winston.format.combine(
+      winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+      winston.format.printf(({ level, message, timestamp, ...meta }) => {
+        return `${timestamp} | ${level.padEnd(8)} | ${message}`;
+      }),
     ),
   }));
 
@@ -68,7 +85,7 @@ export function setupLogger(
     level: 'warning',
     format: winston.format.combine(
       winston.format.colorize(),
-      winston.format.simple()
+      winston.format.simple(),
     ),
   }));
 
