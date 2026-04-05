@@ -1,4 +1,4 @@
-# 🦀 LinguClaw
+#  LinguClaw
 
 <div align="center">
 
