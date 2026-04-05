@@ -1,6 +1,5 @@
+# Lingu Claw Your Virtual Robot 🤖
 <img width="2038" height="512" alt="Gemini_Generated_Image_h22oa1h22oa1h22o" src="https://github.com/user-attachments/assets/2bc220de-41f0-49da-920c-3c9707a58734" />
-# LinguClaw — Codebase-Aware
- Multi-Agent System
 
 <p align="center">
   <img src="https://img.shields.io/badge/TypeScript-5.0+-blue.svg" alt="TypeScript 5.0+">
