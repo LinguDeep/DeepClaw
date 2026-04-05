@@ -1,4 +1,5 @@
-#  LinguClaw
+#  🦾 LinguClaw
+<img width="2038" height="512" alt="Gemini_Generated_Image_h22oa1h22oa1h22o" src="https://github.com/user-attachments/assets/3c78f3ce-50ee-49e8-879c-b0f0563ec044" />
 
 <div align="center">
 
