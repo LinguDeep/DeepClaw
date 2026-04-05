@@ -1,4 +1,6 @@
-# LinguClaw — Codebase-Aware Multi-Agent System
+<img width="2038" height="512" alt="Gemini_Generated_Image_h22oa1h22oa1h22o" src="https://github.com/user-attachments/assets/2bc220de-41f0-49da-920c-3c9707a58734" />
+# LinguClaw — Codebase-Aware
+ Multi-Agent System
 
 <p align="center">
   <img src="https://img.shields.io/badge/TypeScript-5.0+-blue.svg" alt="TypeScript 5.0+">
@@ -8,7 +10,6 @@
 </p>
 
 **LinguClaw** is a professional, production-ready AI agent system that combines:
-<img width="2038" height="512" alt="Gemini_Generated_Image_h22oa1h22oa1h22o" src="https://github.com/user-attachments/assets/08e5b12f-73af-4526-bcb4-da2b5fbbb59f" />
 
 - 🦀 **Multi-Agent Orchestration** — Planner, Executor, and Reviewer agents collaborating on tasks
 - � **Prism Architecture** — Multi-faceted agent system with reflection and dispatch
