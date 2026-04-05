@@ -8,7 +8,6 @@
 </p>
 
 **LinguClaw** is a professional, production-ready AI agent system that combines:
-![Uploading Gemini_Generated_Image_h22oa1h22oa1h22o.png…]()
 
 - 🦀 **Multi-Agent Orchestration** — Planner, Executor, and Reviewer agents collaborating on tasks
 - � **Prism Architecture** — Multi-faceted agent system with reflection and dispatch
