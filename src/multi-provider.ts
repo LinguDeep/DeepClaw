@@ -6,6 +6,7 @@
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import { Message, LLMResponse, ProviderType } from './types';
 import { getLogger } from './logger';
+import { getConfig } from './config';
 
 export { ProviderType } from './types';
 
@@ -77,6 +78,12 @@ export class OpenRouterProvider extends BaseProvider {
         finish_reason: data.choices[0].finish_reason,
       };
     } catch (error: any) {
+      // Log full error details for debugging
+      console.error('=== OpenRouter API Error ===');
+      console.error('Error message:', error.message);
+      console.error('Error code:', error.code);
+      console.error('Error response:', error.response?.data);
+      console.error('Status:', error.response?.status);
       logger.error(`OpenRouter error: ${error.message}`);
       return { content: '', error: error.message, model: '' };
     }
@@ -315,39 +322,57 @@ export class ProviderManager {
   }
 
   createFromEnv(): BaseProvider | null {
-    // Priority: Ollama (local) > OpenRouter > OpenAI > Anthropic
+    // Read from config system (includes env var overrides from loadEnvConfig)
+    const config = getConfig();
+    const llmConfig = config.getLLM();
 
-    // Check Ollama (self-hosted, no API key needed)
+    // If config has a specific provider + apiKey, use that directly
+    if (llmConfig.apiKey && llmConfig.apiKey.length > 0) {
+      const provider = llmConfig.provider;
+      const model = llmConfig.model;
+      const apiKey = llmConfig.apiKey;
+
+      logger.info(`Using configured provider: ${provider}, model: ${model}`);
+
+      switch (provider) {
+        case 'openrouter':
+          return new OpenRouterProvider(apiKey, model);
+        case 'openai':
+          return new OpenAIProvider(apiKey, model);
+        case 'anthropic':
+          return new AnthropicProvider(apiKey, model);
+        case 'ollama':
+          return new OllamaProvider(model, llmConfig.baseUrl || 'http://localhost:11434');
+        case 'lmstudio':
+          return new LMStudioProvider(llmConfig.baseUrl || 'http://localhost:1234');
+      }
+    }
+
+    // Fallback: Check local providers
     const ollama = new OllamaProvider();
     if (ollama.available) {
       logger.info('Using local Ollama provider');
       return ollama;
     }
 
-    // Check LM Studio
     const lmstudio = new LMStudioProvider();
     if (lmstudio.available) {
       logger.info('Using local LM Studio provider');
       return lmstudio;
     }
 
-    // Check cloud providers
+    // Fallback: Check environment variables directly
     if (process.env.OPENROUTER_API_KEY) {
-      const model = process.env.LINGUCLAW_MODEL || 'anthropic/claude-3.5-sonnet';
-      return new OpenRouterProvider(process.env.OPENROUTER_API_KEY, model);
+      return new OpenRouterProvider(process.env.OPENROUTER_API_KEY, process.env.LINGUCLAW_MODEL || 'anthropic/claude-3.5-sonnet');
     }
-
     if (process.env.OPENAI_API_KEY) {
-      const model = process.env.OPENAI_MODEL || 'gpt-4o';
-      return new OpenAIProvider(process.env.OPENAI_API_KEY, model);
+      return new OpenAIProvider(process.env.OPENAI_API_KEY, process.env.OPENAI_MODEL || 'gpt-4o');
     }
-
     if (process.env.ANTHROPIC_API_KEY) {
-      const model = process.env.ANTHROPIC_MODEL || 'claude-3-5-sonnet-20241022';
-      return new AnthropicProvider(process.env.ANTHROPIC_API_KEY, model);
+      return new AnthropicProvider(process.env.ANTHROPIC_API_KEY, process.env.ANTHROPIC_MODEL || 'claude-3-5-sonnet-20241022');
     }
 
-    logger.error('No LLM provider available. Set OPENROUTER_API_KEY, OPENAI_API_KEY, ANTHROPIC_API_KEY, or run Ollama/LM Studio.');
+    logger.error('No LLM provider available. Set API key in Settings or env vars (OPENROUTER_API_KEY, OPENAI_API_KEY, ANTHROPIC_API_KEY), or run Ollama/LM Studio.');
     return null;
   }
 
@@ -372,7 +397,7 @@ export class ProviderManager {
 export function createProvider(providerType: ProviderType, kwargs: Record<string, any> = {}): BaseProvider {
   switch (providerType) {
     case ProviderType.OPENROUTER:
-      return new OpenRouterProvider(kwargs.api_key, kwargs.model || 'anthropic/claude-3.5-sonnet');
+      return new OpenRouterProvider(kwargs.api_key, kwargs.model || 'openai/gpt-3.5-turbo');
     case ProviderType.OPENAI:
       return new OpenAIProvider(kwargs.api_key, kwargs.model || 'gpt-4o');
     case ProviderType.ANTHROPIC:

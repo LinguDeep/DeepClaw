@@ -13,6 +13,7 @@ import { SafetyMiddleware } from './safety';
 import { RAGMemory } from './memory';
 import { Orchestrator } from './orchestrator';
 import { getLogger } from './logger';
+import { getConfig, loadEnvConfig } from './config';
 import { SkillManager } from './skills';
 import { getPrivacyManager } from './privacy';
 import { startDaemon, stopDaemon, daemonStatus, restartDaemon } from './daemon';
@@ -260,6 +261,98 @@ program
       } else {
         console.log(chalk.red('✗ Error:') + ' ' + result.error);
       }
+    }
+  });
+
+// Settings command
+program
+  .command('settings <action>')
+  .description('Manage application settings')
+  .argument('[key]', 'Setting key (e.g., llm.provider)')
+  .argument('[value]', 'Setting value')
+  .action(async (action, key, value) => {
+    const config = getConfig();
+
+    switch (action) {
+      case 'list':
+        const cfg = config.get();
+        console.log(chalk.bold.cyan('📋 Application Settings\n'));
+        
+        console.log(chalk.bold.yellow('LLM Settings:'));
+        console.log(`  Provider: ${chalk.green(cfg.llm.provider)}`);
+        console.log(`  Model: ${chalk.green(cfg.llm.model)}`);
+        console.log(`  API Key: ${cfg.llm.apiKey ? chalk.green('✓ Set') : chalk.red('✗ Not set')}`);
+        console.log(`  Max Tokens: ${chalk.green(cfg.llm.maxTokens)}`);
+        console.log(`  Temperature: ${chalk.green(cfg.llm.temperature)}`);
+        if (cfg.llm.baseUrl) {
+          console.log(`  Base URL: ${chalk.green(cfg.llm.baseUrl)}`);
+        }
+        
+        console.log(chalk.bold.yellow('\nSystem Settings:'));
+        console.log(`  Max Steps: ${chalk.green(cfg.system.maxSteps)}`);
+        console.log(`  Use Docker: ${chalk.green(cfg.system.useDocker)}`);
+        console.log(`  Log Level: ${chalk.green(cfg.system.logLevel)}`);
+        console.log(`  Auto Index: ${chalk.green(cfg.system.autoIndex)}`);
+        console.log(`  Safety Mode: ${chalk.green(cfg.system.safetyMode)}`);
+        
+        console.log(chalk.bold.yellow('\nWeb UI Settings:'));
+        console.log(`  Port: ${chalk.green(cfg.webui.port)}`);
+        console.log(`  Host: ${chalk.green(cfg.webui.host)}`);
+        console.log(`  Auth Enabled: ${chalk.green(cfg.webui.authEnabled)}`);
+        
+        console.log(chalk.dim(`\nConfig file: ${config.getConfigPath()}`));
+        break;
+        
+      case 'get':
+        if (!key) {
+          console.log(chalk.red('Key required'));
+          process.exit(1);
+        }
+        const val = config.getValue(key);
+        if (val !== undefined) {
+          console.log(chalk.bold(`${key}:`) + ' ' + chalk.green(val));
+        } else {
+          console.log(chalk.red(`Unknown setting: ${key}`));
+        }
+        break;
+        
+      case 'set':
+        if (!key || !value) {
+          console.log(chalk.red('Key and value required'));
+          process.exit(1);
+        }
+        try {
+          // Try to parse as number or boolean
+          let parsedValue: any = value;
+          if (value === 'true') parsedValue = true;
+          else if (value === 'false') parsedValue = false;
+          else if (!isNaN(Number(value))) parsedValue = Number(value);
+          
+          config.update(key, parsedValue);
+          console.log(chalk.green(`✓ Set ${key} = ${parsedValue}`));
+        } catch (error: any) {
+          console.log(chalk.red(`Error: ${error.message}`));
+          process.exit(1);
+        }
+        break;
+        
+      case 'reset':
+        console.log(chalk.yellow('Resetting to defaults...'));
+        config.reset();
+        console.log(chalk.green('✓ Settings reset'));
+        break;
+        
+      case 'export':
+        console.log(config.export());
+        break;
+        
+      case 'path':
+        console.log(chalk.green(config.getConfigPath()));
+        break;
+        
+      default:
+        console.log(chalk.red(`Unknown action: ${action}`));
+        console.log('Available: list, get, set, reset, export, path');
     }
   });
 

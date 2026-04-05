@@ -2,7 +2,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/TypeScript-5.0+-blue.svg" alt="TypeScript 5.0+">
-  <img src="https://img.shields.io/badge/Docker-Required-green.svg" alt="Docker">
+  <img src="https://img.shields.io/badge/Node.js-18+-green.svg" alt="Node.js 18+">
   <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="MIT License">
   <img src="https://img.shields.io/badge/OpenClaw-Plugins-orange.svg" alt="OpenClaw Plugins">
 </p>
@@ -15,8 +15,8 @@
 - 🔌 **OpenClaw Plugin System** — Production-ready extensible plugin architecture
 - � **Docker Sandboxing** — All commands run in isolated containers (512MB RAM, 0.5 CPU limit)
 - 🧠 **RAG Memory** — Semantic code search with LanceDB and sentence-transformers
-- 🌐 **Web UI** — FastAPI-based dashboard with WebSocket real-time updates
-- 🖥️ **Professional TUI** — Rich.Live dashboard with real-time agent thoughts and execution logs
+- 🌐 **Web UI** — Express.js dashboard with AI-powered browser, scheduler, skills management
+- � **Chat Interface** — Conversational AI assistant with real-time WebSocket updates
 - 🔐 **Safety-First Design** — Dynamic risk scoring with mandatory confirmation for destructive actions
 <img width="1408" height="768" alt="images" src="https://github.com/user-attachments/assets/cc16af89-163f-4cd1-8838-78aa92b6e142" />
 
@@ -254,13 +254,16 @@ Production-ready extensible plugin architecture:
 
 ### 🌐 Web UI
 
-Express.js-based web interface with Prism workflow visualization:
+Modern Express.js dashboard with blue theme and full-featured panels:
 
-- **Dashboard** — Real-time task execution, thoughts, logs
-- **🔮 Prism Tab** — Workflow visualization, branch metrics, reflections
-- **Plugins Tab** — Plugin management and configuration
-- **Settings Tab** — Model selection, max steps, Docker toggle
-- **WebSocket** — Live updates without page refresh
+- **💬 Chat** — Conversational AI assistant
+- **⚡ Task Runner** — Multi-agent pipeline (Planner → Executor → Reviewer)
+- **🧠 Memory** — Persistent key-value store with categories
+- **� Skills** — Built-in tools + configurable integrations (Email, Telegram, Discord, Slack, WhatsApp)
+- **🕐 Scheduler** — Cron, interval, one-time, and reminder jobs
+- **🌐 AI Browser** — Browse pages, AI summarize, ask questions, smart data extraction, AI-powered search
+- **⚙️ Settings** — LLM provider/model, API keys, system config
+- **WebSocket** — Real-time task updates without page refresh
 
 Access at `http://localhost:8080` after running `npm start -- web`.
 
@@ -283,12 +286,14 @@ Automatic codebase indexing with semantic search:
 - Persists in `.linguclaw/memory/` (project-local)
 - Auto-injects relevant code into agent context
 
-### 🖥️ Professional TUI
+### � Messaging Integrations
 
-Real-time dashboard showing:
-- **Sidebar**: File tree, plan checklist with status icons
-- **Main Pane**: Agent thoughts (color-coded by role), action log table
-- **Footer**: Docker status, token usage bar, risk score, step progress
+Connect to messaging platforms (configurable via Web UI Skills panel or `.env`):
+- **Telegram** — Bot token integration
+- **Discord** — Bot with server support
+- **Slack** — Bot with channel targeting
+- **WhatsApp** — Via Twilio API
+- **Email** — SMTP with app password support
 
 ### 🔐 Safety Middleware
 
@@ -369,31 +374,45 @@ Options:
 
 ```
 linguclaw/
-├── package.json        # Dependencies and scripts
-├── package-lock.json   # Lock file
-├── tsconfig.json       # TypeScript configuration
-├── .gitignore          # Git exclusions
-├── README.md           # This file
-├── LICENSE             # MIT License
+├── package.json          # Dependencies and scripts
+├── package-lock.json     # Lock file
+├── tsconfig.json         # TypeScript configuration
+├── .gitignore            # Git exclusions
+├── .env.example          # Environment variable template
+├── README.md             # This file
+├── LICENSE               # MIT License
+├── .github/
+│   └── workflows/ci.yml  # GitHub Actions CI pipeline
+├── plugins/
+│   └── README.md         # Plugin development guide
 ├── src/
-│   ├── index.ts        # Entry point
-│   ├── cli.ts          # Commander.js CLI
-│   ├── orchestrator.ts # Multi-agent coordinator
-│   ├── types.ts        # TypeScript types and interfaces
+│   ├── index.ts          # Entry point
+│   ├── cli.ts            # Commander.js CLI
+│   ├── orchestrator.ts   # Multi-agent coordinator
+│   ├── types.ts          # TypeScript types and interfaces
 │   ├── multi-provider.ts # Multi-provider LLM support
-│   ├── safety.ts       # Risk scoring
-│   ├── sandbox.ts      # Docker management
-│   ├── tools.ts        # Shell/file tools
-│   ├── memory.ts       # RAG memory system
-│   ├── longterm-memory.ts # SQLite-based persistent storage
-│   ├── skills.ts       # Modular skill system
-│   ├── messaging.ts    # Messaging platform integrations
-│   ├── proactive.ts    # Proactive behavior system
-│   ├── privacy.ts      # Privacy and data control
-│   ├── daemon.ts       # 24/7 daemon mode
-│   └── web.ts          # Express.js Web UI with WebSockets
-├── dist/               # Compiled JavaScript (gitignored)
-└── logs/               # Session logs (gitignored)
+│   ├── config.ts         # Configuration management
+│   ├── logger.ts         # Winston-based logging
+│   ├── safety.ts         # Risk scoring engine
+│   ├── sandbox.ts        # Docker container management
+│   ├── tools.ts          # Shell/file tools
+│   ├── memory.ts         # RAG memory (LanceDB)
+│   ├── longterm-memory.ts # SQLite persistent key-value store
+│   ├── browser.ts        # Puppeteer browser automation
+│   ├── scheduler.ts      # Task scheduling (cron/interval/once)
+│   ├── skills.ts         # Modular skill system
+│   ├── messaging.ts      # Telegram, Discord, Slack, WhatsApp
+│   ├── proactive.ts      # Proactive behavior engine
+│   ├── privacy.ts        # Privacy and data control
+│   ├── prism.ts          # Multi-faceted architecture
+│   ├── prism-orchestrator.ts # Prism integration layer
+│   ├── alphabeta.ts      # Alpha/Beta branching workflow
+│   ├── daemon.ts         # 24/7 daemon mode
+│   ├── web.ts            # Express.js Web UI + API
+│   └── static/
+│       └── dashboard.html # Web UI dashboard
+├── dist/                 # Compiled JavaScript (gitignored)
+└── logs/                 # Session logs (gitignored)
 ```
 
 ---

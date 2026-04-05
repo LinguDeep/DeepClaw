@@ -23,34 +23,28 @@ const logger = getLogger();
 
 // System prompts for each agent role
 const SYSTEM_PROMPTS: Record<AgentRole, string> = {
-  [AgentRole.PLANNER]: `You are a Planner agent. Your job is to create structured, actionable plans.
-Break down complex tasks into clear steps. Each step should be assignable to either:
-- PLANNER (strategy/decision making)
-- EXECUTOR (tool usage, file operations, shell commands)
-- REVIEWER (validation, error checking, final approval)
+  [AgentRole.PLANNER]: `You are a Planner agent. Create structured plans as a JSON array.
+Break down tasks into clear steps. Each step uses one of: executor, planner, reviewer.
+IMPORTANT: Return ONLY a valid JSON array. No extra text before or after.
+Commands run in the project root directory already - never use "cd" commands.
 
-Output format: Return a JSON array of steps with fields:
-{
-  "id": "step-1",
-  "description": "Clear instruction",
-  "agent": "executor",
-  "dependencies": []
-}`,
+Example response:
+[
+  {"id": "step-1", "description": "Run: find . -name '*.ts'", "agent": "executor", "dependencies": []},
+  {"id": "step-2", "description": "Review the output", "agent": "reviewer", "dependencies": ["step-1"]}
+]`,
 
-  [AgentRole.EXECUTOR]: `You are an Executor agent. Your job is to execute the current step using available tools.
-Available tools:
-- shell: Execute commands (Docker sandboxed)
-- filesystem: Read/write files (sandboxed to project root)
-- search: Search codebase memory
+  [AgentRole.EXECUTOR]: `You are an Executor agent. Execute the given step using ONE action.
+Available actions:
+- shell: Execute a shell command (already runs in project root, do NOT use cd)
+- filesystem: Read/write files (use relative paths from project root)
 
-Think step by step, then take ONE action. After each action, wait for the result.
+IMPORTANT: Return ONLY valid JSON. No extra text.
+IMPORTANT: Never use "cd" in commands. Commands already run in the project directory.
 
-Output format: Return JSON with:
-{
-  "thought": "Your reasoning",
-  "action": "tool_name",
-  "input": "command or params"
-}`,
+Example:
+{"thought": "List TypeScript files", "action": "shell", "input": "find . -name '*.ts'"}
+{"thought": "Read a file", "action": "filesystem", "input": "read src/index.ts"}`,
 
   [AgentRole.REVIEWER]: `You are a Reviewer agent. Your job is to validate the execution result.
 Check for:
@@ -106,6 +100,11 @@ export class Orchestrator {
     this.state.task = task;
     
     logger.info(`Starting orchestration for: ${task}`);
+
+    // For simple/conversational tasks, respond directly
+    if (this.isSimpleTask(task)) {
+      return this.handleSimpleTask(task);
+    }
 
     // Phase 1: Planning
     const planResult = await this.planPhase(task);
@@ -170,11 +169,17 @@ export class Orchestrator {
         { role: 'user', content: `Create a plan for: ${task}` },
       ];
 
-      const response = await this.provider.complete(messages, 0.3, 2048);
+      const response = await this.provider.complete(messages, 0.3, 1000);
       
       if (response.error) {
         return { success: false, error: response.error };
       }
+
+      if (!response.content || response.content.trim().length === 0) {
+        return { success: false, error: 'LLM returned empty response. Check your API key and credits.' };
+      }
+
+      logger.info(`Plan response: ${response.content.substring(0, 200)}`);
 
       // Parse plan from response
       const plan = this.parsePlan(response.content);
@@ -191,29 +196,55 @@ export class Orchestrator {
    * Parse plan from LLM response
    */
   private parsePlan(content: string): PlanStep[] {
+    const mapStep = (step: any, idx: number): PlanStep => ({
+      id: step.id || `step-${idx + 1}`,
+      description: step.description || '',
+      agent: (step.agent as AgentRole) || AgentRole.EXECUTOR,
+      status: StepStatus.PENDING,
+      dependencies: step.dependencies || [],
+      retry_count: 0,
+      max_retries: 3,
+    });
+
+    // Try 1: Extract JSON array
     try {
-      // Try to extract JSON
-      const jsonMatch = content.match(/\[[\s\S]*\]/);
-      if (jsonMatch) {
-        const parsed = JSON.parse(jsonMatch[0]);
-        return parsed.map((step: any, idx: number) => ({
-          id: step.id || `step-${idx + 1}`,
-          description: step.description,
-          agent: step.agent as AgentRole,
-          status: StepStatus.PENDING,
-          dependencies: step.dependencies || [],
-          retry_count: 0,
-          max_retries: 3,
-        }));
+      const arrayMatch = content.match(/\[[\s\S]*\]/);
+      if (arrayMatch) {
+        const parsed = JSON.parse(arrayMatch[0]);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          logger.info(`Parsed ${parsed.length} steps from JSON array`);
+          return parsed.map(mapStep);
+        }
       }
-    } catch (error) {
-      logger.warn('Failed to parse structured plan, using fallback');
+    } catch (e) {
+      logger.warn('JSON array parse failed, trying individual objects');
     }
 
-    // Fallback: Create single executor step
+    // Try 2: Extract individual JSON objects
+    try {
+      const objMatches = content.match(/\{[^{}]*"id"[^{}]*"description"[^{}]*\}/g);
+      if (objMatches && objMatches.length > 0) {
+        const steps: PlanStep[] = [];
+        for (let i = 0; i < objMatches.length; i++) {
+          try {
+            const parsed = JSON.parse(objMatches[i]);
+            steps.push(mapStep(parsed, i));
+          } catch (e) { /* skip malformed */ }
+        }
+        if (steps.length > 0) {
+          logger.info(`Parsed ${steps.length} steps from individual objects`);
+          return steps;
+        }
+      }
+    } catch (e) {
+      logger.warn('Individual object parse failed');
+    }
+
+    // Fallback: Create single executor step from content
+    logger.warn('Using fallback single step plan');
     return [{
       id: 'step-1',
-      description: content,
+      description: content.trim(),
       agent: AgentRole.EXECUTOR,
       status: StepStatus.PENDING,
       dependencies: [],
@@ -248,17 +279,25 @@ export class Orchestrator {
         { role: 'user', content: step.description },
       ];
 
+      console.log('DEBUG: Calling provider.complete with messages:', JSON.stringify(messages, null, 2));
       const response = await this.provider.complete(messages, 0.7, 1024);
+      console.log('DEBUG: Provider response:', JSON.stringify(response, null, 2));
       
       if (response.error) {
+        console.log('DEBUG: Provider returned error:', response.error);
         return { success: false, error: response.error };
       }
 
       // Parse action from response
       const action = this.parseAction(response.content);
+      console.log('DEBUG: Parsed action:', JSON.stringify(action));
       
       if (action.action === 'shell') {
-        const result = await this.shell.run(action.input);
+        // Strip cd commands - shell tool already runs in project root
+        let cmd = action.input.replace(/^\s*cd\s+[^\s;&&|]+\s*[;&|]*\s*/g, '').trim();
+        if (!cmd) cmd = 'echo "No command to run"';
+        logger.info(`Shell exec: ${cmd}`);
+        const result = await this.shell.run(cmd);
         return {
           success: result.returncode === 0,
           output: result.stdout,
@@ -338,6 +377,33 @@ export class Orchestrator {
   /**
    * Generate final summary
    */
+  private isSimpleTask(task: string): boolean {
+    const simple = task.trim().toLowerCase();
+    const simplePatterns = ['hello', 'hi', 'hey', 'merhaba', 'selam', 'test', 'ping', 'help', 'yardım'];
+    return simple.split(/\s+/).length <= 3 && simplePatterns.some(p => simple.includes(p));
+  }
+
+  private async handleSimpleTask(task: string): Promise<string> {
+    try {
+      const messages: Message[] = [
+        { role: 'system', content: 'You are LinguClaw, a helpful AI coding assistant. Respond concisely and helpfully.' },
+        { role: 'user', content: task },
+      ];
+
+      const response = await this.provider.complete(messages, 0.7, 500);
+      
+      if (response.error) {
+        return 'Error: ' + response.error;
+      }
+      if (!response.content || response.content.trim().length === 0) {
+        return 'Error: LLM returned empty response. Check your API key and credits.';
+      }
+      return response.content;
+    } catch (error: any) {
+      return 'Error: ' + error.message;
+    }
+  }
+
   private generateSummary(): string {
     const completed = this.state.plan.filter(s => s.status === StepStatus.COMPLETED).length;
     const failed = this.state.plan.filter(s => s.status === StepStatus.FAILED).length;
