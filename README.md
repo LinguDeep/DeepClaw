@@ -18,7 +18,7 @@
 - 🌐 **Web UI** — Express.js dashboard with AI-powered browser, scheduler, skills management
 - � **Chat Interface** — Conversational AI assistant with real-time WebSocket updates
 - 🔐 **Safety-First Design** — Dynamic risk scoring with mandatory confirmation for destructive actions
-<img width="1408" height="768" alt="images" src="https://github.com/user-attachments/assets/cc16af89-163f-4cd1-8838-78aa92b6e142" />
+<img width="1076" height="976" alt="image" src="https://github.com/user-attachments/assets/a5a71c9a-a01a-40f0-bb4a-f9191bab757b" />
 
 ---
 
