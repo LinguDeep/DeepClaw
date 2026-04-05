@@ -8,6 +8,7 @@
 </p>
 
 **LinguClaw** is a professional, production-ready AI agent system that combines:
+<img width="2038" height="512" alt="Gemini_Generated_Image_h22oa1h22oa1h22o" src="https://github.com/user-attachments/assets/08e5b12f-73af-4526-bcb4-da2b5fbbb59f" />
 
 - 🦀 **Multi-Agent Orchestration** — Planner, Executor, and Reviewer agents collaborating on tasks
 - � **Prism Architecture** — Multi-faceted agent system with reflection and dispatch
@@ -20,7 +21,6 @@
 - 🔐 **Safety-First Design** — Dynamic risk scoring with mandatory confirmation for destructive actions
 
 ---
-<img width="2038" height="512" alt="Gemini_Generated_Image_h22oa1h22oa1h22o" src="https://github.com/user-attachments/assets/9826e4f3-a61b-4c8f-86da-a5f2a8025905" />
 
 
 
