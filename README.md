@@ -512,13 +512,6 @@ npm run debug
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-### 🤝 Contributors
-
-Thanks to all the amazing people who contribute to LinguClaw!
-
-<a href="https://github.com/yourusername/linguclaw/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=yourusername/linguclaw" />
-</a>
 
 ---
 
@@ -532,6 +525,6 @@ Thanks to all the amazing people who contribute to LinguClaw!
 
 **Built with ❤️ by the LinguClaw Team**
 
-[🏠 Back to Top](#-linguclaw) • [📖 Documentation](https://github.com/yourusername/linguclaw/wiki) • [🚀 Getting Started](#-quick-start)
+[🏠 Back to Top](#-linguclaw) • [🚀 Getting Started](#-quick-start)
 
 </div>
