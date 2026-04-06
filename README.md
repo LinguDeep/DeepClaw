@@ -10,6 +10,9 @@
 
 **Production-ready multi-agent AI system with email integration, web dashboard, and sandboxed execution**
 
+## 🌟 Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=yourusername/linguclaw&type=Date)](https://star-history.com/#LinguDeep/linguclaw&Date)
 
 </div>
 
@@ -459,12 +462,6 @@ npm run debug
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-
----
-
-## 🌟 Star History
-
-[![Star History Chart](https://api.star-history.com/svg?repos=yourusername/linguclaw&type=Date)](https://star-history.com/#LinguDeep/linguclaw&Date)
 
 ---
 
