@@ -83,31 +83,6 @@ npm run dev
 
 ---
 
-## 📧 Email Integration That Actually Works
-
-Tired of garbled email subjects and duplicate messages? We fixed it:
-
-### ✅ What We Solved
-
-- **MIME Decoding** - Perfect UTF-8 character support (no more "=?UTF-8?Q?")
-- **Duplicate Prevention** - Smart detection eliminates duplicate emails
-- **Real-time Updates** - WebSocket notifications for new messages
-- **Security First** - TLS/SSL with certificate handling
-- **Multiple Folders** - Monitor INBOX, Sent, Drafts, etc.
-
-### 🎯 Email Features
-
-```typescript
-// Automatically handles:
-- Turkish characters: "Toprak, yeni Google Hesabınızın kurulumunu tamamlayın"
-- Russian characters: "ЯГМУР‎ gelmiş, şerefler getirmiş"
-- Emoji support: "Mutlu mekanınıza geri dönün ✨"
-- HTML emails: Clean text extraction
-- Attachments: Safe handling
-```
-
----
-
 ## 🤖 Multi-Agent Architecture
 
 LinguClaw uses a sophisticated multi-agent system:
@@ -478,34 +453,6 @@ npm run logs
 # Debug mode
 npm run debug
 ```
-
-### 💬 Get Help
-
-- **GitHub Issues** - Report bugs and request features
-- **Discussions** - Ask questions and share ideas
-- **Discord Community** - Chat with other users (coming soon)
-- **Email Support** - support@linguclaw.ai
-
----
-
-## 🗺️ Roadmap
-
-### 🚀 Coming Soon
-
-- [ ] **🎤 Voice Interface** - Speech-to-text and text-to-speech
-- [ ] **📱 Mobile App** - React Native application
-- [ ] **🏢 Enterprise Features** - Multi-tenant support
-- [ ] **🔗 Integrations** - Slack, Teams, Discord
-- [ ] **🤖 Advanced AI** - GPT-4, Claude, Gemini integration
-- [ ] **📊 Analytics** - Advanced usage analytics
-- [ ] **🌍 Multi-language** - Internationalization support
-
-### 🎯 Long-term Vision
-
-- **Autonomous Agents** - Self-improving AI agents
-- **Distributed Computing** - Cloud-based agent networks
-- **Marketplace** - Plugin and agent marketplace
-- **Enterprise Suite** - Full business solution
 
 ---
 
