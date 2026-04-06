@@ -464,7 +464,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🌟 Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=yourusername/linguclaw&type=Date)](https://star-history.com/#yourusername/linguclaw&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=yourusername/linguclaw&type=Date)](https://star-history.com/#LinguDeep/linguclaw&Date)
 
 ---
 
