@@ -12,8 +12,6 @@
 
 ## 🌟 Star History
 
-## Star History
-
 <a href="https://www.star-history.com/?repos=LinguDeep%2Flinguclaw&type=date&legend=top-left">
  <picture>
    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=LinguDeep/linguclaw&type=date&theme=dark&legend=top-left" />
