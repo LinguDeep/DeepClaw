@@ -10,7 +10,6 @@
 
 **Production-ready multi-agent AI system with email integration, web dashboard, and sandboxed execution**
 
-[⭐ Star](https://github.com/yourusername/linguclaw) · [🐛 Issues](https://github.com/yourusername/linguclaw/issues) · [📖 Docs](https://github.com/yourusername/linguclaw/wiki)
 
 </div>
 
