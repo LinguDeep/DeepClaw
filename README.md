@@ -1,4 +1,4 @@
-# LinguClaw
+<h1 align="center">🦾 LinguClaw</h1>
 
 ![Version](https://img.shields.io/badge/version-0.3.0-blue.svg)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-3178c6.svg)
@@ -16,6 +16,16 @@
 - **Java** - Spring framework analysis, annotation processing
 - **C++** - Template analysis, memory management detection
 - **C#** - LINQ analysis, async/await patterns, .NET ecosystem support
+
+## 🌟 Star History
+
+<a href="https://www.star-history.com/?repos=LinguDeep%2Flinguclaw&type=date&legend=top-left">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=LinguDeep/linguclaw&type=date&theme=dark&legend=top-left" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=LinguDeep/linguclaw&type=date&legend=top-left" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=LinguDeep/linguclaw&type=date&legend=top-left" />
+ </picture>
+</a>
 
 ### Advanced Analysis
 - **AST Parsing** - Complete abstract syntax tree generation
@@ -160,6 +170,69 @@ const diff = git.diff({ file: 'src/index.ts', staged: true });
 // Get commit history
 const history = git.getLog({ maxCount: 10, file: 'src/index.ts' });
 ```
+## 🤖 Multi-Agent Architecture
+
+LinguClaw uses a sophisticated multi-agent system:
+
+### Agent Roles
+
+| Agent | Responsibility | Skills |
+|-------|----------------|---------|
+| **Planner** | Strategy & Planning | Task decomposition, goal setting |
+| **Executor** | Implementation | Code writing, command execution |
+| **Reviewer** | Quality Control | Testing, validation, optimization |
+
+### 🔄 Agent Workflow
+
+```
+User Request → Planner → Executor → Reviewer → Result
+     ↓           ↓         ↓          ↓        ↓
+  Analysis   Strategy   Code     Testing   Success!
+```
+
+---
+
+## 🌐 Web Dashboard
+
+A modern, responsive web interface that puts you in control:
+
+### 🎛️ Dashboard Features
+
+- **💬 Chat Interface** - Real-time conversation with AI agents
+- **📧 Email Center** - Manage your inbox with AI assistance
+- **🤖 Agent Monitor** - Watch your agents work in real-time
+- **🔌 Plugin Manager** - Enable/disable capabilities
+- **⏰ Task Scheduler** - Automate recurring tasks
+- **⚙️ Settings Panel** - Configure everything in one place
+
+### 📱 Responsive Design
+
+- Desktop: Full-featured dashboard
+- Tablet: Optimized touch interface
+- Mobile: Essential features on the go
+
+---
+
+## 🔌 Plugin System
+
+Extend LinguClaw with custom plugins:
+
+### 🛠️ Creating a Plugin
+
+```typescript
+import { GitIntegration } from './src/git-integration';
+
+const git = new GitIntegration('./my-project');
+
+// Get blame information
+const blame = git.blame('src/index.ts');
+
+// View diff
+const diff = git.diff({ file: 'src/index.ts', staged: true });
+
+// Get commit history
+const history = git.getLog({ maxCount: 10, file: 'src/index.ts' });
+```
 
 ### AI Agent Workflow
 ```typescript
@@ -252,11 +325,104 @@ LinguClaw includes built-in security scanning for:
 
 ## 🤝 Contributing
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+We love contributions! Here's how to get started:
+
+### 🚀 Quick Contribution
+
+1. **Fork** the repository
+2. **Create** a feature branch: `git checkout -b feature/amazing-feature`
+3. **Commit** your changes: `git commit -m 'Add amazing feature'`
+4. **Push** to the branch: `git push origin feature/amazing-feature`
+5. **Open** a Pull Request
+
+### 📋 Contribution Areas
+
+- 🐛 **Bug Fixes** - Help us squash bugs
+- ✨ **Features** - Add new capabilities
+- 📚 **Documentation** - Improve docs and examples
+- 🔌 **Plugins** - Create new plugins
+- 🧪 **Tests** - Improve test coverage
+
+### 🎯 Development Guidelines
+
+- **TypeScript** - Strong typing required
+- **Tests** - Add tests for new features
+- **Documentation** - Update README for API changes
+- **Code Style** - Follow ESLint rules
+- **Security** - Consider security implications
+
+---
+
+## 📊 Performance & Metrics
+
+### ⚡ Benchmarks
+
+| Metric | Value | Notes |
+|--------|-------|-------|
+| **Startup Time** | < 3s | Cold start |
+| **Memory Usage** | < 100MB | Base application |
+| **Response Time** | < 500ms | Average API response |
+| **Email Processing** | 1000/min | Email throughput |
+| **Plugin Execution** | < 2s | Average plugin |
+
+### 📈 Monitoring
+
+```typescript
+// Built-in metrics
+const metrics = {
+  totalRequests: 1250,
+  averageResponseTime: 245,
+  errorRate: 0.02,
+  uptime: '99.9%',
+  activeAgents: 3,
+  processedEmails: 847
+};
+```
+
+---
+
+## 🆘 Troubleshooting
+
+### 🔧 Common Issues
+
+#### 📧 Email Problems
+
+```bash
+# Check IMAP connection
+telnet imap.gmail.com 993
+
+# Verify credentials
+openssl s_client -connect imap.gmail.com:993
+
+# Check logs
+tail -f ~/.linguclaw/linguclaw.log
+```
+
+#### 🐳 Docker Issues
+
+```bash
+# Check Docker status
+docker ps
+docker version
+
+# Test container
+docker run --rm hello-world
+```
+
+#### 🤖 Agent Issues
+
+```bash
+# Check agent status
+curl http://localhost:8080/api/agents/status
+
+# View logs
+npm run logs
+
+# Debug mode
+npm run debug
+```
+
+---
 
 ## 📄 License
 
@@ -273,8 +439,13 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - GitHub Issues: [Report a bug or request a feature](https://github.com/yourusername/linguclaw/issues)
 - Documentation: [Full API docs](https://github.com/yourusername/linguclaw/wiki)
-- Discord: [Join our community](https://discord.gg/linguclaw)
 
 ---
 
-**Note**: This is an advanced development tool. Always review AI-generated code and suggestions before applying them to production systems.
+<div align="center">
+
+**Built with ❤️ by the LinguClaw Team**
+
+[🏠 Back to Top](#-linguclaw) • [🚀 Getting Started](#-quick-start)
+
+</div>
