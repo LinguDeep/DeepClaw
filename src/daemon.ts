@@ -135,7 +135,8 @@ export class LinguClawDaemon extends EventEmitter {
         const pid = parseInt(fs.readFileSync(this.pidFile, 'utf-8'));
         // Check if process exists (simplified)
         return true;
-      } catch {
+      } catch (err: any) {
+        logger.debug(`PID check failed: ${err.message}`);
         this.removePid();
       }
     }
@@ -154,7 +155,8 @@ export class LinguClawDaemon extends EventEmitter {
           errors_count: data.errors_count || 0,
           active_services: data.active_services || [],
         };
-      } catch {
+      } catch (err: any) {
+        logger.debug(`Status read failed: ${err.message}`);
         return this.status;
       }
     }

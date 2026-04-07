@@ -7,6 +7,7 @@ import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import { Message, LLMResponse, ProviderType } from './types';
 import { getLogger } from './logger';
 import { getConfig } from './config';
+import { withRetry, CircuitBreaker, withTimeout, getAdaptiveRetryConfig } from './resilience';
 
 export { ProviderType } from './types';
 
@@ -17,11 +18,13 @@ export abstract class BaseProvider {
   apiKey: string | null;
   baseUrl: string;
   client: AxiosInstance;
+  circuitBreaker: CircuitBreaker;
 
   constructor(model: string, apiKey: string | null = null, baseUrl: string | null = null) {
     this.model = model;
     this.apiKey = apiKey;
     this.baseUrl = baseUrl || '';
+    this.circuitBreaker = new CircuitBreaker(5, 30000, model);
     this.client = axios.create({
       timeout: 120000,
       headers: {
@@ -33,8 +36,96 @@ export abstract class BaseProvider {
   abstract complete(messages: Message[], temperature?: number, maxTokens?: number): Promise<LLMResponse>;
 
   async *stream(messages: Message[], temperature: number = 0.7, maxTokens: number = 4096): AsyncGenerator<string> {
+    // Default fallback: yield complete response as single chunk
     const response = await this.complete(messages, temperature, maxTokens);
     yield response.content;
+  }
+
+  /**
+   * Execute with resilience patterns (retry + circuit breaker)
+   */
+  protected async executeWithResilience<T>(
+    fn: () => Promise<T>,
+    operationName: string
+  ): Promise<T> {
+    return this.circuitBreaker.execute(() =>
+      withRetry(fn, { maxRetries: 3, baseDelayMs: 1000 }, operationName)
+    );
+  }
+
+  /**
+   * Helper for OpenAI-compatible SSE streaming (used by OpenRouter, OpenAI, LMStudio)
+   */
+  protected async *streamOpenAICompat(
+    url: string,
+    headers: Record<string, string>,
+    messages: Message[],
+    model: string,
+    temperature: number,
+    maxTokens: number
+  ): AsyncGenerator<string> {
+    const payload = {
+      model,
+      messages: messages.map(m => ({ role: m.role, content: m.content })),
+      temperature,
+      max_tokens: maxTokens,
+      stream: true,
+    };
+
+    // Retry with exponential backoff for rate limits
+    let retries = 0;
+    const maxRetries = 3;
+    let response: any;
+
+    while (retries < maxRetries) {
+      try {
+        response = await this.client.post(url, payload, {
+          headers,
+          responseType: 'stream',
+          timeout: 120000,
+          validateStatus: (status: number) => status < 500 || status === 429,
+        });
+        break; // Success, exit retry loop
+      } catch (error: any) {
+        const status = error.response?.status;
+        if (status === 429 && retries < maxRetries - 1) {
+          const delay = Math.pow(2, retries) * 1000 + Math.random() * 1000;
+          logger.warn(`Rate limit hit, retrying in ${delay}ms...`);
+          await new Promise(r => setTimeout(r, delay));
+          retries++;
+        } else {
+          throw error;
+        }
+      }
+    }
+
+    if (!response) {
+      throw new Error('Failed to get streaming response after retries');
+    }
+
+    const stream = response.data;
+    let buffer = '';
+
+    for await (const chunk of stream) {
+      buffer += chunk.toString();
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed || !trimmed.startsWith('data: ')) continue;
+        const data = trimmed.slice(6);
+        if (data === '[DONE]') return;
+
+        try {
+          const parsed = JSON.parse(data);
+          const delta = parsed.choices?.[0]?.delta?.content;
+          if (delta) yield delta;
+        } catch {
+          // Skip malformed JSON chunks
+        }
+      }
+    }
   }
 
   async close(): Promise<void> {
@@ -88,6 +179,14 @@ export class OpenRouterProvider extends BaseProvider {
       return { content: '', error: error.message, model: '' };
     }
   }
+
+  async *stream(messages: Message[], temperature: number = 0.7, maxTokens: number = 4096): AsyncGenerator<string> {
+    yield* this.streamOpenAICompat(
+      `${this.baseUrl}/chat/completions`,
+      this.headers,
+      messages, this.model, temperature, maxTokens
+    );
+  }
 }
 
 export class OpenAIProvider extends BaseProvider {
@@ -127,6 +226,14 @@ export class OpenAIProvider extends BaseProvider {
       logger.error(`OpenAI error: ${error.message}`);
       return { content: '', error: error.message, model: '' };
     }
+  }
+
+  async *stream(messages: Message[], temperature: number = 0.7, maxTokens: number = 4096): AsyncGenerator<string> {
+    yield* this.streamOpenAICompat(
+      `${this.baseUrl}/chat/completions`,
+      this.headers,
+      messages, this.model, temperature, maxTokens
+    );
   }
 }
 
@@ -183,6 +290,51 @@ export class AnthropicProvider extends BaseProvider {
     } catch (error: any) {
       logger.error(`Anthropic error: ${error.message}`);
       return { content: '', error: error.message, model: '' };
+    }
+  }
+
+  async *stream(messages: Message[], temperature: number = 0.7, maxTokens: number = 4096): AsyncGenerator<string> {
+    let systemMsg = '';
+    const userMsgs: Array<{ role: string; content: string }> = [];
+    for (const m of messages) {
+      if (m.role === 'system') systemMsg = m.content;
+      else userMsgs.push({ role: m.role, content: m.content });
+    }
+
+    const payload: any = {
+      model: this.model,
+      max_tokens: maxTokens,
+      temperature,
+      messages: userMsgs,
+      stream: true,
+    };
+    if (systemMsg) payload.system = systemMsg;
+
+    const response = await this.client.post(
+      `${this.baseUrl}/messages`,
+      payload,
+      { headers: this.headers, responseType: 'stream', timeout: 120000 }
+    );
+
+    let buffer = '';
+    for await (const chunk of response.data) {
+      buffer += chunk.toString();
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed.startsWith('data: ')) continue;
+        const data = trimmed.slice(6);
+        try {
+          const parsed = JSON.parse(data);
+          if (parsed.type === 'content_block_delta' && parsed.delta?.text) {
+            yield parsed.delta.text;
+          }
+        } catch {
+          // Skip malformed chunks
+        }
+      }
     }
   }
 }

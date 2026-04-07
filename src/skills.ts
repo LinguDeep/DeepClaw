@@ -288,6 +288,283 @@ export class FileSkill extends BaseSkill {
   }
 }
 
+// ============== Web Search Skill ==============
+
+export class WebSearchSkill extends BaseSkill {
+  NAME = 'web_search';
+  DESCRIPTION = 'Search the web and fetch page content';
+  VERSION = '1.0.0';
+  AUTHOR = 'LinguClaw';
+  TYPE = SkillType.PYTHON;
+
+  async execute(params: Record<string, any>): Promise<SkillResult> {
+    const action = params.action || 'search';
+
+    switch (action) {
+      case 'search':
+        return this.search(params.query);
+      case 'fetch':
+        return this.fetchPage(params.url);
+      default:
+        return { success: false, error: `Unknown action: ${action}` };
+    }
+  }
+
+  private async search(query: string): Promise<SkillResult> {
+    if (!query) return { success: false, error: 'Query is required' };
+
+    try {
+      const axios = require('axios');
+      const res = await axios.get(`https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`, {
+        headers: { 'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36' },
+        timeout: 10000,
+      });
+
+      const html = res.data as string;
+      const results: { title: string; url: string; snippet: string }[] = [];
+      const titleRegex = /<a[^>]*class="result__a"[^>]*>(.*?)<\/a>/gi;
+      const snippetRegex = /<a[^>]*class="result__snippet"[^>]*>(.*?)<\/a>/gi;
+
+      let titleMatch;
+      while ((titleMatch = titleRegex.exec(html)) !== null && results.length < 5) {
+        results.push({
+          title: titleMatch[1].replace(/<[^>]*>/g, '').trim(),
+          url: '',
+          snippet: '',
+        });
+      }
+
+      let snippetMatch;
+      let idx = 0;
+      while ((snippetMatch = snippetRegex.exec(html)) !== null && idx < results.length) {
+        results[idx].snippet = snippetMatch[1].replace(/<[^>]*>/g, '').trim();
+        idx++;
+      }
+
+      return {
+        success: true,
+        output: results.map((r, i) => `${i + 1}. ${r.title}\n   ${r.snippet}`).join('\n\n'),
+        metadata: { results },
+      };
+    } catch (error: any) {
+      return { success: false, error: error.message };
+    }
+  }
+
+  private async fetchPage(url: string): Promise<SkillResult> {
+    if (!url) return { success: false, error: 'URL is required' };
+
+    try {
+      const axios = require('axios');
+      const res = await axios.get(url, {
+        headers: { 'User-Agent': 'Mozilla/5.0' },
+        timeout: 15000,
+        maxContentLength: 1024 * 1024, // 1MB max
+      });
+
+      const html = res.data as string;
+      // Extract text content
+      const text = html
+        .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+        .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+        .replace(/<[^>]*>/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .substring(0, 5000);
+
+      return { success: true, output: text };
+    } catch (error: any) {
+      return { success: false, error: error.message };
+    }
+  }
+}
+
+// ============== System Command Skill ==============
+
+export class SystemSkill extends BaseSkill {
+  NAME = 'system';
+  DESCRIPTION = 'System utilities: time, uptime, disk, processes';
+  VERSION = '1.0.0';
+  AUTHOR = 'LinguClaw';
+  TYPE = SkillType.PYTHON;
+
+  async execute(params: Record<string, any>): Promise<SkillResult> {
+    const action = params.action || 'info';
+
+    switch (action) {
+      case 'info':
+        return this.systemInfo();
+      case 'time':
+        return { success: true, output: new Date().toLocaleString() };
+      case 'uptime':
+        return this.getUptime();
+      case 'disk':
+        return this.getDisk();
+      case 'exec':
+        return this.safeExec(params.command);
+      default:
+        return { success: false, error: `Unknown action: ${action}` };
+    }
+  }
+
+  private systemInfo(): SkillResult {
+    const os = require('os');
+    const totalMem = os.totalmem();
+    const freeMem = os.freemem();
+    const info = [
+      `Hostname: ${os.hostname()}`,
+      `Platform: ${os.platform()} ${os.arch()}`,
+      `CPUs: ${os.cpus().length}x ${os.cpus()[0]?.model || 'Unknown'}`,
+      `Memory: ${((totalMem - freeMem) / 1024 / 1024 / 1024).toFixed(1)}GB / ${(totalMem / 1024 / 1024 / 1024).toFixed(1)}GB`,
+      `Uptime: ${Math.floor(os.uptime() / 3600)}h ${Math.floor((os.uptime() % 3600) / 60)}m`,
+      `Load: ${os.loadavg().map((l: number) => l.toFixed(2)).join(', ')}`,
+    ].join('\n');
+    return { success: true, output: info };
+  }
+
+  private getUptime(): SkillResult {
+    const os = require('os');
+    const uptime = os.uptime();
+    const days = Math.floor(uptime / 86400);
+    const hours = Math.floor((uptime % 86400) / 3600);
+    const mins = Math.floor((uptime % 3600) / 60);
+    return { success: true, output: `System uptime: ${days}d ${hours}h ${mins}m` };
+  }
+
+  private getDisk(): SkillResult {
+    try {
+      const { execSync } = require('child_process');
+      const output = execSync('df -h / 2>/dev/null', { encoding: 'utf-8', timeout: 5000 });
+      return { success: true, output: output.trim() };
+    } catch (error: any) {
+      return { success: false, error: error.message };
+    }
+  }
+
+  private safeExec(command: string): SkillResult {
+    if (!command) return { success: false, error: 'Command is required' };
+
+    // Block dangerous commands
+    const blocked = ['rm -rf', 'mkfs', 'dd if=', ':(){', 'chmod -R 777', 'sudo rm'];
+    for (const b of blocked) {
+      if (command.includes(b)) {
+        return { success: false, error: `Blocked dangerous command: ${b}` };
+      }
+    }
+
+    try {
+      const { execSync } = require('child_process');
+      const output = execSync(command, {
+        encoding: 'utf-8',
+        timeout: 10000,
+        maxBuffer: 1024 * 512, // 512KB
+      });
+      return { success: true, output: output.trim().substring(0, 5000) };
+    } catch (error: any) {
+      return { success: false, error: error.message };
+    }
+  }
+}
+
+// ============== Note Taking Skill ==============
+
+export class NoteSkill extends BaseSkill {
+  NAME = 'notes';
+  DESCRIPTION = 'Create, search, and manage quick notes';
+  VERSION = '1.0.0';
+  AUTHOR = 'LinguClaw';
+  TYPE = SkillType.PYTHON;
+
+  private notesPath: string;
+
+  constructor(config: Record<string, any> = {}) {
+    super(config);
+    this.notesPath = path.join(process.env.HOME || '~', '.linguclaw', 'notes.json');
+  }
+
+  async execute(params: Record<string, any>): Promise<SkillResult> {
+    const action = params.action || 'list';
+
+    switch (action) {
+      case 'add':
+        return this.addNote(params.title, params.content, params.tags);
+      case 'list':
+        return this.listNotes(params.tag);
+      case 'search':
+        return this.searchNotes(params.query);
+      case 'delete':
+        return this.deleteNote(params.id);
+      default:
+        return { success: false, error: `Unknown action: ${action}` };
+    }
+  }
+
+  private loadNotes(): any[] {
+    try {
+      if (fs.existsSync(this.notesPath)) {
+        return JSON.parse(fs.readFileSync(this.notesPath, 'utf-8'));
+      }
+    } catch (err: any) {
+      const logger = getLogger();
+      logger.debug(`Notes load failed: ${err.message}`);
+    }
+    return [];
+  }
+
+  private saveNotes(notes: any[]): void {
+    const dir = path.dirname(this.notesPath);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(this.notesPath, JSON.stringify(notes, null, 2));
+  }
+
+  private addNote(title: string, content: string, tags?: string): SkillResult {
+    if (!title) return { success: false, error: 'Title is required' };
+    const notes = this.loadNotes();
+    const note = {
+      id: 'n-' + Date.now().toString(36),
+      title,
+      content: content || '',
+      tags: tags ? tags.split(',').map((t: string) => t.trim()) : [],
+      createdAt: new Date().toISOString(),
+    };
+    notes.push(note);
+    this.saveNotes(notes);
+    return { success: true, output: `Note created: "${title}" (${note.id})` };
+  }
+
+  private listNotes(tag?: string): SkillResult {
+    let notes = this.loadNotes();
+    if (tag) {
+      notes = notes.filter((n: any) => n.tags?.some((t: string) => t.toLowerCase() === tag.toLowerCase()));
+    }
+    if (notes.length === 0) return { success: true, output: 'No notes found' };
+    const output = notes.map((n: any) => `[${n.id}] ${n.title} ${n.tags?.length ? '(' + n.tags.join(', ') + ')' : ''}`).join('\n');
+    return { success: true, output, metadata: { count: notes.length } };
+  }
+
+  private searchNotes(query: string): SkillResult {
+    if (!query) return this.listNotes();
+    const notes = this.loadNotes();
+    const q = query.toLowerCase();
+    const results = notes.filter((n: any) =>
+      n.title?.toLowerCase().includes(q) || n.content?.toLowerCase().includes(q)
+    );
+    if (results.length === 0) return { success: true, output: `No notes matching "${query}"` };
+    const output = results.map((n: any) => `[${n.id}] ${n.title}: ${(n.content || '').substring(0, 80)}`).join('\n');
+    return { success: true, output };
+  }
+
+  private deleteNote(id: string): SkillResult {
+    if (!id) return { success: false, error: 'Note ID is required' };
+    const notes = this.loadNotes();
+    const idx = notes.findIndex((n: any) => n.id === id);
+    if (idx === -1) return { success: false, error: `Note not found: ${id}` };
+    const removed = notes.splice(idx, 1)[0];
+    this.saveNotes(notes);
+    return { success: true, output: `Deleted: "${removed.title}"` };
+  }
+}
+
 // ============== Skill Manager ==============
 
 export class SkillManager {
@@ -346,6 +623,9 @@ export class SkillManager {
     this.register(new EmailSkill());
     this.register(new CalendarSkill());
     this.register(new FileSkill());
+    this.register(new WebSearchSkill());
+    this.register(new SystemSkill());
+    this.register(new NoteSkill());
     logger.info(`Loaded ${this.skills.size} built-in skills`);
   }
 }

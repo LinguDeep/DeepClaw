@@ -494,12 +494,36 @@ document.querySelectorAll('.ni[data-v]').forEach(function(n){n.addEventListener(
 var cBusy=0;
 function sendChat(){var i=document.getElementById('chatIn'),m=i.value.trim();if(!m||cBusy)return;cBusy=1;i.value='';document.getElementById('chatBtn').disabled=true;
   addMsg('user',m);document.getElementById('typing').classList.add('show');
-  fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:m})})
-  .then(function(r){return r.json()}).then(function(d){document.getElementById('typing').classList.remove('show');cBusy=0;document.getElementById('chatBtn').disabled=false;
-    if(d.error){addMsg('err',d.error);return}
-    if(d.actionExecuted){addMsg('action',d.reply,d.model)}
-    else if(d.reply){addMsg('bot',d.reply,d.model)}
-    else{addMsg('err','No response from AI')}
+  // Use streaming endpoint
+  fetch('/api/chat/stream',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:m})})
+  .then(function(r){
+    if(!r.ok){return r.json().then(function(d){throw new Error(d.error||'Request failed')})}
+    // Create bot message element for streaming
+    var b=document.getElementById('chatBox'),d=document.createElement('div');d.className='msg bot';
+    var now=new Date(),ts=now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0');
+    d.innerHTML='<div class="msg-head"><span class="msg-who">LinguClaw</span><span class="msg-model" id="streamModel"></span><span class="msg-time">'+ts+'</span></div><div class="msg-body" id="streamBody"></div>';
+    b.appendChild(d);
+    document.getElementById('typing').classList.remove('show');
+    var reader=r.body.getReader(),decoder=new TextDecoder(),fullText='',buf='';
+    function readChunk(){
+      reader.read().then(function(result){
+        if(result.done){cBusy=0;document.getElementById('chatBtn').disabled=false;return}
+        buf+=decoder.decode(result.value,{stream:true});
+        var lines=buf.split('\n');buf=lines.pop()||'';
+        for(var li=0;li<lines.length;li++){
+          var line=lines[li].trim();if(!line.startsWith('data: '))continue;
+          try{var ev=JSON.parse(line.slice(6));
+            if(ev.done){var sm=document.getElementById('streamModel');if(sm&&ev.model)sm.textContent=ev.model;
+              document.getElementById('streamBody').removeAttribute('id');document.getElementById('streamModel').removeAttribute('id');
+              cBusy=0;document.getElementById('chatBtn').disabled=false;return}
+            if(ev.error){addMsg('err',ev.error);cBusy=0;document.getElementById('chatBtn').disabled=false;return}
+            if(ev.chunk){fullText+=ev.chunk;var el=document.getElementById('streamBody');if(el){el.textContent=fullText;b.scrollTop=b.scrollHeight}}
+          }catch(e){}
+        }
+        readChunk();
+      }).catch(function(e){cBusy=0;document.getElementById('chatBtn').disabled=false;addMsg('err','Stream error: '+e.message)});
+    }
+    readChunk();
   }).catch(function(e){document.getElementById('typing').classList.remove('show');cBusy=0;document.getElementById('chatBtn').disabled=false;addMsg('err','Connection error: '+e.message)});}
 function addMsg(t,tx,mod){var b=document.getElementById('chatBox'),d=document.createElement('div');d.className='msg '+t;
   var now=new Date(),ts=now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0');

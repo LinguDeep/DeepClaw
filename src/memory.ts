@@ -1,76 +1,45 @@
 /**
- * RAG Memory system with LanceDB
- * TypeScript equivalent of Python memory.py
+ * RAG Memory system backed by SemanticMemory (TF-IDF + SQLite)
+ * No external dependencies like lancedb required.
  */
 
 import path from 'path';
 import fs from 'fs';
-import { promisify } from 'util';
-import { exec as execCallback } from 'child_process';
 import { CodeChunk } from './types';
 import { getLogger } from './logger';
+import { SemanticMemory } from './semantic-memory';
+import { parseTypeScriptFile, parseGenericFile, ParsedChunk } from './code-parser';
 
-const execAsync = promisify(execCallback);
 const logger = getLogger();
 
 export class RAGMemory {
   projectRoot: string;
-  dbPath: string;
   available: boolean;
-  private lancedb: any;
-  private table: any;
-  private embeddingFunction: any;
-  private db: any;
+  private semanticMemory: SemanticMemory;
+  private indexedCount: number = 0;
 
   constructor(projectRoot: string) {
     this.projectRoot = path.resolve(projectRoot);
-    this.dbPath = path.join(this.projectRoot, '.linguclaw', 'memory');
+    const dbPath = path.join(this.projectRoot, '.linguclaw', 'rag-memory.db');
+    this.semanticMemory = new SemanticMemory(dbPath);
     this.available = false;
-    this.lancedb = null;
-    this.table = null;
-    this.embeddingFunction = null;
   }
 
   /**
-   * Initialize LanceDB connection
+   * Initialize memory
    */
   async init(): Promise<boolean> {
     try {
-      // Dynamic import for optional dependency
-      let lancedb: any;
-      try {
-        lancedb = require('vectordb');
-      } catch (e) {
-        logger.warn('vectordb module not installed, RAG memory unavailable');
-        return false;
+      const ok = this.semanticMemory.init();
+      if (ok) {
+        this.available = true;
+        const stats = this.semanticMemory.getStats();
+        this.indexedCount = stats.totalDocuments;
+        logger.info(`RAG memory initialized (${this.indexedCount} chunks indexed)`);
       }
-      this.lancedb = lancedb;
-      
-      // Connect to/create database
-      this.db = await lancedb.connect(this.dbPath);
-      
-      // Setup embedding function (using sentence-transformers via API or local)
-      // In production, you'd use a proper embedding model
-      this.embeddingFunction = {
-        sourceColumn: 'content',
-        embed: async (texts: string[]): Promise<number[][]> => {
-          // Placeholder: In real implementation, use sentence-transformers
-          return texts.map(() => new Array(384).fill(0).map(() => Math.random()));
-        },
-      };
-
-      // Open or create table
-      try {
-        this.table = await this.db.openTable('codebase', this.embeddingFunction);
-      } catch {
-        this.table = await this.db.createTable('codebase', [], this.embeddingFunction);
-      }
-
-      this.available = true;
-      logger.info(`RAG memory initialized at ${this.dbPath}`);
-      return true;
+      return ok;
     } catch (error: any) {
-      logger.warn(`RAG memory unavailable: ${error.message}`);
+      logger.warn(`RAG memory init failed: ${error.message}`);
       this.available = false;
       return false;
     }
@@ -102,50 +71,66 @@ export class RAGMemory {
           const fullPath = path.join(dir, entry);
           const stat = fs.statSync(fullPath);
           
-          if (stat.isDirectory() && !entry.startsWith('.') && entry !== 'node_modules') {
+          if (stat.isDirectory() && !entry.startsWith('.') && entry !== 'node_modules' && entry !== 'dist' && entry !== 'tests' && entry !== '__pycache__') {
             findFiles(fullPath);
           } else if (stat.isFile() && extensions.some(ext => entry.endsWith(ext))) {
             files.push(fullPath);
           }
         }
-      } catch {
-        // Skip directories we can't read
+      } catch (err: any) {
+        logger.debug(`Skipping unreadable directory ${dir}: ${err.message}`);
       }
     };
 
     findFiles(this.projectRoot);
 
-    // Parse and index files
+    // Parse and index files with AST for TypeScript
     let indexed = 0;
-    const chunks: CodeChunk[] = [];
+    const parsedChunks: ParsedChunk[] = [];
 
-    for (const file of files.slice(0, 100)) { // Limit to 100 files
+    for (const file of files) {
       try {
-        const content = fs.readFileSync(file, 'utf-8');
-        const fileChunks = this.parseFile(file, content);
-        chunks.push(...fileChunks);
-        indexed += fileChunks.length;
+        const ext = path.extname(file);
+        if (ext === '.ts' || ext === '.tsx' || ext === '.js' || ext === '.jsx') {
+          // Use AST-based parsing for TypeScript/JavaScript
+          const chunks = parseTypeScriptFile(file);
+          parsedChunks.push(...chunks);
+          indexed += chunks.length;
+        } else {
+          // Use regex-based parsing for other languages
+          const content = fs.readFileSync(file, 'utf-8');
+          const chunks = parseGenericFile(file, content);
+          parsedChunks.push(...chunks);
+          indexed += chunks.length;
+        }
       } catch (error) {
         logger.warn(`Failed to index ${file}: ${error}`);
       }
     }
 
-    // Add to LanceDB
-    if (chunks.length > 0) {
-      const records = chunks.map(chunk => ({
-        id: chunk.id,
-        content: chunk.content,
-        file_path: chunk.file_path,
-        chunk_type: chunk.chunk_type,
+    // Store chunks in semantic memory with rich metadata
+    for (const chunk of parsedChunks) {
+      this.semanticMemory.store(chunk.id, chunk.content, 'code', {
+        file_path: chunk.filePath,
+        chunk_type: chunk.chunkType,
         name: chunk.name,
-        line_start: chunk.line_start,
-        line_end: chunk.line_end,
-      }));
-
-      await this.table.add(records);
+        line_start: chunk.lineStart,
+        line_end: chunk.lineEnd,
+        signature: chunk.signature,
+        documentation: chunk.documentation,
+        is_exported: chunk.isExported,
+        dependencies: chunk.dependencies,
+        dependents: chunk.dependents,
+      });
     }
 
-    logger.info(`Indexed ${indexed} chunks from ${files.length} files`);
+    // Rebuild TF-IDF index after batch insert
+    if (parsedChunks.length > 0) {
+      this.semanticMemory.rebuildIndex();
+    }
+
+    this.indexedCount = parsedChunks.length;
+    logger.info(`Indexed ${indexed} AST chunks from ${files.length} files`);
     return indexed;
   }
 
@@ -224,23 +209,29 @@ export class RAGMemory {
   }
 
   /**
-   * Search codebase
+   * Search codebase with smart context
    */
   async search(query: string, k: number = 5): Promise<string> {
-    if (!this.available || !this.table) {
+    if (!this.available) {
       return '[Memory unavailable]';
     }
 
     try {
-      const results = await this.table.search(query).limit(k).execute();
-      
+      const results = this.semanticMemory.search(query, k, 'code');
+
       if (!results || results.length === 0) {
         return '[No relevant code found]';
       }
 
-      const formatted = results.map((r: any, i: number) => 
-        `[${i + 1}] ${r.chunk_type}: ${r.name} (${r.file_path}:${r.line_start})\n${r.content.slice(0, 200)}...`
-      );
+      const formatted = results.map((r, i) => {
+        const meta = r.metadata || {};
+        let context = `[${i + 1}] ${meta.chunk_type || 'code'}: ${meta.name || 'unknown'} (${meta.file_path || '?'}:${meta.line_start || '?'})`;
+        if (meta.signature) context += `\n   Signature: ${meta.signature}`;
+        if (meta.documentation) context += `\n   Docs: ${meta.documentation.substring(0, 100)}...`;
+        if (meta.dependencies?.length > 0) context += `\n   Uses: ${meta.dependencies.slice(0, 5).join(', ')}`;
+        context += `\n${r.content.slice(0, 200)}...`;
+        return context;
+      });
 
       return formatted.join('\n\n');
     } catch (error: any) {
@@ -253,16 +244,44 @@ export class RAGMemory {
    * Get memory stats
    */
   getStats(): { count: number } {
-    if (!this.available || !this.table) {
+    if (!this.available) {
       return { count: 0 };
     }
 
     try {
-      // LanceDB doesn't have a simple count method
-      // This is a simplified version
+      const stats = this.semanticMemory.getStats();
+      return { count: stats.totalDocuments };
+    } catch (err: any) {
+      logger.debug(`getStats error: ${err.message}`);
       return { count: 0 };
-    } catch {
-      return { count: 0 };
+    }
+  }
+
+  /**
+   * Get related code for a symbol
+   */
+  getRelated(symbol: string, k: number = 3): string {
+    if (!this.available) return '[Memory unavailable]';
+    
+    try {
+      // Find the symbol
+      const all = this.semanticMemory.search(symbol, 50, 'code');
+      const target = all.find(r => r.metadata?.name === symbol);
+      if (!target) return `[Symbol '${symbol}' not found]`;
+
+      // Get dependencies and dependents
+      const meta = target.metadata || {};
+      const deps = meta.dependencies || [];
+      const dps = meta.dependents || [];
+      
+      let result = `Related to ${symbol}:\n\n`;
+      if (deps.length > 0) result += `Dependencies: ${deps.slice(0, k).join(', ')}\n`;
+      if (dps.length > 0) result += `Used by: ${dps.slice(0, k).join(', ')}\n`;
+      
+      return result;
+    } catch (err: any) {
+      logger.error(`getRelated error: ${err.message}`);
+      return `[Error: ${err.message}]`;
     }
   }
 }

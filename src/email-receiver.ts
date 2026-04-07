@@ -262,56 +262,70 @@ export class IMAPReceiver {
               return;
             }
             
-            // Fetch only headers, no body to avoid MIME completely
-            const f = connection.fetch(results, { bodies: 'HEADER.FIELDS (FROM TO SUBJECT DATE MESSAGE-ID IN-REPLY-TO)' });
+            // Fetch FULL message (headers + body) for simpleParser
+            const f = connection.fetch(results, { bodies: '' });
+            let pending = 0;
             
             f.on('message', (msg: any, seqno: number) => {
+              pending++;
               logger.info(`[IMAP-POLL] Processing message #${seqno}`);
               
-              let header: any = null;
+              let rawBuffer: Buffer[] = [];
               
-              msg.on('body', (stream: any, info: any) => {
-                let buffer = '';
-                stream.on('data', (chunk: any) => buffer += chunk.toString('utf8'));
-                stream.on('end', () => {
-                  if (info.which === 'HEADER') header = buffer;
-                });
+              msg.on('body', (stream: any) => {
+                stream.on('data', (chunk: Buffer) => rawBuffer.push(chunk));
               });
               
-              msg.once('end', () => {
-                logger.info(`[IMAP-POLL] Message fetched, header: ${!!header}`);
-                
-                // Parse header to extract email fields
-                if (header) {
-                  const headerLines = header.split('\r\n');
-                  const headers: Record<string, string> = {};
+              msg.once('end', async () => {
+                try {
+                  const raw = Buffer.concat(rawBuffer);
+                  const parsed = await simpleParser(raw);
                   
-                  for (const line of headerLines) {
-                    const match = line.match(/^([^:]+):\s*(.*)$/);
-                    if (match) {
-                      headers[match[1].toLowerCase()] = match[2];
-                    }
+                  const subject = (parsed.subject || '(no subject)').trim();
+                  const from = parsed.from?.text || parsed.from?.value?.[0]?.address || 'unknown@sender.com';
+                  const to = parsed.to?.text || parsed.to?.value?.[0]?.address || this.config!.username;
+                  const messageId = parsed.messageId || `msg_${Date.now()}_${seqno}`;
+                  const inReplyTo = parsed.inReplyTo || undefined;
+                  
+                  // Get body: prefer text, fallback to stripped HTML
+                  let body = '';
+                  if (parsed.text) {
+                    body = parsed.text.trim();
+                  } else if (parsed.html) {
+                    body = parsed.html
+                      .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+                      .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+                      .replace(/<[^>]*>/g, ' ')
+                      .replace(/&nbsp;/g, ' ')
+                      .replace(/&amp;/g, '&')
+                      .replace(/&lt;/g, '<')
+                      .replace(/&gt;/g, '>')
+                      .replace(/&quot;/g, '"')
+                      .replace(/&#39;/g, "'")
+                      .replace(/\s+/g, ' ')
+                      .trim();
                   }
                   
-                  const subject = this.cleanEmailBody(headers['subject'] || '(no subject)');
-                  const from = this.cleanEmailBody(headers['from'] || 'unknown@sender.com');
-                  const to = this.cleanEmailBody(headers['to'] || this.config!.username);
-                  const messageId = this.cleanEmailBody(headers['message-id'] || `msg_${Date.now()}_${seqno}`);
-                  const inReplyTo = headers['in-reply-to'] ? this.cleanEmailBody(headers['in-reply-to']) : undefined;
+                  // Truncate body to 10KB
+                  body = body.substring(0, 10000);
                   
-                  logger.info(`[IMAP-POLL] Parsed - From: ${from}, Subject: ${subject}`);
+                  logger.info(`[IMAP-POLL] Parsed - From: ${this.extractEmail(from)}, Subject: ${subject}, Body: ${body.length} chars`);
                   
-                  // Add to inbox - skip body to avoid MIME issues completely
                   this.inbox.addMessage({
                     platform: 'email',
                     from: this.extractEmail(from),
                     to: this.extractEmail(to),
                     subject: folder !== 'INBOX' ? `[${folder}] ${subject}` : subject,
-                    body: '', // No body - subject contains the important info
+                    body,
                     threadId: inReplyTo || messageId,
                     inReplyTo
                   });
                   logger.info('[IMAP-POLL] Message added to inbox');
+                } catch (parseErr: any) {
+                  logger.error(`[IMAP-POLL] simpleParser error for msg #${seqno}: ${parseErr.message}`);
+                } finally {
+                  pending--;
+                  if (pending === 0) finish();
                 }
               });
             });
@@ -322,8 +336,9 @@ export class IMAPReceiver {
             });
             
             f.once('end', () => {
-              logger.info('[IMAP-POLL] Fetch completed');
-              finish();
+              logger.info('[IMAP-POLL] Fetch stream ended');
+              // If no messages were pending, finish now
+              if (pending === 0) finish();
             });
           });
         });

@@ -16,6 +16,8 @@ import {
 export { SharedState } from './types';
 import { ShellTool, FileSystemTool } from './tools';
 import { SafetyMiddleware } from './safety';
+import { RAGMemory } from './memory';
+import { getSemanticMemory } from './semantic-memory';
 import { getLogger } from './logger';
 import { BaseProvider } from './multi-provider';
 
@@ -68,18 +70,23 @@ export class Orchestrator {
   safety: SafetyMiddleware;
   maxIterations: number;
   state: SharedState;
+  memory: RAGMemory;
+  semanticMemory: ReturnType<typeof getSemanticMemory>;
 
   constructor(
     provider: BaseProvider,
     shell: ShellTool,
     fs: FileSystemTool,
-    maxIterations: number = 15
+    maxIterations: number = 15,
+    projectRoot: string = '.'
   ) {
     this.provider = provider;
     this.shell = shell;
     this.fs = fs;
     this.safety = new SafetyMiddleware();
     this.maxIterations = maxIterations;
+    this.memory = new RAGMemory(projectRoot);
+    this.semanticMemory = getSemanticMemory();
     this.state = {
       task: '',
       plan: [],
@@ -99,15 +106,21 @@ export class Orchestrator {
   async run(task: string): Promise<string> {
     this.state.task = task;
     
+    // Initialize memory if not already done
+    await this.memory.init();
+    
     logger.info(`Starting orchestration for: ${task}`);
+
+    // Get codebase context for planning
+    const codeContext = await this.getCodebaseContext(task);
 
     // For simple/conversational tasks, respond directly
     if (this.isSimpleTask(task)) {
       return this.handleSimpleTask(task);
     }
 
-    // Phase 1: Planning
-    const planResult = await this.planPhase(task);
+    // Phase 1: Planning with codebase context
+    const planResult = await this.planPhase(task, codeContext);
     if (!planResult.success) {
       return `Planning failed: ${planResult.error}`;
     }
@@ -135,7 +148,14 @@ export class Orchestrator {
 
       // Execute step based on agent role
       step.status = StepStatus.IN_PROGRESS;
-      const result = await this.executeStep(step);
+
+      // Execute with timeout (60s per step)
+      const result = await Promise.race([
+        this.executeStep(step),
+        new Promise<{ success: boolean; output?: string; error?: string }>((resolve) =>
+          setTimeout(() => resolve({ success: false, error: 'Step execution timed out after 60s' }), 60000)
+        ),
+      ]);
 
       if (result.success) {
         step.status = StepStatus.COMPLETED;
@@ -160,13 +180,40 @@ export class Orchestrator {
   }
 
   /**
-   * Planning phase
+   * Get codebase context relevant to the task
    */
-  private async planPhase(task: string): Promise<{ success: boolean; error?: string }> {
+  private async getCodebaseContext(task: string): Promise<string> {
+    try {
+      // Search for relevant code
+      const codeResults = await this.memory.search(task, 5);
+      
+      // Search semantic memory for related conversations/knowledge
+      const semanticResults = this.semanticMemory.search(task, 3, undefined, 0.1);
+      
+      let context = '';
+      if (codeResults && codeResults !== '[Memory unavailable]' && codeResults !== '[No relevant code found]') {
+        context += `\n\nRelevant codebase:\n${codeResults}`;
+      }
+      
+      if (semanticResults.length > 0) {
+        context += `\n\nRelated knowledge:\n${semanticResults.map(r => `- ${r.content.substring(0, 150)}`).join('\n')}`;
+      }
+      
+      return context;
+    } catch (err: any) {
+      logger.debug(`Failed to get codebase context: ${err.message}`);
+      return '';
+    }
+  }
+
+  /**
+   * Planning phase with codebase context
+   */
+  private async planPhase(task: string, codeContext: string = ''): Promise<{ success: boolean; error?: string }> {
     try {
       const messages: Message[] = [
         { role: 'system', content: SYSTEM_PROMPTS[AgentRole.PLANNER] },
-        { role: 'user', content: `Create a plan for: ${task}` },
+        { role: 'user', content: `Create a plan for: ${task}${codeContext}` },
       ];
 
       const response = await this.provider.complete(messages, 0.3, 1000);
@@ -279,18 +326,15 @@ export class Orchestrator {
         { role: 'user', content: step.description },
       ];
 
-      console.log('DEBUG: Calling provider.complete with messages:', JSON.stringify(messages, null, 2));
       const response = await this.provider.complete(messages, 0.7, 1024);
-      console.log('DEBUG: Provider response:', JSON.stringify(response, null, 2));
       
       if (response.error) {
-        console.log('DEBUG: Provider returned error:', response.error);
         return { success: false, error: response.error };
       }
 
       // Parse action from response
       const action = this.parseAction(response.content);
-      console.log('DEBUG: Parsed action:', JSON.stringify(action));
+      logger.info(`Executor action: ${action.action} - ${action.input.substring(0, 100)}`);
       
       if (action.action === 'shell') {
         // Strip cd commands - shell tool already runs in project root
@@ -326,11 +370,30 @@ export class Orchestrator {
   }
 
   /**
-   * Execute decision/planning step
+   * Execute decision/planning step - re-plans based on current state
    */
   private async executeDecisionStep(step: PlanStep): Promise<{ success: boolean; output?: string; error?: string }> {
-    // Decision steps mainly update the plan or state
-    return { success: true, output: 'Decision made' };
+    try {
+      const completedSteps = this.state.plan
+        .filter(s => s.status === StepStatus.COMPLETED)
+        .map(s => `${s.id}: ${s.description} -> ${(s.result || '').substring(0, 200)}`);
+      const failedSteps = this.state.plan
+        .filter(s => s.status === StepStatus.FAILED)
+        .map(s => `${s.id}: ${s.description} -> ERROR: ${s.error}`);
+
+      const messages: Message[] = [
+        { role: 'system', content: SYSTEM_PROMPTS[AgentRole.PLANNER] },
+        { role: 'user', content: `Original task: ${this.state.task}\nCompleted: ${completedSteps.join('\n')}\nFailed: ${failedSteps.join('\n')}\nDecision needed: ${step.description}` },
+      ];
+
+      const response = await this.provider.complete(messages, 0.3, 1000);
+      if (response.error) {
+        return { success: false, error: response.error };
+      }
+      return { success: true, output: response.content };
+    } catch (error: any) {
+      return { success: false, error: error.message };
+    }
   }
 
   /**
@@ -338,9 +401,20 @@ export class Orchestrator {
    */
   private async executeReviewStep(step: PlanStep): Promise<{ success: boolean; output?: string; error?: string }> {
     try {
+      // Build execution context for reviewer
+      const executionResults = this.state.plan
+        .filter(s => s.status === StepStatus.COMPLETED || s.status === StepStatus.FAILED)
+        .map(s => ({
+          step: s.id,
+          description: s.description,
+          status: s.status,
+          result: (s.result || '').substring(0, 500),
+          error: s.error,
+        }));
+
       const messages: Message[] = [
         { role: 'system', content: SYSTEM_PROMPTS[AgentRole.REVIEWER] },
-        { role: 'user', content: `Review task: ${this.state.task}\nPlan: ${JSON.stringify(this.state.plan)}` },
+        { role: 'user', content: `Task: ${this.state.task}\n\nExecution Results:\n${JSON.stringify(executionResults, null, 2)}` },
       ];
 
       const response = await this.provider.complete(messages, 0.3, 1024);
@@ -368,8 +442,8 @@ export class Orchestrator {
           input: parsed.input || parsed.command || '',
         };
       }
-    } catch {
-      // Fallback: treat entire content as thought
+    } catch (err: any) {
+      logger.debug(`parseAction: JSON parse failed for content, treating as thought: ${err.message}`);
     }
     return { action: 'unknown', input: content };
   }

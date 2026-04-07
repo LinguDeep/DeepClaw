@@ -20,6 +20,7 @@ import { getLogger } from './logger';
 import { InboxManager } from './inbox';
 import { EmailReceiver } from './email-receiver';
 import { MessagingHub, TelegramBot, DiscordBot, SlackBot, WhatsAppBot } from './messaging';
+import { SemanticMemory, getSemanticMemory } from './semantic-memory';
 
 const logger = getLogger();
 
@@ -49,6 +50,7 @@ export class WebUIManager {
   inbox: InboxManager;
   emailReceiver: EmailReceiver;
   messagingHub: MessagingHub;
+  semanticMemory: SemanticMemory;
 
   constructor(projectRoot: string, host: string = '0.0.0.0', port: number = 8080) {
     this.projectRoot = projectRoot;
@@ -67,6 +69,7 @@ export class WebUIManager {
     this.inbox = new InboxManager(this.memory);
     this.emailReceiver = new EmailReceiver(this.inbox);
     this.messagingHub = new MessagingHub();
+    this.semanticMemory = getSemanticMemory();
   }
 
   /**
@@ -255,9 +258,15 @@ export class WebUIManager {
         if (!provider) { res.status(500).json({ error: 'No LLM provider configured. Go to Settings to add your API key.' }); return; }
         this.chatHistory.push({ role: 'user', content: message, timestamp: new Date().toISOString() });
 
-        // Build context
+        // Build context from both memory systems
         const recentMemories = this.memory.search(message, undefined, 5);
         const memCtx = recentMemories.length > 0 ? '\nRelevant memories: ' + recentMemories.map((m: any) => m.value).join('; ') : '';
+
+        // Semantic memory: find related past conversations and knowledge
+        const semanticResults = this.semanticMemory.search(message, 5, undefined, 0.1);
+        const semanticCtx = semanticResults.length > 0
+          ? '\n\nRelated knowledge from memory:\n' + semanticResults.map((r, i) => `${i + 1}. [${r.category}] ${r.content.substring(0, 200)}`).join('\n')
+          : '';
 
         // Inbox context - show unread messages to AI
         const unreadMessages = this.inbox.getUnread();
@@ -282,7 +291,7 @@ export class WebUIManager {
 
         const toolsInfo = available.length > 0 ? `\n\nYou have these messaging integrations configured: ${available.join(', ')}.\n\nMESSAGING RULES — follow these strictly:\n1. When the user asks to send a message, FIRST check what information is missing (to, subject, body for email; message for telegram, etc).\n2. If the user provides all details including body/content, use what they provided.\n3. If the user says things like "send an email to John about the meeting", generate a suitable email body content intelligently.\n4. Once you have ALL required info, show a PREVIEW of what will be sent. Format it clearly like:\n   📧 Email Preview:\n   To: user@example.com\n   Subject: Hello\n   Body: Your message text here\n\n   Then ask: "Should I send this?"\n5. When the user CONFIRMS (says yes, send it, go, gönder, tamam, etc), THEN respond with ONLY the JSON action object:\n   {"action":"send","platform":"email","to":"user@example.com","subject":"Hello","body":"Message text"}\n   {"action":"send","platform":"telegram","message":"Hello!"}\n   {"action":"send","platform":"discord","channelId":"123","message":"Hello!"}\n   {"action":"send","platform":"slack","channel":"#general","message":"Hello!"}\n   {"action":"send","platform":"whatsapp","to":"+1234567890","message":"Hello!"}\n6. The JSON must be the ONLY content in your response — no extra text.\n7. For everything else (questions, conversation), respond normally in natural language.` : '\n\nNo messaging integrations are configured yet. If the user asks to send messages, tell them to configure integrations in the Skills panel first.';
 
-        const sysPrompt = 'You are LinguClaw 🦀, a powerful personal AI assistant. You can send emails, Telegram/Discord/Slack/WhatsApp messages, browse the web, manage files, schedule jobs, and more. Be helpful and conversational. When a user wants to send a message, always ask for missing details, show a preview, and wait for confirmation before sending.' + memCtx + inboxCtx + toolsInfo;
+        const sysPrompt = 'You are LinguClaw 🦀, a powerful personal AI assistant. You can send emails, Telegram/Discord/Slack/WhatsApp messages, browse the web, manage files, schedule jobs, and more. Be helpful and conversational. When a user wants to send a message, always ask for missing details, show a preview, and wait for confirmation before sending.' + memCtx + semanticCtx + inboxCtx + toolsInfo;
 
         const messages: Message[] = [
           { role: 'system', content: sysPrompt },
@@ -317,7 +326,7 @@ export class WebUIManager {
               actionExecuted = true;
             }
           }
-        } catch { /* not JSON, use as normal reply */ }
+        } catch (parseErr: any) { logger.debug(`Chat reply JSON parse attempt: ${parseErr.message}`); }
 
         this.chatHistory.push({ role: 'assistant', content: reply, timestamp: new Date().toISOString() });
 
@@ -325,9 +334,92 @@ export class WebUIManager {
         if (message.toLowerCase().includes('remember') || message.toLowerCase().includes('hatırla') || message.toLowerCase().includes('hatirla')) {
           this.memory.store('chat_' + Date.now(), message, 'chat');
         }
+
+        // Save conversation turn to semantic memory for cross-session recall
+        const turnId = `chat_${Date.now()}`;
+        this.semanticMemory.store(turnId, `User: ${message}\nAssistant: ${reply.substring(0, 500)}`, 'conversation', {
+          timestamp: new Date().toISOString(),
+          actionExecuted,
+        });
+
         res.json({ reply, model: response.model, actionExecuted });
       } catch (error: any) {
         res.json({ reply: 'Error: ' + error.message });
+      }
+    });
+
+    // ============ STREAMING CHAT (SSE) ============
+    this.app.post('/api/chat/stream', async (req: Request, res: Response) => {
+      const { message } = req.body;
+      if (!message) { res.status(400).json({ error: 'message required' }); return; }
+
+      try {
+        const provider = this.providerManager.createFromEnv();
+        if (!provider) { res.status(500).json({ error: 'No LLM provider configured.' }); return; }
+
+        this.chatHistory.push({ role: 'user', content: message, timestamp: new Date().toISOString() });
+
+        // Build context (same as non-streaming)
+        const recentMemories = this.memory.search(message, undefined, 5);
+        const memCtx = recentMemories.length > 0 ? '\nRelevant memories: ' + recentMemories.map((m: any) => m.value).join('; ') : '';
+        const semanticResults = this.semanticMemory.search(message, 5, undefined, 0.1);
+        const semanticCtx = semanticResults.length > 0
+          ? '\n\nRelated knowledge from memory:\n' + semanticResults.map((r, i) => `${i + 1}. [${r.category}] ${r.content.substring(0, 200)}`).join('\n')
+          : '';
+        const unreadMessages = this.inbox.getUnread();
+        const inboxCtx = unreadMessages.length > 0
+          ? `\n\n📬 INBOX: ${unreadMessages.length} unread.`
+          : '\n\n📬 INBOX: No unread messages.';
+
+        const sysPrompt = 'You are LinguClaw 🦀, a powerful personal AI assistant. Be helpful and conversational.' + memCtx + semanticCtx + inboxCtx;
+
+        const messages: Message[] = [
+          { role: 'system', content: sysPrompt },
+          ...this.chatHistory.slice(-20).map(m => ({ role: m.role as 'user' | 'assistant', content: m.content })),
+        ];
+
+        // Set SSE headers
+        res.setHeader('Content-Type', 'text/event-stream');
+        res.setHeader('Cache-Control', 'no-cache');
+        res.setHeader('Connection', 'keep-alive');
+        res.setHeader('X-Accel-Buffering', 'no');
+        res.flushHeaders();
+
+        let fullReply = '';
+
+        try {
+          for await (const chunk of provider.stream(messages, 0.7, 2048)) {
+            fullReply += chunk;
+            res.write(`data: ${JSON.stringify({ chunk })}\n\n`);
+          }
+        } catch (streamErr: any) {
+          // If streaming fails, fall back to complete
+          logger.warn(`Streaming failed, falling back: ${streamErr.message}`);
+          const response = await provider.complete(messages, 0.7, 2048);
+          fullReply = response.content || '';
+          res.write(`data: ${JSON.stringify({ chunk: fullReply })}\n\n`);
+        }
+
+        // Send done event
+        res.write(`data: ${JSON.stringify({ done: true, model: provider.model })}\n\n`);
+        res.end();
+
+        // Save to history and semantic memory
+        this.chatHistory.push({ role: 'assistant', content: fullReply, timestamp: new Date().toISOString() });
+        this.semanticMemory.store(`chat_${Date.now()}`, `User: ${message}\nAssistant: ${fullReply.substring(0, 500)}`, 'conversation', {
+          timestamp: new Date().toISOString(),
+        });
+
+        if (message.toLowerCase().includes('remember') || message.toLowerCase().includes('hatırla') || message.toLowerCase().includes('hatirla')) {
+          this.memory.store('chat_' + Date.now(), message, 'chat');
+        }
+      } catch (error: any) {
+        if (!res.headersSent) {
+          res.status(500).json({ error: error.message });
+        } else {
+          res.write(`data: ${JSON.stringify({ error: error.message })}\n\n`);
+          res.end();
+        }
       }
     });
 
@@ -424,7 +516,7 @@ export class WebUIManager {
         const title = await this.browser.evaluate('document.title');
         const url = await this.browser.evaluate('window.location.href');
         return { content: result.data || '', title: title.data || '', url: url.data || '' };
-      } catch { return null; }
+      } catch (err: any) { logger.warn(`getBrowserPageContent error: ${err.message}`); return null; }
     };
 
     this.app.post('/api/browser/summarize', async (req: Request, res: Response) => {
@@ -520,7 +612,7 @@ export class WebUIManager {
     // ============ SKILLS API ============
     const integrationsPath = path.join(require('os').homedir(), '.linguclaw', 'integrations.json');
     const loadIntegrations = (): Record<string, Record<string, string>> => {
-      try { return JSON.parse(require('fs').readFileSync(integrationsPath, 'utf8')); } catch { return {}; }
+      try { return JSON.parse(require('fs').readFileSync(integrationsPath, 'utf8')); } catch (e: any) { logger.debug(`loadIntegrations: ${e.message}`); return {}; }
     };
     const saveIntegrations = (data: Record<string, Record<string, string>>) => {
       const dir = path.dirname(integrationsPath);
@@ -986,8 +1078,8 @@ Provide a brief summary and suggested reply.` }
               try {
                 const analysis = JSON.parse(response.content);
                 this.inbox.setAnalysis(msg.id, analysis.summary, analysis.suggestedReply);
-              } catch {
-                // If not valid JSON, store raw response as analysis
+              } catch (parseErr: any) {
+                logger.debug(`Inbox analysis JSON parse failed: ${parseErr.message}`);
                 this.inbox.setAnalysis(msg.id, response.content.substring(0, 200), undefined);
               }
             }
@@ -1083,7 +1175,7 @@ Provide a brief summary and suggested reply.` }
         let ints: Record<string, any> = {};
         try {
           ints = JSON.parse(require('fs').readFileSync(integrationsPath, 'utf8'));
-        } catch { /* no integrations */ }
+        } catch (e: any) { logger.debug(`No integrations file: ${e.message}`); }
         
         const emailCfg = ints['email'];
         if (!emailCfg || !emailCfg.host) {
@@ -1205,7 +1297,7 @@ Provide a brief summary and suggested reply.` }
     let ints: Record<string, any> = {};
     try {
       ints = JSON.parse(require('fs').readFileSync(integrationsPath, 'utf8'));
-    } catch { /* no integrations yet */ }
+    } catch (e: any) { logger.debug(`No integrations file yet: ${e.message}`); }
 
     // Check for IMAP email configuration
     const emailCfg = ints['email'];
