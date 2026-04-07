@@ -620,7 +620,8 @@ export class RefactoringEngine {
   }
 
   private hasPromiseChains(node: ASTNode): boolean {
-    return /\.then\s*\(/.test(JSON.stringify(node)) || /\.catch\s*\(/.test(JSON.stringify(node)));
+    const str = JSON.stringify(node);
+    return str.includes('.then(') || str.includes('.catch(');
   }
 
   private convertToAsyncAwait(node: ASTNode, source: string): RefactoringResult {
