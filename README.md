@@ -1,72 +1,73 @@
-<h1 align="center">🦾 LinguClaw</h1>
+# 🤖 LinguClaw
 
-![Version](https://img.shields.io/badge/version-0.3.0-blue.svg)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-3178c6.svg)
-![License](https://img.shields.io/badge/license-MIT-green.svg)
+<p align="center">
+  <img src="https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript">
+  <img src="https://img.shields.io/badge/Node.js-43853D?style=for-the-badge&logo=node.js&logoColor=white" alt="Node.js">
+  <img src="https://img.shields.io/badge/SQLite-003B57?style=for-the-badge&logo=sqlite&logoColor=white" alt="SQLite">
+  <img src="https://img.shields.io/badge/OpenAI-412991?style=for-the-badge&logo=openai&logoColor=white" alt="OpenAI">
+</p>
 
-**LinguClaw** is an advanced, multi-language code analysis and AI-powered development platform. It provides intelligent code parsing, security analysis, refactoring tools, and multi-agent collaboration for modern software development.
+<p align="center">
+  <a href="https://github.com/LinguDeep/linguclaw/actions"><img src="https://github.com/LinguDeep/linguclaw/workflows/CI%2FCD%20Pipeline/badge.svg" alt="CI/CD"></a>
+  <a href="https://codecov.io/gh/LinguDeep/linguclaw"><img src="https://codecov.io/gh/LinguDeep/linguclaw/branch/main/graph/badge.svg" alt="Coverage"></a>
+  <a href="https://www.npmjs.com/package/linguclaw"><img src="https://img.shields.io/npm/v/linguclaw.svg" alt="NPM Version"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
+</p>
 
-## 🚀 Features
+---
 
-### Multi-Language Support
-- **TypeScript/JavaScript** - Full AST parsing, React/Node.js analysis
-- **Python** - SQL injection detection, complexity analysis, security scanning
-- **Rust** - Ownership tracking, lifetime analysis, unsafe code detection
-- **Go** - Goroutine and channel analysis, concurrency patterns
-- **Java** - Spring framework analysis, annotation processing
-- **C++** - Template analysis, memory management detection
-- **C#** - LINQ analysis, async/await patterns, .NET ecosystem support
+**LinguClaw** is an advanced AI-powered code analysis and development platform that combines static analysis, multi-agent AI systems, and semantic memory to provide intelligent code assistance across multiple programming languages.
 
-## 🌟 Star History
+## ✨ Features
 
-<a href="https://www.star-history.com/?repos=LinguDeep%2Flinguclaw&type=date&legend=top-left">
- <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=LinguDeep/linguclaw&type=date&theme=dark&legend=top-left" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=LinguDeep/linguclaw&type=date&legend=top-left" />
-   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=LinguDeep/linguclaw&type=date&legend=top-left" />
- </picture>
-</a>
+### 🌐 Multi-Language Support
+- **TypeScript/JavaScript** - Full support with modern features
+- **Python** - Advanced analysis with security focus
+- **Rust** - Ownership, lifetime, and memory safety analysis
+- **Go** - Goroutine, channel, and concurrency patterns
+- **Java** - Enterprise patterns, Spring annotations, security
+- **C++** - Template analysis, memory management, performance
+- **C#** - LINQ, async/await, .NET patterns, nullable types
 
-### Advanced Analysis
-- **AST Parsing** - Complete abstract syntax tree generation
-- **Security Scanning** - SQL injection, XSS, hardcoded secrets detection
-- **Performance Analysis** - Complexity metrics, bottleneck identification
-- **Code Quality** - Best practices, anti-pattern detection
-- **Dependency Analysis** - Cross-file references, call graph generation
+### 🤖 AI Agent System
+- **Architect Agent** - System design and architecture planning
+- **Coder Agent** - Intelligent code implementation
+- **Reviewer Agent** - Automated code review with quality checks
+- **Tester Agent** - Test generation and coverage analysis
+- **Security Agent** - Security vulnerability detection
+- **Optimizer Agent** - Performance optimization suggestions
+- **Coordinator Agent** - Multi-agent orchestration
 
-### AI-Powered Development
-- **Multi-Agent System** - Specialized agents for different tasks:
-  - Architect - System design and patterns
-  - Coder - Code implementation
-  - Reviewer - Code review and quality
-  - Tester - Test generation
-  - Debugger - Troubleshooting
-  - Security - Vulnerability scanning
-- **Workflow Orchestration** - Chain agents for complex tasks
-- **Semantic Memory** - TF-IDF based code search with SQLite
+### 🔍 Advanced Analysis
+- **Static Analysis** - AST-based code parsing and analysis
+- **Security Scanning** - Detect SQL injection, XSS, hardcoded secrets
+- **Performance Analysis** - Identify bottlenecks and optimization opportunities
+- **Code Metrics** - Cyclomatic complexity, Halstead metrics, maintainability index
+- **Semantic Search** - TF-IDF based code search with SQLite backend
 
-### Git Integration
-- **Blame Analysis** - Line-by-line author tracking
-- **Diff Viewer** - Hunk-based comparison
-- **Branch Management** - Create, merge, rebase operations
-- **Commit History** - Detailed statistics and churn analysis
-- **Stash Operations** - Save and restore work-in-progress
-
-### Refactoring Engine
+### 🛠️ Refactoring Engine
 - 15+ automated refactoring operations
-- Unused import cleanup
-- Template literal conversion
-- Optional chaining transformation
-- Method extraction
+- Dead code elimination
+- Modern syntax conversion (async/await, optional chaining, template literals)
+- LINQ/Stream optimization
 - Batch refactoring support
 
-### Real-Time Collaboration
-- WebSocket-based sync
-- Multi-cursor support
-- Virtual scrolling editor
-- Syntax highlighting
+### 📊 Git Integration
+- Blame analysis with author statistics
+- Diff viewing with syntax highlighting
+- Branch management and merge assistance
+- Commit history and code churn analysis
+- Worktree support
 
-## 📦 Installation
+### 💾 Persistent Memory
+- **Semantic Memory** - TF-IDF based semantic search
+- **Conversation History** - Chat context preservation
+- **Task Scheduling** - Cron, interval, and one-time jobs
+- **Plugin System** - Extensible architecture
+
+## 🚀 Quick Start
+
+### Installation
 
 ```bash
 # Clone the repository
@@ -76,210 +77,156 @@ cd linguclaw
 # Install dependencies
 npm install
 
-# Copy environment configuration
-cp .env.example .env
-
-# Edit .env with your API keys
-# Required: OPENROUTER_API_KEY or OPENAI_API_KEY
-
 # Build the project
 npm run build
-
-# Start the development server
-npm run dev
-```
-
-## 🎯 Quick Start
-
-### CLI Mode
-```bash
-# Analyze a file
-node dist/cli.js analyze src/example.ts
-
-# Start interactive mode
-node dist/cli.js interactive
 
 # Run tests
 npm test
 ```
 
-### Web UI Mode
-```bash
-# Start web server
-node dist/index.js --web
+### Configuration
 
-# Or with custom port
-node dist/index.js --web --port 8080
-```
-
-Then open http://localhost:3000 in your browser.
-
-## 🛠️ Configuration
-
-Create a `.env` file in the project root:
+Create a `.env` file:
 
 ```env
-# LLM Provider (required)
-OPENROUTER_API_KEY=sk-or-your-key-here
-# Or
-OPENAI_API_KEY=sk-your-key-here
+# LLM Provider (OpenAI or Ollama)
+LLM_PROVIDER=openai
+OPENAI_API_KEY=your_api_key_here
+OPENAI_MODEL=gpt-4
 
-# Optional: Messaging Integrations
-TELEGRAM_BOT_TOKEN=your-bot-token
-DISCORD_BOT_TOKEN=your-bot-token
-SLACK_BOT_TOKEN=xoxb-your-token
+# For local LLM
+# LLM_PROVIDER=ollama
+# OLLAMA_URL=http://localhost:11434
 
-# Optional: Email (SMTP)
-EMAIL_HOST=smtp.gmail.com
-EMAIL_PORT=587
-EMAIL_USERNAME=you@gmail.com
-EMAIL_PASSWORD=your-app-password
+# Semantic Memory
+MEMORY_PATH=./data/memory.db
 ```
 
-## 📚 Usage Examples
+### Usage
 
-### Code Analysis
-```typescript
-import { LinguClawEngine } from './src/core/engine';
-import { PythonLanguageSupport } from './src/languages/python';
+#### CLI Mode
 
-const engine = new LinguClawEngine({ storage: {} });
-await engine.registerLanguage(PythonLanguageSupport);
+```bash
+# Analyze a file
+npx linguclaw analyze src/example.ts
 
-const analysis = await engine.analyzeFile(
-  'example.py',
-  fs.readFileSync('example.py', 'utf-8')
-);
+# Chat with AI about your code
+npx linguclaw chat
 
-console.log(analysis.suggestions);
-console.log(analysis.securityIssues);
+# Run orchestrator for complex tasks
+npx linguclaw run "Refactor authentication module"
 ```
 
-### Git Operations
-```typescript
-import { GitIntegration } from './src/git-integration';
+#### Web Interface
 
-const git = new GitIntegration('./my-project');
-
-// Get blame information
-const blame = git.blame('src/index.ts');
-
-// View diff
-const diff = git.diff({ file: 'src/index.ts', staged: true });
-
-// Get commit history
-const history = git.getLog({ maxCount: 10, file: 'src/index.ts' });
-```
-## 🤖 Multi-Agent Architecture
-
-LinguClaw uses a sophisticated multi-agent system:
-
-### Agent Roles
-
-| Agent | Responsibility | Skills |
-|-------|----------------|---------|
-| **Planner** | Strategy & Planning | Task decomposition, goal setting |
-| **Executor** | Implementation | Code writing, command execution |
-| **Reviewer** | Quality Control | Testing, validation, optimization |
-
-### 🔄 Agent Workflow
-
-```
-User Request → Planner → Executor → Reviewer → Result
-     ↓           ↓         ↓          ↓        ↓
-  Analysis   Strategy   Code     Testing   Success!
+```bash
+npm run web
+# Open http://localhost:3000
 ```
 
----
-
-## 🌐 Web Dashboard
-
-A modern, responsive web interface that puts you in control:
-
-### 🎛️ Dashboard Features
-
-- **💬 Chat Interface** - Real-time conversation with AI agents
-- **📧 Email Center** - Manage your inbox with AI assistance
-- **🤖 Agent Monitor** - Watch your agents work in real-time
-- **🔌 Plugin Manager** - Enable/disable capabilities
-- **⏰ Task Scheduler** - Automate recurring tasks
-- **⚙️ Settings Panel** - Configure everything in one place
-
-### 📱 Responsive Design
-
-- Desktop: Full-featured dashboard
-- Tablet: Optimized touch interface
-- Mobile: Essential features on the go
-
----
-
-## 🔌 Plugin System
-
-Extend LinguClaw with custom plugins:
-
-### 🛠️ Creating a Plugin
+#### Programmatic API
 
 ```typescript
-import { GitIntegration } from './src/git-integration';
+import { LinguClawEngine, AgentOrchestrator } from 'linguclaw';
 
-const git = new GitIntegration('./my-project');
+// Initialize engine
+const engine = new LinguClawEngine();
+await engine.initialize();
 
-// Get blame information
-const blame = git.blame('src/index.ts');
+// Analyze a file
+const result = await engine.analyzeFile('src/example.ts');
+console.log(result.metrics);
+console.log(result.securityIssues);
 
-// View diff
-const diff = git.diff({ file: 'src/index.ts', staged: true });
-
-// Get commit history
-const history = git.getLog({ maxCount: 10, file: 'src/index.ts' });
-```
-
-### AI Agent Workflow
-```typescript
-import { AgentOrchestrator } from './src/agent-system';
-
-const orchestrator = new AgentOrchestrator(
-  './project',
-  './memory.db'
-);
-
+// Use AI agents
+const orchestrator = new AgentOrchestrator('./project', './memory.db');
 await orchestrator.initialize();
 
-// Create specialized agents
-const architect = orchestrator.createAgent('architect', llmProvider);
-orchestrator.registerAgent(architect);
-
-// Submit task
 const taskId = await orchestrator.submitTask({
-  type: 'design',
+  type: 'implement',
   priority: 'high',
-  description: 'Design authentication system',
-  context: { requirements: ['JWT', 'OAuth2', 'RBAC'] },
-  estimatedTime: 30,
+  description: 'Add user authentication',
+  context: { feature: 'AuthModule' }
 });
 ```
 
-### Refactoring
-```typescript
-import { RefactoringEngine } from './src/refactoring-engine';
+## 📁 Project Structure
 
-const engine = new RefactoringEngine();
-
-// Analyze for refactoring opportunities
-const suggestions = engine.analyzeForRefactoring(
-  ast,
-  'typescript',
-  sourceCode
-);
-
-// Apply refactoring
-const result = await engine.applyRefactoring(
-  'src/index.ts',
-  'convert-to-template-literals',
-  ast,
-  false // dryRun = false
-);
 ```
+linguclaw/
+├── src/
+│   ├── core/
+│   │   └── engine.ts          # Core engine interfaces
+│   ├── languages/
+│   │   ├── typescript.ts    # TS/JS parser & analyzer
+│   │   ├── python.ts        # Python support
+│   │   ├── rust.ts          # Rust support
+│   │   ├── golang.ts        # Go support
+│   │   ├── java.ts          # Java support
+│   │   ├── cpp.ts           # C++ support
+│   │   └── csharp.ts        # C# support
+│   ├── agent-system.ts      # Multi-agent AI system
+│   ├── git-integration.ts   # Git operations
+│   ├── refactoring-engine.ts # Code refactoring
+│   ├── semantic-memory.ts   # Vector memory storage
+│   ├── scheduler.ts         # Task scheduling
+│   ├── web-ui.ts           # Web interface
+│   └── index.ts            # Main exports
+├── tests/
+│   └── *.test.ts           # Test suites
+├── plugins/
+│   └── *.js              # Plugin examples
+├── .github/
+│   └── workflows/         # CI/CD pipelines
+├── docs/                  # Documentation
+└── README.md             # This file
+```
+
+## 🔧 Advanced Configuration
+
+### Custom Plugins
+
+Create custom plugins in the `plugins/` directory:
+
+```javascript
+// plugins/my-plugin.js
+module.exports = {
+  name: 'MyPlugin',
+  version: '1.0.0',
+  
+  async initialize(context) {
+    // Setup code
+  },
+  
+  async execute(action, params) {
+    // Plugin logic
+  }
+};
+```
+
+### Language Registration
+
+Add support for new languages:
+
+```typescript
+import { LinguClawEngine } from './core/engine';
+
+engine.registerLanguage({
+  id: 'mylang',
+  name: 'MyLanguage',
+  extensions: ['.mylang'],
+  parser: new MyLanguageParser(),
+  analyzer: new MyLanguageAnalyzer()
+});
+```
+
+## 📈 GitHub Actions Workflows
+
+| Workflow | Description | Trigger |
+|----------|-------------|---------|
+| `ci-cd.yml` | Build, test, lint, security scan | Push, PR |
+| `docs.yml` | Generate & deploy API docs | Push to main |
+| `automation.yml` | Issue/PR labeling, stale management | Issues, PRs |
 
 ## 🧪 Testing
 
@@ -288,164 +235,51 @@ const result = await engine.applyRefactoring(
 npm test
 
 # Run with coverage
-npm run test:coverage
+npm test -- --coverage
 
 # Run specific test file
-npm test -- web.test.ts
+npm test -- tests/engine.test.ts
+
+# Run in watch mode
+npm test -- --watch
 ```
 
-## 📁 Project Structure
+## 📚 Documentation
 
-```
-linguclaw/
-├── src/
-│   ├── core/           # Core engine and architecture
-│   ├── languages/      # Language parsers (Python, Rust, Go, etc.)
-│   ├── plugins/        # Plugin system and examples
-│   ├── git-integration.ts
-│   ├── agent-system.ts
-│   ├── refactoring-engine.ts
-│   └── ...
-├── tests/              # Test suites
-├── plugins/            # Built-in plugins
-├── public/             # Web UI assets
-└── package.json
-```
-
-## 🔒 Security
-
-LinguClaw includes built-in security scanning for:
-- SQL injection vulnerabilities
-- Command injection
-- Hardcoded credentials
-- Path traversal
-- Insecure deserialization
-- Weak cryptography
-- XSS vulnerabilities
+- [API Documentation](https://yourusername.github.io/linguclaw/)
+- [Contributing Guide](CONTRIBUTING.md)
+- [Changelog](CHANGELOG.md)
+- [Architecture Decision Records](docs/adr/)
 
 ## 🤝 Contributing
 
-We love contributions! Here's how to get started:
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
 
-### 🚀 Quick Contribution
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-1. **Fork** the repository
-2. **Create** a feature branch: `git checkout -b feature/amazing-feature`
-3. **Commit** your changes: `git commit -m 'Add amazing feature'`
-4. **Push** to the branch: `git push origin feature/amazing-feature`
-5. **Open** a Pull Request
-
-### 📋 Contribution Areas
-
-- 🐛 **Bug Fixes** - Help us squash bugs
-- ✨ **Features** - Add new capabilities
-- 📚 **Documentation** - Improve docs and examples
-- 🔌 **Plugins** - Create new plugins
-- 🧪 **Tests** - Improve test coverage
-
-### 🎯 Development Guidelines
-
-- **TypeScript** - Strong typing required
-- **Tests** - Add tests for new features
-- **Documentation** - Update README for API changes
-- **Code Style** - Follow ESLint rules
-- **Security** - Consider security implications
-
----
-
-## 📊 Performance & Metrics
-
-### ⚡ Benchmarks
-
-| Metric | Value | Notes |
-|--------|-------|-------|
-| **Startup Time** | < 3s | Cold start |
-| **Memory Usage** | < 100MB | Base application |
-| **Response Time** | < 500ms | Average API response |
-| **Email Processing** | 1000/min | Email throughput |
-| **Plugin Execution** | < 2s | Average plugin |
-
-### 📈 Monitoring
-
-```typescript
-// Built-in metrics
-const metrics = {
-  totalRequests: 1250,
-  averageResponseTime: 245,
-  errorRate: 0.02,
-  uptime: '99.9%',
-  activeAgents: 3,
-  processedEmails: 847
-};
-```
-
----
-
-## 🆘 Troubleshooting
-
-### 🔧 Common Issues
-
-#### 📧 Email Problems
-
-```bash
-# Check IMAP connection
-telnet imap.gmail.com 993
-
-# Verify credentials
-openssl s_client -connect imap.gmail.com:993
-
-# Check logs
-tail -f ~/.linguclaw/linguclaw.log
-```
-
-#### 🐳 Docker Issues
-
-```bash
-# Check Docker status
-docker ps
-docker version
-
-# Test container
-docker run --rm hello-world
-```
-
-#### 🤖 Agent Issues
-
-```bash
-# Check agent status
-curl http://localhost:8080/api/agents/status
-
-# View logs
-npm run logs
-
-# Debug mode
-npm run debug
-```
-
----
-
-## 📄 License
+## 📜 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 🙏 Acknowledgments
 
-- Built with TypeScript and Node.js
-- Uses SQLite for semantic memory
-- Integrates with OpenRouter, OpenAI, and Anthropic APIs
-- Inspired by modern IDE features and code analysis tools
-
-## 📞 Support
-
-- GitHub Issues: [Report a bug or request a feature](https://github.com/yourusername/linguclaw/issues)
-- Documentation: [Full API docs](https://github.com/yourusername/linguclaw/wiki)
+- OpenAI for GPT API
+- SQLite team for the amazing database
+- TypeScript team for the language
+- All contributors and users
 
 ---
 
-<div align="center">
+<p align="center">
+  Made with ❤️ by the LinguClaw Team
+</p>
 
-**Built with ❤️ by the LinguClaw Team**
-
-[🏠 Back to Top](#-linguclaw) • [🚀 Getting Started](#-quick-start)
-
-</div>
+<p align="center">
+  <a href="https://github.com/yourusername/linguclaw">⭐ Star us on GitHub</a> |
+  <a href="https://twitter.com/linguclaw">🐦 Twitter</a> |
+  <a href="https://discord.gg/linguclaw">💬 Discord</a>
+</p>
