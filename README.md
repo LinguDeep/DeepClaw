@@ -103,7 +103,7 @@ npm run build
 npm start web
 ```
 
-Open Web Dashboard: [http://localhost:3000](http://localhost:3000)
+Open Web Dashboard: [http://localhost:3000](http://localhost:8080)
 
 ---
 
