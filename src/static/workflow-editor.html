@@ -95,10 +95,11 @@ body{font-family:'Inter','SF Pro Display',-apple-system,sans-serif;background:va
 .wf-node-body .n-param .n-val{color:var(--dim);font-size:10px;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
 /* Ports */
-.port{position:absolute;width:12px;height:12px;border-radius:50%;border:2px solid var(--border);background:var(--bg1);cursor:crosshair;z-index:20;transition:transform .15s,border-color .15s}
-.port:hover{transform:scale(1.3);border-color:var(--accent)}
-.port.input{left:-6px}
-.port.output{right:-6px}
+.port{position:absolute;width:14px;height:14px;border-radius:50%;border:2px solid var(--border);background:var(--bg1);cursor:crosshair;z-index:20;transition:transform .15s,border-color .15s}
+.port::after{content:'';position:absolute;inset:-6px;border-radius:50%}
+.port:hover{transform:scale(1.4);border-color:var(--accent)}
+.port.input{left:-7px}
+.port.output{right:-7px}
 .port.connected{background:var(--accent);border-color:var(--accent)}
 
 /* Connection SVG */
@@ -474,7 +475,6 @@ function renderNode(node){
     port.style.top=(35+i*20)+'px';
     // Check if connected
     if(workflow.connections.some(function(c){return c.targetNodeId===node.id&&c.targetInput===i}))port.classList.add('connected');
-    port.addEventListener('mouseup',function(e){e.stopPropagation()});
     el.appendChild(port);
   }
 
@@ -488,6 +488,7 @@ function renderNode(node){
     if(workflow.connections.some(function(c){return c.sourceNodeId===node.id&&c.sourceOutput===i}))port.classList.add('connected');
     port.addEventListener('mousedown',function(e){
       e.stopPropagation();
+      e.preventDefault();
       connecting={sourceNodeId:this.dataset.nodeId,sourceOutput:parseInt(this.dataset.idx)};
     }.bind(port));
     el.appendChild(port);
@@ -595,8 +596,9 @@ function removeTempLine(){var t=document.getElementById('tempConn');if(t)t.remov
 
 function endConnection(e){
   if(!connecting)return;
-  // Find target port under mouse
+  // Find target port under mouse - check element and its parent
   var el=document.elementFromPoint(e.clientX,e.clientY);
+  if(el&&el.parentElement&&el.parentElement.classList.contains('port'))el=el.parentElement;
   if(!el||!el.classList.contains('port')||!el.classList.contains('input'))return;
 
   var targetNodeId=el.dataset.nodeId;
