@@ -154,7 +154,17 @@ jobs:
       id: package_version
       run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
 
+    - name: Check if tag exists
+      id: check_tag
+      run: |
+        if git ls-remote --tags origin | grep -q "refs/tags/v${{ steps.package_version.outputs.version }}$"; then
+          echo "exists=true" >> $GITHUB_OUTPUT
+        else
+          echo "exists=false" >> $GITHUB_OUTPUT
+        fi
+
     - name: Create Release
+      if: steps.check_tag.outputs.exists == 'false'
       uses: actions/create-release@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
