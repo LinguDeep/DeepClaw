@@ -95,8 +95,8 @@ body{font-family:'Inter','SF Pro Display',-apple-system,sans-serif;background:va
 .wf-node-body .n-param .n-val{color:var(--dim);font-size:10px;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
 /* Ports */
-.port{position:absolute;width:14px;height:14px;border-radius:50%;border:2px solid var(--border);background:var(--bg1);cursor:crosshair;z-index:20;transition:transform .15s,border-color .15s}
-.port::after{content:'';position:absolute;inset:-6px;border-radius:50%}
+.port{position:absolute;width:14px;height:14px;border-radius:50%;border:2px solid var(--border);background:var(--bg1);cursor:crosshair;z-index:20;transition:transform .15s,border-color .15s;pointer-events:all}
+.port::after{content:'';position:absolute;inset:-6px;border-radius:50%;pointer-events:none}
 .port:hover{transform:scale(1.4);border-color:var(--accent)}
 .port.input{left:-7px}
 .port.output{right:-7px}
@@ -596,10 +596,11 @@ function removeTempLine(){var t=document.getElementById('tempConn');if(t)t.remov
 
 function endConnection(e){
   if(!connecting)return;
-  // Find target port under mouse - check element and its parent
-  var el=document.elementFromPoint(e.clientX,e.clientY);
-  if(el&&el.parentElement&&el.parentElement.classList.contains('port'))el=el.parentElement;
-  if(!el||!el.classList.contains('port')||!el.classList.contains('input'))return;
+  // Find target port under mouse - check elements at point
+  var els=document.elementsFromPoint(e.clientX,e.clientY);
+  var el=null;
+  for(var i=0;i<els.length;i++){if(els[i].classList.contains('port')&&els[i].classList.contains('input')){el=els[i];break}}
+  if(!el)return;
 
   var targetNodeId=el.dataset.nodeId;
   var targetInput=parseInt(el.dataset.idx);
