@@ -2,118 +2,130 @@
 
 # 🦾 LinguClaw
 
-<img width="2038" height="512" alt="Gemini_Generated_Image_h22oa1h22oa1h22o" src="https://github.com/user-attachments/assets/ca6404ef-fa21-4b79-ae99-108f6463a33c" />
+<img width="2038" height="512" alt="LinguClaw Banner" src="https://github.com/user-attachments/assets/ca6404ef-fa21-4b79-ae99-108f6463a33c" />
 
+### ⚡ Codebase-Aware Multi-Agent AI Platform
 
-**Codebase-Aware Multi-Agent AI System**
+<p>
+  <b>Analyze · Orchestrate · Automate · Optimize</b>
+</p>
 
-# [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-# [![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-# [![Node.js](https://img.shields.io/badge/Node.js-%3E%3D20-green?logo=node.js&logoColor=white)](https://nodejs.org/)
+<p>
+  <img src="https://img.shields.io/badge/TypeScript-5.3-blue?logo=typescript&logoColor=white"/>
+  <img src="https://img.shields.io/badge/Node.js-%3E%3D20-green?logo=node.js&logoColor=white"/>
+  <img src="https://img.shields.io/badge/License-MIT-blue.svg"/>
+</p>
 
-LinguClaw is a TypeScript-powered AI platform that combines multi-agent orchestration, static code analysis across 7 languages, a visual workflow engine, real-time messaging integrations, and a professional web dashboard — all in one system.
+<p>
+  <a href="#-features">Features</a> •
+  <a href="#-getting-started">Getting Started</a> •
+  <a href="#-architecture">Architecture</a> •
+  <a href="#-documentation">Docs</a>
+</p>
 
-[Getting Started](#-getting-started) · [Features](#-features) · [Architecture](#-architecture) · [Docs](#-documentation) · [Contributing](CONTRIBUTING.md)
+---
 
-</div>
+### 🚀 What is LinguClaw?
+
+**LinguClaw** is an advanced AI engineering system that combines:
+
+✨ Multi-agent intelligence
+🧠 Deep static code analysis
+🔄 Visual workflow automation
+📡 Real-time integrations
+🖥️ Professional developer dashboard
+
+All in one unified platform.
 
 ---
 
 ## ✨ Features
 
-### Multi-Agent AI System
+### 🤖 Multi-Agent Intelligence
 
-Seven specialized agents work together through an orchestrator:
+Seven specialized agents collaborate autonomously:
 
-| Agent | Role |
-|-------|------|
-| **Architect** | System design & architecture planning |
-| **Coder** | Intelligent code implementation |
-| **Reviewer** | Automated code review with quality checks |
-| **Tester** | Test generation & coverage analysis |
-| **Security** | Vulnerability detection & hardening |
-| **Optimizer** | Performance analysis & optimization |
-| **Coordinator** | Multi-agent task orchestration |
+* **Architect** → System design
+* **Coder** → Code generation
+* **Reviewer** → Code quality analysis
+* **Tester** → Test creation & coverage
+* **Security** → Vulnerability detection
+* **Optimizer** → Performance tuning
+* **Coordinator** → Task orchestration
 
-Supports **OpenAI**, **Anthropic**, **OpenRouter**, **Ollama**, and **LM Studio** as LLM providers.
+> Supports: OpenAI · Anthropic · OpenRouter · Ollama · LM Studio
 
-### Multi-Language Code Analysis
+---
 
-Deep static analysis with AST parsing for **7 languages**:
+### 🔍 Multi-Language Code Analysis
 
-- **TypeScript / JavaScript** — modern features, async patterns
-- **Python** — security analysis, type inference
-- **Rust** — ownership, lifetimes, memory safety
-- **Go** — goroutines, channels, concurrency patterns
-- **Java** — Spring annotations, enterprise patterns
-- **C++** — templates, memory management, performance
-- **C#** — LINQ, async/await, .NET patterns, nullable types
+Supports **7 languages** with deep AST parsing:
 
-Detects SQL injection, XSS, hardcoded secrets, insecure deserialization, weak cryptography, and more. Computes cyclomatic complexity, Halstead metrics, and maintainability index.
+`TypeScript` · `Python` · `Rust` · `Go` · `Java` · `C++` · `C#`
 
-### Visual Workflow Engine
+✔ Security detection (SQLi, XSS, secrets)
+✔ Complexity metrics (Cyclomatic, Halstead)
+✔ Maintainability scoring
+✔ Pattern & anti-pattern recognition
 
-An **n8n-style** node-based workflow system with a drag-and-drop canvas editor:
+---
 
-- **22 built-in nodes** across 5 categories
-- **Triggers** — Manual, Schedule, Webhook, Email
-- **Actions** — HTTP Request, Shell Command, Send Email, AI Prompt, Telegram, File R/W, Memory Store/Retrieve, Delay
-- **Logic** — If/Else Condition, Switch
-- **Transform** — Code Transform, JSON Transform, Text Template, Merge
-- **Output** — Log, Webhook Response
-- SVG bezier connections, zoom/pan, undo/redo, visual execution feedback
-- Full CRUD API with topological-sort execution
+### 🔄 Visual Workflow Engine
 
-### Messaging Integrations
+n8n-style drag & drop system:
 
-Send and receive messages across 4 platforms:
+* 22 built-in nodes
+* Trigger → Logic → Action → Output pipeline
+* Real-time execution feedback
+* Topological execution engine
 
-| Platform | Method |
-|----------|--------|
-| **Telegram** | Bot API with long polling |
-| **Discord** | Gateway WebSocket + REST |
-| **Slack** | Web API + Socket Mode |
-| **WhatsApp** | Twilio API |
+---
 
-Unified inbox with email (IMAP/SMTP) support via Nodemailer.
+### 💬 Messaging Integrations
 
-### Web Dashboard
+* Telegram
+* Discord
+* Slack
+* WhatsApp (Twilio)
+* Email (IMAP/SMTP)
 
-A professional dark-themed SPA with 10 views:
+📥 Unified inbox across all platforms
 
-- **Home** — System health, topology, quick actions
-- **Inbox** — Unified message inbox across all platforms
-- **Chat** — Streaming AI chat with model indicator
-- **Tasks** — Planner → Executor → Reviewer pipeline
-- **Memory** — Persistent key-value store with categories
-- **Skills** — Plugin management & integration config
-- **Workflows** — List, create, execute visual workflows
-- **Scheduler** — Cron, interval, and one-time jobs
-- **Browser** — Web automation, screenshots, AI summarization & extraction
-- **Settings** — LLM provider, model, safety mode config
+---
 
-### Additional Capabilities
+### 🖥️ Web Dashboard
 
-- **Refactoring Engine** — 15+ automated refactoring operations, dead code elimination, modern syntax conversion
-- **Git Integration** — blame, diff, branch management, commit history, code churn analysis
-- **Semantic Memory** — TF-IDF search with SQLite backend
-- **Task Scheduler** — cron, interval, one-time, and reminder jobs
-- **Plugin System** — load custom JS plugins from `plugins/`
-- **Sandbox Execution** — Docker-based isolated code execution
-- **24/7 Daemon Mode** — background service with auto-restart
-- **Proactive Monitoring** — file watchers, automated suggestions
-- **Resilience** — retry logic, circuit breakers, graceful degradation
+Modern SPA with:
+
+* AI Chat (streaming)
+* Task pipeline (Planner → Executor → Reviewer)
+* Workflow builder
+* Memory system
+* Scheduler
+* Web automation tools
+
+---
+
+### ⚙️ Advanced Capabilities
+
+* 🔧 Refactoring Engine (15+ ops)
+* 🌿 Git Intelligence (diff, blame, churn)
+* 🧠 Semantic Memory (TF-IDF + SQLite)
+* 🐳 Sandbox Execution (Docker)
+* 🔌 Plugin System
+* ⏱️ Scheduler (cron, interval)
+* 🔁 Resilience (retry, circuit breaker)
 
 ---
 
 ## 🚀 Getting Started
 
-### Prerequisites
+### Requirements
 
-- **Node.js** ≥ 20
-- **npm** ≥ 10
+* Node.js ≥ 20
+* npm ≥ 10
 
-### Installation
+### Install
 
 ```bash
 git clone https://github.com/LinguDeep/LinguClaw.git
@@ -122,82 +134,31 @@ npm install
 npm run build
 ```
 
-### Configuration
-
-Create a `.env` file in the project root:
+### Configure
 
 ```env
-# LLM Provider: openai | anthropic | openrouter | ollama | lmstudio
 LLM_PROVIDER=openrouter
 OPENROUTER_API_KEY=your_key_here
 OPENROUTER_MODEL=openai/gpt-4o
-
-# OpenAI (alternative)
-# LLM_PROVIDER=openai
-# OPENAI_API_KEY=sk-...
-# OPENAI_MODEL=gpt-4
-
-# Local LLM
-# LLM_PROVIDER=ollama
-# OLLAMA_URL=http://localhost:11434
 ```
 
-### Usage
-
-#### Web Interface
+### Run
 
 ```bash
 npm start
-# Open http://localhost:3000
 ```
 
-#### CLI
+🌐 Open: http://localhost:3000
+
+---
+
+## 🧠 CLI Usage
 
 ```bash
-# Start the web UI
-npx linguclaw web
-
-# Interactive AI agent
 npx linguclaw agent
-
-# Index codebase for RAG memory
-npx linguclaw index ./my-project
-
-# Run as background daemon
+npx linguclaw index ./project
 npx linguclaw daemon start
-
-# Check system status
 npx linguclaw status
-
-# Manage settings
-npx linguclaw settings list
-npx linguclaw settings set llm.model gpt-4o
-
-# Execute a skill
-npx linguclaw skills execute shell "ls -la"
-```
-
-#### Programmatic API
-
-```typescript
-import { LinguClawEngine, AgentOrchestrator } from 'linguclaw';
-
-const engine = new LinguClawEngine();
-await engine.initialize();
-
-// Analyze a file
-const result = await engine.analyzeFile('src/example.ts');
-console.log(result.metrics);
-console.log(result.securityIssues);
-
-// Use the orchestrator
-const orchestrator = new AgentOrchestrator('./project', './memory.db');
-await orchestrator.initialize();
-const taskId = await orchestrator.submitTask({
-  type: 'implement',
-  priority: 'high',
-  description: 'Add user authentication',
-});
 ```
 
 ---
@@ -205,67 +166,9 @@ const taskId = await orchestrator.submitTask({
 ## 🏗 Architecture
 
 ```
-linguclaw/
-├── src/
-│   ├── core/
-│   │   └── engine.ts              # Core analysis engine & AST types
-│   ├── languages/
-│   │   ├── python.ts              # Python parser & analyzer
-│   │   ├── rust.ts                # Rust parser & analyzer
-│   │   ├── go.ts                  # Go parser & analyzer
-│   │   ├── java.ts                # Java parser & analyzer
-│   │   ├── cpp.ts                 # C++ parser & analyzer
-│   │   └── csharp.ts              # C# parser & analyzer
-│   ├── static/
-│   │   ├── dashboard.html         # Main web dashboard SPA
-│   │   └── workflow-editor.html   # Visual node editor
-│   ├── agent-system.ts            # Multi-agent AI system (7 agents)
-│   ├── orchestrator.ts            # Prism orchestrator (plan → execute → review)
-│   ├── workflow-engine.ts         # n8n-style workflow execution engine
-│   ├── web.ts                     # Express server + REST API
-│   ├── cli.ts                     # CLI interface (9 commands)
-│   ├── messaging.ts               # Telegram, Discord, Slack, WhatsApp
-│   ├── email-receiver.ts          # IMAP email ingestion
-│   ├── inbox.ts                   # Unified message inbox
-│   ├── browser.ts                 # Puppeteer web automation
-│   ├── git-integration.ts         # Git operations & analysis
-│   ├── refactoring-engine.ts      # 15+ automated refactorings
-│   ├── semantic-memory.ts         # TF-IDF search with SQLite
-│   ├── memory.ts                  # Persistent key-value memory
-│   ├── scheduler.ts               # Task scheduling (cron/interval)
-│   ├── plugins.ts                 # Plugin loader
-│   ├── daemon.ts                  # Background service management
-│   ├── safety.ts                  # Safety checks & content filtering
-│   ├── sandbox.ts                 # Docker-based isolated execution
-│   ├── resilience.ts              # Retry, circuit breaker, fallback
-│   └── index.ts                   # Public API exports
-├── plugins/
-│   ├── notes.js                   # Notes plugin example
-│   ├── system-info.js             # System info plugin
-│   └── weather.js                 # Weather plugin
-├── tests/                         # 13 test suites (unit + integration)
-├── .github/workflows/             # CI/CD, docs, automation
-├── package.json
-└── tsconfig.json
-```
-
-### System Diagram
-
-```
-┌─────────────────────────────────────────────────────────┐
-│                      Web Dashboard                       │
-│  Home │ Chat │ Tasks │ Workflows │ Browser │ Settings    │
-└──────────────────────┬──────────────────────────────────┘
-                       │ REST + WebSocket
-┌──────────────────────┴──────────────────────────────────┐
-│                    Express Server                        │
-│  /api/chat  /api/task  /api/workflows  /api/browser     │
-└─────┬──────┬──────┬──────┬──────┬──────┬────────────────┘
-      │      │      │      │      │      │
-┌─────┴┐ ┌──┴──┐ ┌─┴──┐ ┌─┴──┐ ┌┴───┐ ┌┴────────┐
-│Agents│ │Orch.│ │ WF │ │Git │ │Mem │ │Messaging│
-│System│ │     │ │Eng.│ │Int.│ │    │ │TG/DC/SL │
-└──────┘ └─────┘ └────┘ └────┘ └────┘ └─────────┘
+Agents → Orchestrator → Workflow Engine → Execution Layer
+        ↓
+   Memory + Git + Messaging + Plugins
 ```
 
 ---
@@ -273,74 +176,44 @@ linguclaw/
 ## 🧪 Testing
 
 ```bash
-# Run all tests
 npm test
-
-# Run with coverage
 npm test -- --coverage
-
-# Run a specific test
-npm test -- tests/orchestrator.test.ts
-
-# Watch mode
-npm test -- --watch
 ```
 
 ---
 
-## 🔌 Plugins
+## 🔌 Plugin Example
 
-Create JS files under `plugins/`:
-
-```javascript
-// plugins/my-plugin.js
+```js
 module.exports = {
-  name: 'MyPlugin',
-  version: '1.0.0',
-  async initialize(context) {
-    // setup
-  },
+  name: 'ExamplePlugin',
   async execute(action, params) {
-    // logic
-    return { result: 'done' };
+    return { result: 'ok' };
   }
 };
 ```
-
-See [plugins/README.md](plugins/README.md) for details.
-
----
-
-## ⚙️ GitHub Actions
-
-| Workflow | Trigger | Purpose |
-|----------|---------|---------|
-| `ci-cd.yml` | Push, PR | Build, lint, test, security scan |
-| `docs.yml` | Push to main | Generate & deploy API docs |
-| `automation.yml` | Issues, PRs | Auto-labeling, stale management |
 
 ---
 
 ## 🤝 Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md). In short:
-
-1. Fork the repo
-2. Create a feature branch (`git checkout -b feature/my-feature`)
-3. Commit changes (`git commit -m 'feat: add my feature'`)
-4. Push (`git push origin feature/my-feature`)
-5. Open a Pull Request
+1. Fork
+2. Branch
+3. Commit
+4. PR 🚀
 
 ---
 
 ## 📄 License
 
-MIT — see [LICENSE](LICENSE).
+MIT License
 
 ---
 
 <div align="center">
 
-**[LinguDeep/LinguClaw](https://github.com/LinguDeep/LinguClaw)**
+### ⭐ If you like this project, give it a star!
+
+</div>
 
 </div>
