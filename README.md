@@ -1,31 +1,23 @@
-<div align="center">
-
 # 🦾 LinguClaw
 
-<img width="100%" alt="LinguClaw Banner" src="https://github.com/user-attachments/assets/ca6404ef-fa21-4b79-ae99-108f6463a33c" />
+![LinguClaw Banner](https://github.com/user-attachments/assets/ca6404ef-fa21-4b79-ae99-108f6463a33c)
 
-### ⚡ Codebase-Aware Multi-Agent AI Platform
+**⚡ Codebase-Aware Multi-Agent AI Platform**
+*Analyze · Orchestrate · Automate · Optimize*
 
-<p>
-<b>Analyze · Orchestrate · Automate · Optimize</b>
-</p>
+---
 
-<p>
-<img src="https://img.shields.io/github/stars/LinguDeep/LinguClaw?style=for-the-badge&logo=github"/>
-<img src="https://img.shields.io/github/forks/LinguDeep/LinguClaw?style=for-the-badge&logo=github"/>
-<img src="https://img.shields.io/github/issues/LinguDeep/LinguClaw?style=for-the-badge&logo=github"/>
-<img src="https://img.shields.io/github/contributors/LinguDeep/LinguClaw?style=for-the-badge&logo=github"/>
-<img src="https://img.shields.io/github/license/LinguDeep/LinguClaw?style=for-the-badge&logo=github"/>
-</p>
+### Badges
 
-<p>
-<img src="https://img.shields.io/badge/TypeScript-5.3-blue?style=for-the-badge&logo=typescript&logoColor=white"/>
-<img src="https://img.shields.io/badge/Node.js-%3E%3D20-green?style=for-the-badge&logo=node.js&logoColor=white"/>
-<img src="https://img.shields.io/badge/Express-4.x-lightgrey?style=for-the-badge&logo=express"/>
-<img src="https://img.shields.io/badge/OpenAI-LLM-purple?style=for-the-badge&logo=openai"/>
-<img src="https://img.shields.io/badge/Anthropic-LLM-orange?style=for-the-badge&logo=anthropic"/>
-<img src="https://img.shields.io/badge/Ollama-LLM-red?style=for-the-badge&logo=ollama"/>
-</p>
+![GitHub stars](https://img.shields.io/github/stars/LinguDeep/LinguClaw?style=for-the-badge\&logo=github)
+![GitHub forks](https://img.shields.io/github/forks/LinguDeep/LinguClaw?style=for-the-badge\&logo=github)
+![GitHub issues](https://img.shields.io/github/issues/LinguDeep/LinguClaw?style=for-the-badge\&logo=github)
+![License](https://img.shields.io/github/license/LinguDeep/LinguClaw?style=for-the-badge\&logo=github)
+
+![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue?style=for-the-badge\&logo=typescript\&logoColor=white)
+![Node.js](https://img.shields.io/badge/Node.js-%3E%3D20-green?style=for-the-badge\&logo=node.js\&logoColor=white)
+![OpenAI](https://img.shields.io/badge/OpenAI-LLM-purple?style=for-the-badge\&logo=openai)
+![Anthropic](https://img.shields.io/badge/Anthropic-LLM-orange?style=for-the-badge\&logo=anthropic)
 
 ---
 
@@ -39,19 +31,17 @@
 
 ### 🤖 Multi-Agent AI System
 
-Seven specialized agents working together seamlessly:
+Seven specialized agents collaborating seamlessly:
 
-| Agent           | Role                               |
-| --------------- | ---------------------------------- |
-| **Architect**   | System design & architecture       |
-| **Coder**       | AI-powered code generation         |
-| **Reviewer**    | Automated code quality checks      |
-| **Tester**      | Test generation & coverage         |
-| **Security**    | Vulnerability scanning & hardening |
-| **Optimizer**   | Performance & refactoring          |
-| **Coordinator** | Orchestration & task planning      |
+* **Architect** → System design & architecture planning
+* **Coder** → AI-powered code implementation
+* **Reviewer** → Automated code quality checks
+* **Tester** → Test generation & coverage
+* **Security** → Vulnerability scanning & hardening
+* **Optimizer** → Performance tuning & refactoring
+* **Coordinator** → Task orchestration
 
-> Supports **OpenAI · Anthropic · OpenRouter · Ollama · LM Studio**
+> Supports OpenAI · Anthropic · OpenRouter · Ollama · LM Studio
 
 ---
 
@@ -59,7 +49,7 @@ Seven specialized agents working together seamlessly:
 
 **7 Languages:** TypeScript · Python · Rust · Go · Java · C++ · C#
 **Metrics:** Cyclomatic complexity, Halstead metrics, maintainability index
-**Security:** SQLi, XSS, hardcoded secrets, unsafe deserialization
+**Security:** SQL injection, XSS, hardcoded secrets, unsafe deserialization
 
 ---
 
@@ -81,7 +71,7 @@ Unified inbox with streaming AI chat
 
 ### 🖥️ Web Dashboard
 
-Modern SPA:
+Modern SPA includes:
 
 * Home (system health, quick actions)
 * Tasks (Planner → Executor → Reviewer)
@@ -98,7 +88,7 @@ Modern SPA:
 * 🐳 Docker sandbox execution
 * 🧠 Semantic memory (TF-IDF + SQLite)
 * 🔌 Plugin system for custom JS
-* ⏱️ 24/7 Daemon mode + Proactive monitoring
+* ⏱️ 24/7 Daemon mode + proactive monitoring
 * 🔁 Resilience (retry logic, circuit breakers)
 
 ---
@@ -112,7 +102,7 @@ npm install
 npm run build
 ```
 
-🌐 Open Web Dashboard: [http://localhost:3000](http://localhost:3000)
+Open Web Dashboard: [http://localhost:3000](http://localhost:3000)
 
 ---
 
@@ -136,9 +126,7 @@ npx linguclaw status
 
 ## 🏗 Architecture
 
-<div align="center">
-<img src="https://raw.githubusercontent.com/LinguDeep/LinguClaw/main/assets/architecture-diagram.png" width="80%"/>
-</div>
+![Architecture Diagram](https://raw.githubusercontent.com/LinguDeep/LinguClaw/main/assets/architecture-diagram.png)
 
 ---
 
@@ -169,8 +157,4 @@ module.exports = {
 
 MIT License
 
-<div align="center">
-
-⭐ If you love it, **give it a star**! ⭐
-
-</div>
+⭐ If you love it, **give it a star!** ⭐
