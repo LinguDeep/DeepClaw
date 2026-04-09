@@ -21,6 +21,7 @@ import { InboxManager } from './inbox';
 import { EmailReceiver } from './email-receiver';
 import { MessagingHub, TelegramBot, DiscordBot, SlackBot, WhatsAppBot } from './messaging';
 import { SemanticMemory, getSemanticMemory } from './semantic-memory';
+import { WorkflowEngine, getWorkflowEngine } from './workflow-engine';
 
 const logger = getLogger();
 
@@ -1208,6 +1209,65 @@ Provide a brief summary and suggested reply.` }
     });
 
     // Serve main HTML - use static dashboard or fallback to inline
+    // ============ WORKFLOW API ============
+    const workflowEngine = getWorkflowEngine();
+
+    this.app.get('/api/workflows/node-definitions', (_req: Request, res: Response) => {
+      res.json(workflowEngine.getNodeDefinitions());
+    });
+
+    this.app.get('/api/workflows', (_req: Request, res: Response) => {
+      res.json(workflowEngine.listWorkflows());
+    });
+
+    this.app.post('/api/workflows', (req: Request, res: Response) => {
+      const { name, description } = req.body;
+      if (!name) { res.status(400).json({ error: 'name required' }); return; }
+      const wf = workflowEngine.createWorkflow(name, description || '');
+      res.json(wf);
+    });
+
+    this.app.get('/api/workflows/:id', (req: Request, res: Response) => {
+      const wf = workflowEngine.getWorkflow(req.params.id);
+      if (!wf) { res.status(404).json({ error: 'Workflow not found' }); return; }
+      res.json(wf);
+    });
+
+    this.app.put('/api/workflows/:id', (req: Request, res: Response) => {
+      const wf = workflowEngine.updateWorkflow(req.params.id, req.body);
+      if (!wf) { res.status(404).json({ error: 'Workflow not found' }); return; }
+      res.json(wf);
+    });
+
+    this.app.delete('/api/workflows/:id', (req: Request, res: Response) => {
+      const ok = workflowEngine.deleteWorkflow(req.params.id);
+      res.json({ success: ok });
+    });
+
+    this.app.post('/api/workflows/:id/duplicate', (req: Request, res: Response) => {
+      const wf = workflowEngine.duplicateWorkflow(req.params.id);
+      if (!wf) { res.status(404).json({ error: 'Workflow not found' }); return; }
+      res.json(wf);
+    });
+
+    this.app.post('/api/workflows/:id/execute', async (req: Request, res: Response) => {
+      try {
+        const provider = this.providerManager.createFromEnv();
+        const result = await workflowEngine.executeWorkflow(req.params.id, req.body.triggerData, {
+          provider,
+          memory: this.memory,
+        });
+        res.json(result);
+      } catch (e: any) { res.status(500).json({ error: e.message }); }
+    });
+
+    this.app.post('/api/workflows/:id/toggle', (req: Request, res: Response) => {
+      const wf = workflowEngine.getWorkflow(req.params.id);
+      if (!wf) { res.status(404).json({ error: 'Workflow not found' }); return; }
+      const updated = workflowEngine.updateWorkflow(req.params.id, { active: !wf.active });
+      res.json(updated);
+    });
+
     this.app.get('/', (_req: Request, res: Response) => {
       const dashboardPath = path.join(__dirname, 'static', 'dashboard.html');
       if (require('fs').existsSync(dashboardPath)) {

@@ -214,7 +214,11 @@ type SecurityCategory =
   | 'xxe'
   | 'ssrf'
   | 'race-condition'
-  | 'memory-safety';
+  | 'memory-safety'
+  | 'deserialization'
+  | 'weak-cryptography'
+  | 'debug-code'
+  | 'secrets';
 
 // ============================================
 // PLUGIN SYSTEM

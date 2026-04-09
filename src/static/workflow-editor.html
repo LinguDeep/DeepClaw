@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LinguClaw — Workflow Editor</title>
+<style>
+:root{--bg0:#0a0a0b;--bg1:#121214;--bg2:#1a1a1c;--bg3:#222224;--border:#2e2e30;--accent:#5b5bd6;--accent2:#4a4ac2;--accent3:#6c6ce0;--glow:rgba(91,91,214,.15);--green:#4ade80;--red:#f87171;--yellow:#fbbf24;--cyan:#22d3ee;--orange:#fb923c;--text:#f0f0f1;--dim:#9ca3af;--muted:#6b7280;--r:8px;--r2:12px;--node-trigger:#16a34a;--node-action:#3b82f6;--node-condition:#f59e0b;--node-transform:#8b5cf6;--node-output:#ef4444}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter','SF Pro Display',-apple-system,sans-serif;background:var(--bg0);color:var(--text);height:100vh;overflow:hidden;display:flex;flex-direction:column}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+/* Top bar */
+.wf-top{display:flex;align-items:center;height:48px;padding:0 16px;background:var(--bg1);border-bottom:1px solid var(--border);gap:12px;flex-shrink:0;z-index:100}
+.wf-top .back{display:flex;align-items:center;gap:6px;color:var(--dim);cursor:pointer;font-size:13px;font-weight:500;padding:6px 10px;border-radius:6px;text-decoration:none;transition:all .15s}
+.wf-top .back:hover{background:var(--bg2);color:var(--text)}
+.wf-top .back svg{width:16px;height:16px}
+.wf-top .title{font-weight:600;font-size:14px;cursor:pointer;padding:4px 8px;border-radius:4px;border:1px solid transparent;transition:border .15s}
+.wf-top .title:hover{border-color:var(--border)}
+.wf-top .sep{width:1px;height:24px;background:var(--border)}
+.wf-actions{display:flex;align-items:center;gap:6px;margin-left:auto}
+.btn{padding:7px 14px;border:none;border-radius:7px;cursor:pointer;font-size:12px;font-weight:600;transition:all .15s;display:inline-flex;align-items:center;gap:5px}
+.btn:disabled{opacity:.4;cursor:default}
+.btn-p{background:var(--accent);color:#fff}.btn-p:hover:not(:disabled){background:var(--accent2)}
+.btn-g{background:transparent;color:var(--dim);border:1px solid var(--border)}.btn-g:hover{color:var(--text);background:var(--bg2)}
+.btn-s{background:var(--green);color:#000}.btn-s:hover{filter:brightness(1.1)}
+.btn-d{background:rgba(239,68,68,.1);color:var(--red);border:1px solid rgba(239,68,68,.2)}.btn-d:hover{background:rgba(239,68,68,.2)}
+.btn svg{width:14px;height:14px}
+
+/* Main layout */
+.wf-main{display:flex;flex:1;overflow:hidden}
+
+/* Node palette */
+.palette{width:260px;background:var(--bg1);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;z-index:50}
+.palette-search{padding:10px;border-bottom:1px solid var(--border)}
+.palette-search input{width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);border-radius:7px;color:var(--text);font-size:12px;outline:none;transition:border .15s}
+.palette-search input:focus{border-color:var(--accent)}
+.palette-search input::placeholder{color:var(--muted)}
+.palette-list{flex:1;overflow-y:auto;padding:8px}
+.palette-cat{margin-bottom:12px}
+.palette-cat-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);padding:4px 8px 6px;user-select:none}
+.palette-node{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:7px;cursor:grab;font-size:12px;font-weight:500;color:var(--dim);border:1px solid transparent;transition:all .15s;user-select:none;margin-bottom:2px}
+.palette-node:hover{background:var(--bg2);color:var(--text);border-color:var(--border)}
+.palette-node:active{cursor:grabbing}
+.palette-node .pn-icon{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.palette-node .pn-icon svg{width:14px;height:14px}
+.palette-node[data-type="trigger"] .pn-icon{background:rgba(22,163,74,.15);color:var(--node-trigger)}
+.palette-node[data-type="action"] .pn-icon{background:rgba(59,130,246,.15);color:var(--node-action)}
+.palette-node[data-type="condition"] .pn-icon{background:rgba(245,158,11,.15);color:var(--node-condition)}
+.palette-node[data-type="transform"] .pn-icon{background:rgba(139,92,246,.15);color:var(--node-transform)}
+.palette-node[data-type="output"] .pn-icon{background:rgba(239,68,68,.15);color:var(--node-output)}
+.palette-node .pn-info{min-width:0}
+.palette-node .pn-name{font-weight:600;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.palette-node .pn-desc{font-size:10px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* Canvas */
+.canvas-wrap{flex:1;position:relative;overflow:hidden;background:var(--bg0)}
+.canvas-bg{position:absolute;inset:0;background-image:radial-gradient(circle,var(--border) 1px,transparent 1px);background-size:24px 24px}
+#canvas{position:absolute;inset:0;width:100%;height:100%}
+#nodeLayer{position:absolute;inset:0;pointer-events:none}
+
+/* Zoom controls */
+.zoom-ctrl{position:absolute;bottom:16px;right:16px;display:flex;gap:4px;z-index:60}
+.zoom-ctrl button{width:32px;height:32px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;color:var(--dim);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.zoom-ctrl button:hover{background:var(--bg3);color:var(--text)}
+.zoom-ctrl .zoom-val{padding:0 8px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;font-size:11px;color:var(--dim);display:flex;align-items:center}
+
+/* Canvas nodes */
+.wf-node{position:absolute;min-width:180px;background:var(--bg2);border:1.5px solid var(--border);border-radius:10px;cursor:move;pointer-events:all;transition:box-shadow .2s;user-select:none;z-index:10}
+.wf-node:hover{box-shadow:0 4px 20px rgba(0,0,0,.4)}
+.wf-node.selected{border-color:var(--accent);box-shadow:0 0 0 2px var(--glow),0 4px 20px rgba(0,0,0,.4)}
+.wf-node.running{border-color:var(--yellow);box-shadow:0 0 0 2px rgba(251,191,36,.2)}
+.wf-node.success{border-color:var(--green);box-shadow:0 0 0 2px rgba(74,222,128,.2)}
+.wf-node.error{border-color:var(--red);box-shadow:0 0 0 2px rgba(248,113,113,.2)}
+.wf-node-header{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--border);border-radius:10px 10px 0 0}
+.wf-node-header .n-icon{width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.wf-node-header .n-icon svg{width:13px;height:13px}
+.wf-node[data-type="trigger"] .n-icon{background:rgba(22,163,74,.2);color:var(--node-trigger)}
+.wf-node[data-type="action"] .n-icon{background:rgba(59,130,246,.2);color:var(--node-action)}
+.wf-node[data-type="condition"] .n-icon{background:rgba(245,158,11,.2);color:var(--node-condition)}
+.wf-node[data-type="transform"] .n-icon{background:rgba(139,92,246,.2);color:var(--node-transform)}
+.wf-node[data-type="output"] .n-icon{background:rgba(239,68,68,.2);color:var(--node-output)}
+.wf-node[data-type="trigger"] .wf-node-header{background:rgba(22,163,74,.06)}
+.wf-node[data-type="action"] .wf-node-header{background:rgba(59,130,246,.06)}
+.wf-node[data-type="condition"] .wf-node-header{background:rgba(245,158,11,.06)}
+.wf-node[data-type="transform"] .wf-node-header{background:rgba(139,92,246,.06)}
+.wf-node[data-type="output"] .wf-node-header{background:rgba(239,68,68,.06)}
+.wf-node-header .n-name{font-size:12px;font-weight:600;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wf-node-header .n-del{width:20px;height:20px;border-radius:4px;display:none;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);transition:all .15s}
+.wf-node-header .n-del:hover{background:rgba(239,68,68,.15);color:var(--red)}
+.wf-node:hover .n-del{display:flex}
+.wf-node-body{padding:8px 12px;font-size:11px;color:var(--dim);min-height:20px}
+.wf-node-body .n-param{display:flex;align-items:center;justify-content:space-between;padding:2px 0}
+.wf-node-body .n-param .n-key{color:var(--muted);font-size:10px}
+.wf-node-body .n-param .n-val{color:var(--dim);font-size:10px;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* Ports */
+.port{position:absolute;width:12px;height:12px;border-radius:50%;border:2px solid var(--border);background:var(--bg1);cursor:crosshair;z-index:20;transition:transform .15s,border-color .15s}
+.port:hover{transform:scale(1.3);border-color:var(--accent)}
+.port.input{left:-6px}
+.port.output{right:-6px}
+.port.connected{background:var(--accent);border-color:var(--accent)}
+
+/* Connection SVG */
+.conn-svg{position:absolute;inset:0;pointer-events:none;z-index:5}
+.conn-svg path{fill:none;stroke:var(--border);stroke-width:2;transition:stroke .2s}
+.conn-svg path:hover{stroke:var(--accent);stroke-width:2.5}
+.conn-svg path.active{stroke:var(--accent)}
+.conn-svg path.running{stroke:var(--yellow);stroke-dasharray:8 4;animation:dash .5s linear infinite}
+.conn-svg path.success{stroke:var(--green)}
+.conn-svg path.error{stroke:var(--red)}
+@keyframes dash{to{stroke-dashoffset:-12}}
+
+/* Properties panel */
+.props{width:300px;background:var(--bg1);border-left:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;z-index:50;transform:translateX(100%);transition:transform .25s ease}
+.props.open{transform:translateX(0)}
+.props-head{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.props-head h3{font-size:14px;font-weight:600;display:flex;align-items:center;gap:6px}
+.props-head .close{width:24px;height:24px;border-radius:4px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);border:none;background:none;transition:all .15s}
+.props-head .close:hover{background:var(--bg2);color:var(--text)}
+.props-body{flex:1;overflow-y:auto;padding:14px 16px}
+.props-field{margin-bottom:14px}
+.props-field label{display:block;font-size:11px;font-weight:600;color:var(--dim);margin-bottom:4px;letter-spacing:.3px}
+.props-field input,.props-field select,.props-field textarea{width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);border-radius:7px;color:var(--text);font-size:12px;outline:none;transition:border .15s;font-family:inherit}
+.props-field input:focus,.props-field select:focus,.props-field textarea:focus{border-color:var(--accent)}
+.props-field textarea{min-height:80px;resize:vertical}
+.props-field .hint{font-size:10px;color:var(--muted);margin-top:3px}
+.props-field select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2364748b'%3E%3Cpath d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px}
+
+/* Toast */
+.toast{position:fixed;top:16px;right:16px;padding:10px 16px;border-radius:8px;font-size:13px;font-weight:500;z-index:9999;opacity:0;transform:translateY(-8px);transition:all .25s;pointer-events:none}
+.toast.show{opacity:1;transform:translateY(0)}.toast.ok{background:#0d2818;color:var(--green);border:1px solid rgba(34,197,94,.3)}.toast.err{background:#2a0f0f;color:var(--red);border:1px solid rgba(239,68,68,.3)}.toast.info{background:#0f1b2d;color:var(--accent3);border:1px solid rgba(59,130,246,.3)}
+
+/* Modal */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);z-index:200;align-items:center;justify-content:center;opacity:0;transition:opacity .2s}
+.modal-bg.open{display:flex;opacity:1}
+.modal{background:var(--bg1);border:1px solid var(--border);border-radius:12px;padding:24px;width:90%;max-width:450px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.modal h3{font-size:16px;margin-bottom:16px}
+.modal .fld{margin-bottom:12px}
+.modal .fld label{display:block;font-size:11px;font-weight:600;color:var(--dim);margin-bottom:4px}
+.modal .fld input,.modal .fld textarea{width:100%;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);border-radius:7px;color:var(--text);font-size:12px;outline:none}
+.modal .acts{display:flex;gap:8px;justify-content:flex-end;margin-top:20px}
+
+/* Empty state */
+.empty-canvas{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:6;pointer-events:none}
+.empty-canvas .ec-inner{text-align:center;pointer-events:all}
+.empty-canvas .ec-inner svg{width:48px;height:48px;color:var(--muted);opacity:.3;margin-bottom:12px}
+.empty-canvas .ec-inner p{font-size:14px;color:var(--muted);margin-bottom:4px}
+.empty-canvas .ec-inner .sub{font-size:12px;color:var(--border)}
+
+/* Minimap */
+.minimap{position:absolute;bottom:16px;left:16px;width:160px;height:100px;background:var(--bg1);border:1px solid var(--border);border-radius:8px;z-index:60;overflow:hidden;opacity:.7;transition:opacity .15s}
+.minimap:hover{opacity:1}
+.minimap canvas{width:100%;height:100%}
+</style>
+</head>
+<body>
+<div id="toast" class="toast"></div>
+<div class="wf-top">
+  <a class="back" href="/" id="backBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5m7-7-7 7 7 7"/></svg> Back</a>
+  <div class="sep"></div>
+  <div class="title" id="wfTitle" onclick="renameWorkflow()">Untitled Workflow</div>
+  <span style="font-size:11px;color:var(--muted)" id="wfStatus">Draft</span>
+  <div class="wf-actions">
+    <button class="btn btn-g" id="undoBtn" onclick="undo()" title="Undo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6.69 3L3 13"/></svg></button>
+    <button class="btn btn-g" id="redoBtn" onclick="redo()" title="Redo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 7v6h-6"/><path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6.69 3L21 13"/></svg></button>
+    <div class="sep"></div>
+    <button class="btn btn-g" onclick="saveWorkflow()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Save</button>
+    <button class="btn btn-s" onclick="executeWorkflow()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg> Execute</button>
+  </div>
+</div>
+<div class="wf-main">
+  <div class="palette">
+    <div class="palette-search"><input id="nodeSearch" placeholder="Search nodes..." oninput="filterNodes()"></div>
+    <div class="palette-list" id="paletteList"></div>
+  </div>
+  <div class="canvas-wrap" id="canvasWrap">
+    <div class="canvas-bg" id="canvasBg"></div>
+    <svg class="conn-svg" id="connSvg"></svg>
+    <div id="nodeLayer"></div>
+    <div class="empty-canvas" id="emptyCanvas">
+      <div class="ec-inner">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 5v14m-7-7h14"/></svg>
+        <p>Drag nodes from the palette to start</p>
+        <div class="sub">or double-click the canvas to add a node</div>
+      </div>
+    </div>
+    <div class="zoom-ctrl">
+      <button onclick="zoomIn()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+      <div class="zoom-val" id="zoomVal">100%</div>
+      <button onclick="zoomOut()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+      <button onclick="zoomFit()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg></button>
+    </div>
+  </div>
+  <div class="props" id="propsPanel">
+    <div class="props-head">
+      <h3 id="propsTitle">Node Properties</h3>
+      <button class="close" onclick="closeProps()"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="props-body" id="propsBody"></div>
+  </div>
+</div>
+
+<div class="modal-bg" id="renameMod"><div class="modal"><h3>Rename Workflow</h3>
+  <div class="fld"><label>Name</label><input id="renameIn"></div>
+  <div class="fld"><label>Description</label><textarea id="renameDesc" rows="3"></textarea></div>
+  <div class="acts"><button class="btn btn-g" onclick="closeModal('renameMod')">Cancel</button><button class="btn btn-p" onclick="applyRename()">Save</button></div>
+</div></div>
+
+<script>
+/* ==================== State ==================== */
+var workflowId = new URLSearchParams(location.search).get('id');
+var nodeDefs = [];
+var workflow = { id: '', name: 'Untitled Workflow', description: '', nodes: [], connections: [], active: false };
+var selectedNodeId = null;
+var zoom = 1, panX = 0, panY = 0;
+var draggingNode = null, dragOffX = 0, dragOffY = 0;
+var connecting = null; // {sourceNodeId, sourceOutput, tempLine}
+var undoStack = [], redoStack = [];
+
+/* ==================== Icons ==================== */
+var icons = {
+  play:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21"/></svg>',
+  clock:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+  webhook:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 16.98h1a2 2 0 0 0 2-2v-1a2 2 0 0 0-4 0"/><path d="M6 16.98H5a2 2 0 0 1-2-2v-1a2 2 0 0 1 4 0"/><path d="M12 3a2 2 0 0 0-2 2v1a2 2 0 0 0 4 0V5a2 2 0 0 0-2-2z"/><path d="M6 12h12"/></svg>',
+  mail:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>',
+  globe:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>',
+  terminal:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>',
+  brain:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 1.98-3A2.5 2.5 0 0 1 9.5 2z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-1.98-3A2.5 2.5 0 0 0 14.5 2z"/></svg>',
+  send:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>',
+  file:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>',
+  'file-plus':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>',
+  database:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>',
+  'git-branch':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg>',
+  code:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>',
+  braces:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H7a2 2 0 0 0-2 2v5a2 2 0 0 1-2 2 2 2 0 0 1 2 2v5c0 1.1.9 2 2 2h1"/><path d="M16 21h1a2 2 0 0 0 2-2v-5c0-1.1.9-2 2-2a2 2 0 0 1-2-2V5a2 2 0 0 0-2-2h-1"/></svg>',
+  type:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>',
+  'git-merge':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M6 21V9a9 9 0 0 0 9 9"/></svg>',
+  'file-text':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>'
+};
+
+/* ==================== Helpers ==================== */
+function esc(s){if(!s)return '';var d=document.createElement('div');d.textContent=String(s);return d.innerHTML}
+function toast(m,t){var e=document.getElementById('toast');e.textContent=m;e.className='toast show '+(t||'info');clearTimeout(e._t);e._t=setTimeout(function(){e.className='toast'},3000)}
+function openModal(id){document.getElementById(id).classList.add('open')}
+function closeModal(id){document.getElementById(id).classList.remove('open')}
+function genId(){return 'n_'+Math.random().toString(36).substr(2,9)}
+
+/* ==================== Init ==================== */
+async function init(){
+  // Load node definitions
+  try{var r=await fetch('/api/workflows/node-definitions');nodeDefs=await r.json();renderPalette()}catch(e){console.error('Failed to load node defs:',e)}
+
+  // Load or create workflow
+  if(workflowId){
+    try{var r=await fetch('/api/workflows/'+workflowId);if(r.ok){workflow=await r.json();document.getElementById('wfTitle').textContent=workflow.name;document.getElementById('wfStatus').textContent=workflow.active?'Active':'Draft';renderAll()}}catch(e){toast('Failed to load workflow','err')}
+  }
+  setupCanvasEvents();
+  pushUndo();
+}
+
+/* ==================== Palette ==================== */
+function renderPalette(){
+  var cats={};nodeDefs.forEach(function(d){if(!cats[d.category])cats[d.category]=[];cats[d.category].push(d)});
+  var h='';for(var cat in cats){
+    h+='<div class="palette-cat"><div class="palette-cat-title">'+esc(cat)+'</div>';
+    cats[cat].forEach(function(d){
+      h+='<div class="palette-node" data-type="'+d.type+'" data-def="'+d.id+'" draggable="true">';
+      h+='<div class="pn-icon">'+(icons[d.icon]||icons.play)+'</div>';
+      h+='<div class="pn-info"><div class="pn-name">'+esc(d.name)+'</div><div class="pn-desc">'+esc(d.description)+'</div></div></div>';
+    });
+    h+='</div>';
+  }
+  document.getElementById('paletteList').innerHTML=h;
+  // Drag events
+  document.querySelectorAll('.palette-node').forEach(function(el){
+    el.addEventListener('dragstart',function(e){e.dataTransfer.setData('defId',el.dataset.def);e.dataTransfer.effectAllowed='copy'});
+  });
+}
+
+function filterNodes(){
+  var q=document.getElementById('nodeSearch').value.toLowerCase();
+  document.querySelectorAll('.palette-node').forEach(function(el){
+    var name=el.querySelector('.pn-name').textContent.toLowerCase();
+    var desc=el.querySelector('.pn-desc').textContent.toLowerCase();
+    el.style.display=(name.includes(q)||desc.includes(q))?'flex':'none';
+  });
+}
+
+/* ==================== Canvas ==================== */
+function setupCanvasEvents(){
+  var wrap=document.getElementById('canvasWrap');
+
+  // Drop from palette
+  wrap.addEventListener('dragover',function(e){e.preventDefault();e.dataTransfer.dropEffect='copy'});
+  wrap.addEventListener('drop',function(e){
+    e.preventDefault();
+    var defId=e.dataTransfer.getData('defId');if(!defId)return;
+    var rect=wrap.getBoundingClientRect();
+    var x=(e.clientX-rect.left-panX)/zoom;
+    var y=(e.clientY-rect.top-panY)/zoom;
+    addNode(defId,x,y);
+  });
+
+  // Pan with middle mouse / right-click drag
+  var panning=false,lastX,lastY;
+  wrap.addEventListener('mousedown',function(e){
+    if(e.button===1||e.button===2||(e.button===0&&e.target===wrap.querySelector('.canvas-bg'))){
+      if(e.target.closest('.wf-node')||e.target.closest('.port'))return;
+      panning=true;lastX=e.clientX;lastY=e.clientY;wrap.style.cursor='grabbing';e.preventDefault();
+      // Deselect
+      if(e.button===0){selectNode(null)}
+    }
+  });
+  window.addEventListener('mousemove',function(e){
+    if(panning){panX+=e.clientX-lastX;panY+=e.clientY-lastY;lastX=e.clientX;lastY=e.clientY;applyTransform()}
+    if(draggingNode){
+      var rect=wrap.getBoundingClientRect();
+      var x=(e.clientX-rect.left-panX)/zoom-dragOffX;
+      var y=(e.clientY-rect.top-panY)/zoom-dragOffY;
+      var node=workflow.nodes.find(function(n){return n.id===draggingNode});
+      if(node){node.position.x=Math.round(x/12)*12;node.position.y=Math.round(y/12)*12;renderNodePosition(node.id)}
+      renderConnections();
+    }
+    if(connecting){
+      renderTempConnection(e.clientX,e.clientY);
+    }
+  });
+  window.addEventListener('mouseup',function(e){
+    if(panning){panning=false;wrap.style.cursor=''}
+    if(draggingNode){pushUndo();draggingNode=null}
+    if(connecting){endConnection(e);connecting=null;removeTempLine()}
+  });
+
+  // Zoom with wheel
+  wrap.addEventListener('wheel',function(e){
+    e.preventDefault();
+    var rect=wrap.getBoundingClientRect();
+    var mx=e.clientX-rect.left, my=e.clientY-rect.top;
+    var oldZoom=zoom;
+    if(e.deltaY<0)zoom=Math.min(zoom*1.1,3);
+    else zoom=Math.max(zoom/1.1,0.2);
+    panX=mx-(mx-panX)*(zoom/oldZoom);
+    panY=my-(my-panY)*(zoom/oldZoom);
+    applyTransform();
+    document.getElementById('zoomVal').textContent=Math.round(zoom*100)+'%';
+  },{passive:false});
+
+  wrap.addEventListener('contextmenu',function(e){e.preventDefault()});
+
+  // Keyboard
+  document.addEventListener('keydown',function(e){
+    if(e.key==='Delete'||e.key==='Backspace'){
+      if(document.activeElement.tagName==='INPUT'||document.activeElement.tagName==='TEXTAREA')return;
+      if(selectedNodeId){deleteNode(selectedNodeId);e.preventDefault()}
+    }
+    if(e.ctrlKey&&e.key==='z'){undo();e.preventDefault()}
+    if(e.ctrlKey&&e.key==='y'){redo();e.preventDefault()}
+    if(e.ctrlKey&&e.key==='s'){saveWorkflow();e.preventDefault()}
+  });
+}
+
+function applyTransform(){
+  var layer=document.getElementById('nodeLayer');
+  layer.style.transform='translate('+panX+'px,'+panY+'px) scale('+zoom+')';
+  layer.style.transformOrigin='0 0';
+  var svg=document.getElementById('connSvg');
+  svg.style.transform='translate('+panX+'px,'+panY+'px) scale('+zoom+')';
+  svg.style.transformOrigin='0 0';
+  var bg=document.getElementById('canvasBg');
+  bg.style.backgroundPosition=panX+'px '+panY+'px';
+  bg.style.backgroundSize=(24*zoom)+'px '+(24*zoom)+'px';
+}
+
+function zoomIn(){zoom=Math.min(zoom*1.2,3);applyTransform();document.getElementById('zoomVal').textContent=Math.round(zoom*100)+'%'}
+function zoomOut(){zoom=Math.max(zoom/1.2,0.2);applyTransform();document.getElementById('zoomVal').textContent=Math.round(zoom*100)+'%'}
+function zoomFit(){
+  if(!workflow.nodes.length){zoom=1;panX=0;panY=0;applyTransform();return}
+  var minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
+  workflow.nodes.forEach(function(n){
+    minX=Math.min(minX,n.position.x);minY=Math.min(minY,n.position.y);
+    maxX=Math.max(maxX,n.position.x+200);maxY=Math.max(maxY,n.position.y+80);
+  });
+  var wrap=document.getElementById('canvasWrap').getBoundingClientRect();
+  var w=maxX-minX+100,h=maxY-minY+100;
+  zoom=Math.min(wrap.width/w,wrap.height/h,1.5);
+  panX=(wrap.width-w*zoom)/2-minX*zoom;
+  panY=(wrap.height-h*zoom)/2-minY*zoom;
+  applyTransform();
+  document.getElementById('zoomVal').textContent=Math.round(zoom*100)+'%';
+}
+
+/* ==================== Node Management ==================== */
+function addNode(defId,x,y){
+  var def=nodeDefs.find(function(d){return d.id===defId});if(!def)return;
+  var node={id:genId(),definitionId:defId,type:def.type,name:def.name,config:{},position:{x:x||200,y:y||200}};
+  // Set defaults
+  def.configFields.forEach(function(f){if(f.default!==undefined)node.config[f.key]=f.default});
+  workflow.nodes.push(node);
+  renderNode(node);
+  selectNode(node.id);
+  updateEmptyState();
+  pushUndo();
+}
+
+function deleteNode(id){
+  workflow.nodes=workflow.nodes.filter(function(n){return n.id!==id});
+  workflow.connections=workflow.connections.filter(function(c){return c.sourceNodeId!==id&&c.targetNodeId!==id});
+  var el=document.getElementById('node_'+id);if(el)el.remove();
+  if(selectedNodeId===id){selectedNodeId=null;closeProps()}
+  renderConnections();
+  updateEmptyState();
+  pushUndo();
+}
+
+function selectNode(id){
+  document.querySelectorAll('.wf-node.selected').forEach(function(el){el.classList.remove('selected')});
+  selectedNodeId=id;
+  if(id){
+    var el=document.getElementById('node_'+id);if(el)el.classList.add('selected');
+    openProps(id);
+  }else{closeProps()}
+}
+
+function updateEmptyState(){
+  document.getElementById('emptyCanvas').style.display=workflow.nodes.length>0?'none':'flex';
+}
+
+/* ==================== Render ==================== */
+function renderAll(){
+  document.getElementById('nodeLayer').innerHTML='';
+  workflow.nodes.forEach(function(n){renderNode(n)});
+  renderConnections();
+  updateEmptyState();
+}
+
+function renderNode(node){
+  var def=nodeDefs.find(function(d){return d.id===node.definitionId});
+  if(!def)return;
+  var el=document.createElement('div');
+  el.id='node_'+node.id;
+  el.className='wf-node'+(selectedNodeId===node.id?' selected':'');
+  el.dataset.type=node.type;
+  el.style.left=node.position.x+'px';
+  el.style.top=node.position.y+'px';
+
+  var h='<div class="wf-node-header">';
+  h+='<div class="n-icon">'+(icons[def.icon]||icons.play)+'</div>';
+  h+='<div class="n-name">'+esc(node.name)+'</div>';
+  h+='<div class="n-del" onclick="event.stopPropagation();deleteNode(\''+node.id+'\')"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>';
+  h+='</div>';
+
+  // Body - show key config params
+  h+='<div class="wf-node-body">';
+  var shown=0;
+  def.configFields.forEach(function(f){
+    if(shown>=2)return;
+    var v=node.config[f.key];
+    if(v!==undefined&&v!==''){
+      h+='<div class="n-param"><span class="n-key">'+esc(f.label)+'</span><span class="n-val">'+esc(String(v))+'</span></div>';
+      shown++;
+    }
+  });
+  if(!shown)h+='<div style="color:var(--muted);font-size:10px">Click to configure</div>';
+  h+='</div>';
+  el.innerHTML=h;
+
+  // Input ports
+  for(var i=0;i<def.inputs;i++){
+    var port=document.createElement('div');
+    port.className='port input';
+    port.dataset.nodeId=node.id;
+    port.dataset.idx=i;
+    port.style.top=(35+i*20)+'px';
+    // Check if connected
+    if(workflow.connections.some(function(c){return c.targetNodeId===node.id&&c.targetInput===i}))port.classList.add('connected');
+    port.addEventListener('mouseup',function(e){e.stopPropagation()});
+    el.appendChild(port);
+  }
+
+  // Output ports
+  for(var i=0;i<def.outputs;i++){
+    var port=document.createElement('div');
+    port.className='port output';
+    port.dataset.nodeId=node.id;
+    port.dataset.idx=i;
+    port.style.top=(35+i*20)+'px';
+    if(workflow.connections.some(function(c){return c.sourceNodeId===node.id&&c.sourceOutput===i}))port.classList.add('connected');
+    port.addEventListener('mousedown',function(e){
+      e.stopPropagation();
+      connecting={sourceNodeId:this.dataset.nodeId,sourceOutput:parseInt(this.dataset.idx)};
+    }.bind(port));
+    el.appendChild(port);
+  }
+
+  // Node drag
+  el.addEventListener('mousedown',function(e){
+    if(e.target.closest('.port')||e.target.closest('.n-del'))return;
+    e.stopPropagation();
+    selectNode(node.id);
+    draggingNode=node.id;
+    var rect=el.getBoundingClientRect();
+    var wrap=document.getElementById('canvasWrap').getBoundingClientRect();
+    dragOffX=(e.clientX-rect.left)/zoom;
+    dragOffY=(e.clientY-rect.top)/zoom;
+  });
+
+  el.addEventListener('dblclick',function(e){
+    e.stopPropagation();
+    openProps(node.id);
+  });
+
+  document.getElementById('nodeLayer').appendChild(el);
+}
+
+function renderNodePosition(id){
+  var node=workflow.nodes.find(function(n){return n.id===id});if(!node)return;
+  var el=document.getElementById('node_'+id);if(!el)return;
+  el.style.left=node.position.x+'px';
+  el.style.top=node.position.y+'px';
+}
+
+/* ==================== Connections ==================== */
+function renderConnections(){
+  var svg=document.getElementById('connSvg');
+  svg.innerHTML='';
+  workflow.connections.forEach(function(c){
+    var srcEl=document.getElementById('node_'+c.sourceNodeId);
+    var tgtEl=document.getElementById('node_'+c.targetNodeId);
+    if(!srcEl||!tgtEl)return;
+    var srcNode=workflow.nodes.find(function(n){return n.id===c.sourceNodeId});
+    var tgtNode=workflow.nodes.find(function(n){return n.id===c.targetNodeId});
+    if(!srcNode||!tgtNode)return;
+
+    var x1=srcNode.position.x+srcEl.offsetWidth;
+    var y1=srcNode.position.y+35+c.sourceOutput*20;
+    var x2=tgtNode.position.x;
+    var y2=tgtNode.position.y+35+c.targetInput*20;
+
+    var dx=Math.abs(x2-x1)*0.5;
+    var d='M'+x1+','+y1+' C'+(x1+dx)+','+y1+' '+(x2-dx)+','+y2+' '+x2+','+y2;
+    var path=document.createElementNS('http://www.w3.org/2000/svg','path');
+    path.setAttribute('d',d);
+    path.dataset.connId=c.id;
+    path.style.pointerEvents='stroke';
+    path.style.cursor='pointer';
+    path.addEventListener('click',function(e){
+      e.stopPropagation();
+      if(confirm('Remove this connection?')){
+        workflow.connections=workflow.connections.filter(function(cn){return cn.id!==c.id});
+        renderConnections();
+        pushUndo();
+      }
+    });
+    svg.appendChild(path);
+  });
+
+  // Update port connected states
+  document.querySelectorAll('.port').forEach(function(p){
+    p.classList.remove('connected');
+    var nId=p.dataset.nodeId,idx=parseInt(p.dataset.idx);
+    if(p.classList.contains('output')){
+      if(workflow.connections.some(function(c){return c.sourceNodeId===nId&&c.sourceOutput===idx}))p.classList.add('connected');
+    }else{
+      if(workflow.connections.some(function(c){return c.targetNodeId===nId&&c.targetInput===idx}))p.classList.add('connected');
+    }
+  });
+}
+
+function renderTempConnection(mx,my){
+  removeTempLine();
+  if(!connecting)return;
+  var srcEl=document.getElementById('node_'+connecting.sourceNodeId);
+  var srcNode=workflow.nodes.find(function(n){return n.id===connecting.sourceNodeId});
+  if(!srcEl||!srcNode)return;
+
+  var wrap=document.getElementById('canvasWrap').getBoundingClientRect();
+  var x1=srcNode.position.x+srcEl.offsetWidth;
+  var y1=srcNode.position.y+35+connecting.sourceOutput*20;
+  var x2=(mx-wrap.left-panX)/zoom;
+  var y2=(my-wrap.top-panY)/zoom;
+
+  var dx=Math.abs(x2-x1)*0.5;
+  var d='M'+x1+','+y1+' C'+(x1+dx)+','+y1+' '+(x2-dx)+','+y2+' '+x2+','+y2;
+  var svg=document.getElementById('connSvg');
+  var path=document.createElementNS('http://www.w3.org/2000/svg','path');
+  path.setAttribute('d',d);
+  path.id='tempConn';
+  path.classList.add('active');
+  path.style.strokeDasharray='6 3';
+  svg.appendChild(path);
+}
+
+function removeTempLine(){var t=document.getElementById('tempConn');if(t)t.remove()}
+
+function endConnection(e){
+  if(!connecting)return;
+  // Find target port under mouse
+  var el=document.elementFromPoint(e.clientX,e.clientY);
+  if(!el||!el.classList.contains('port')||!el.classList.contains('input'))return;
+
+  var targetNodeId=el.dataset.nodeId;
+  var targetInput=parseInt(el.dataset.idx);
+
+  // No self-connection
+  if(targetNodeId===connecting.sourceNodeId)return;
+
+  // No duplicate connections
+  if(workflow.connections.some(function(c){
+    return c.sourceNodeId===connecting.sourceNodeId&&c.sourceOutput===connecting.sourceOutput&&
+           c.targetNodeId===targetNodeId&&c.targetInput===targetInput;
+  }))return;
+
+  // Remove existing connection to this input (only one allowed per input)
+  workflow.connections=workflow.connections.filter(function(c){
+    return !(c.targetNodeId===targetNodeId&&c.targetInput===targetInput);
+  });
+
+  workflow.connections.push({
+    id:'c_'+Math.random().toString(36).substr(2,9),
+    sourceNodeId:connecting.sourceNodeId,
+    sourceOutput:connecting.sourceOutput,
+    targetNodeId:targetNodeId,
+    targetInput:targetInput
+  });
+  renderConnections();
+  pushUndo();
+}
+
+/* ==================== Properties Panel ==================== */
+function openProps(nodeId){
+  var node=workflow.nodes.find(function(n){return n.id===nodeId});if(!node)return;
+  var def=nodeDefs.find(function(d){return d.id===node.definitionId});if(!def)return;
+
+  document.getElementById('propsPanel').classList.add('open');
+  document.getElementById('propsTitle').textContent=node.name;
+
+  var h='<div class="props-field"><label>Node Name</label><input value="'+esc(node.name)+'" onchange="updateNodeName(\''+node.id+'\',this.value)"></div>';
+
+  def.configFields.forEach(function(f){
+    h+='<div class="props-field"><label>'+esc(f.label)+(f.required?' *':'')+'</label>';
+    var val=node.config[f.key];if(val===undefined)val=f.default||'';
+
+    if(f.type==='select'){
+      h+='<select onchange="updateNodeConfig(\''+node.id+'\',\''+f.key+'\',this.value)">';
+      (f.options||[]).forEach(function(o){h+='<option value="'+esc(o.value)+'"'+(String(val)===String(o.value)?' selected':'')+'>'+esc(o.label)+'</option>'});
+      h+='</select>';
+    }else if(f.type==='boolean'){
+      h+='<select onchange="updateNodeConfig(\''+node.id+'\',\''+f.key+'\',this.value===\'true\')">';
+      h+='<option value="true"'+(val?' selected':'')+'>Yes</option>';
+      h+='<option value="false"'+(!val?' selected':'')+'>No</option></select>';
+    }else if(f.type==='code'||f.type==='json'){
+      h+='<textarea rows="5" style="font-family:monospace;font-size:11px" placeholder="'+esc(f.placeholder||'')+'" onchange="updateNodeConfig(\''+node.id+'\',\''+f.key+'\',this.value)">'+esc(String(val))+'</textarea>';
+    }else if(f.type==='number'){
+      h+='<input type="number" value="'+esc(String(val))+'" placeholder="'+esc(f.placeholder||'')+'" onchange="updateNodeConfig(\''+node.id+'\',\''+f.key+'\',parseFloat(this.value))">';
+    }else{
+      h+='<input value="'+esc(String(val))+'" placeholder="'+esc(f.placeholder||'')+'" onchange="updateNodeConfig(\''+node.id+'\',\''+f.key+'\',this.value)">';
+    }
+    if(f.placeholder)h+='<div class="hint">'+esc(f.placeholder)+'</div>';
+    h+='</div>';
+  });
+
+  document.getElementById('propsBody').innerHTML=h;
+}
+
+function closeProps(){document.getElementById('propsPanel').classList.remove('open');selectedNodeId=null;document.querySelectorAll('.wf-node.selected').forEach(function(el){el.classList.remove('selected')})}
+
+function updateNodeName(id,name){
+  var node=workflow.nodes.find(function(n){return n.id===id});if(!node)return;
+  node.name=name;
+  var el=document.getElementById('node_'+id);if(el){el.querySelector('.n-name').textContent=name}
+  document.getElementById('propsTitle').textContent=name;
+}
+
+function updateNodeConfig(id,key,value){
+  var node=workflow.nodes.find(function(n){return n.id===id});if(!node)return;
+  node.config[key]=value;
+  // Re-render node body to show updated config preview
+  var def=nodeDefs.find(function(d){return d.id===node.definitionId});if(!def)return;
+  var body=document.querySelector('#node_'+id+' .wf-node-body');
+  if(body){
+    var h='',shown=0;
+    def.configFields.forEach(function(f){
+      if(shown>=2)return;
+      var v=node.config[f.key];
+      if(v!==undefined&&v!==''){h+='<div class="n-param"><span class="n-key">'+esc(f.label)+'</span><span class="n-val">'+esc(String(v))+'</span></div>';shown++}
+    });
+    if(!shown)h='<div style="color:var(--muted);font-size:10px">Click to configure</div>';
+    body.innerHTML=h;
+  }
+}
+
+/* ==================== Undo/Redo ==================== */
+function pushUndo(){
+  undoStack.push(JSON.stringify({nodes:workflow.nodes,connections:workflow.connections}));
+  if(undoStack.length>50)undoStack.shift();
+  redoStack=[];
+}
+function undo(){
+  if(undoStack.length<=1)return;
+  redoStack.push(undoStack.pop());
+  var state=JSON.parse(undoStack[undoStack.length-1]);
+  workflow.nodes=state.nodes;workflow.connections=state.connections;
+  renderAll();
+}
+function redo(){
+  if(!redoStack.length)return;
+  var state=JSON.parse(redoStack.pop());
+  workflow.nodes=state.nodes;workflow.connections=state.connections;
+  undoStack.push(JSON.stringify(state));
+  renderAll();
+}
+
+/* ==================== Save/Execute ==================== */
+async function saveWorkflow(){
+  try{
+    if(workflowId){
+      await fetch('/api/workflows/'+workflowId,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+        name:workflow.name,description:workflow.description,nodes:workflow.nodes,connections:workflow.connections
+      })});
+    }else{
+      var r=await fetch('/api/workflows',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:workflow.name,description:workflow.description})});
+      var wf=await r.json();workflowId=wf.id;workflow.id=wf.id;
+      await fetch('/api/workflows/'+workflowId,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({nodes:workflow.nodes,connections:workflow.connections})});
+      history.replaceState(null,'','?id='+workflowId);
+    }
+    toast('Workflow saved','ok');
+  }catch(e){toast('Save failed: '+e.message,'err')}
+}
+
+async function executeWorkflow(){
+  if(!workflowId){await saveWorkflow();if(!workflowId)return}
+  await saveWorkflow();
+
+  // Visual reset
+  document.querySelectorAll('.wf-node').forEach(function(el){el.classList.remove('running','success','error')});
+  document.querySelectorAll('.conn-svg path').forEach(function(p){p.classList.remove('running','success','error')});
+
+  try{
+    toast('Executing workflow...','info');
+    var r=await fetch('/api/workflows/'+workflowId+'/execute',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({})});
+    var result=await r.json();
+
+    if(result.error){toast('Execution failed: '+result.error,'err');return}
+
+    // Animate results
+    (result.nodeResults||[]).forEach(function(nr){
+      var el=document.getElementById('node_'+nr.nodeId);
+      if(el){el.classList.add(nr.status==='success'?'success':'error')}
+    });
+
+    var msg='Workflow '+(result.status==='success'?'completed':'failed')+' in '+(result.duration/1000).toFixed(1)+'s';
+    toast(msg,result.status==='success'?'ok':'err');
+  }catch(e){toast('Execution error: '+e.message,'err')}
+}
+
+/* ==================== Rename ==================== */
+function renameWorkflow(){
+  document.getElementById('renameIn').value=workflow.name;
+  document.getElementById('renameDesc').value=workflow.description||'';
+  openModal('renameMod');
+}
+function applyRename(){
+  workflow.name=document.getElementById('renameIn').value||'Untitled Workflow';
+  workflow.description=document.getElementById('renameDesc').value||'';
+  document.getElementById('wfTitle').textContent=workflow.name;
+  closeModal('renameMod');
+}
+
+/* ==================== Start ==================== */
+init();
+</script>
+</body>
+</html>

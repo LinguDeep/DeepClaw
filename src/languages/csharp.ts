@@ -583,7 +583,7 @@ export class CSharpParser {
 
   private parseAttribute(lines: string[], startIdx: number, filePath: string): { node: ASTNode; endIndex: number } | null {
     const line = lines[startIdx].trim();
-    const match = line.match(/^\[([\w]+)(?:\(([^)]*)\))?\]\s*(?:$|/);
+    const match = line.match(/^\[([\w]+)(?:\(([^)]*)\))?\]\s*(?:$|\/\/)/);
     if (!match) return null;
 
     const name = match[1];

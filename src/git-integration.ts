@@ -520,7 +520,7 @@ export class GitIntegration {
       };
 
       const code = staged ? line[0] : line[1];
-      const filePath = line.substring(3).trim();
+      let filePath = line.substring(3).trim();
       
       // Handle renamed files (R100 old -> new)
       let originalPath: string | undefined;

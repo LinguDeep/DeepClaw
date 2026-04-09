@@ -147,6 +147,20 @@ select.inp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns
 .sh{font-size:10px;color:var(--muted);margin-top:3px}
 .sa{display:flex;gap:8px;margin-top:16px}
 .es{text-align:center;padding:60px 20px;color:var(--muted)}.es .ei{font-size:40px;margin-bottom:12px;opacity:.5}.es p{font-size:13px;margin-bottom:16px}
+/* Workflow List */
+.wf-item{display:flex;align-items:center;gap:14px;padding:14px 18px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);margin-bottom:8px;transition:transform .15s,border .15s,box-shadow .15s;cursor:pointer}
+.wf-item:hover{border-color:var(--accent);transform:translateY(-1px);box-shadow:0 4px 16px rgba(0,0,0,.3)}
+.wf-item .wf-icon{width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,rgba(91,91,214,.15),rgba(91,91,214,.05));display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--accent3)}
+.wf-item .wf-icon svg{width:18px;height:18px}
+.wf-item .wf-info{flex:1;min-width:0}
+.wf-item .wf-name{font-weight:600;font-size:14px;margin-bottom:3px}
+.wf-item .wf-desc{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wf-item .wf-meta{display:flex;gap:12px;font-size:11px;color:var(--muted);margin-top:4px}
+.wf-item .wf-meta span{display:flex;align-items:center;gap:3px}
+.wf-item .wf-badge{font-size:10px;padding:3px 8px;border-radius:4px;font-weight:600}
+.wf-item .wf-badge.active{background:rgba(74,222,128,.1);color:var(--green)}
+.wf-item .wf-badge.draft{background:var(--bg3);color:var(--muted)}
+.wf-item .wf-acts{display:flex;gap:4px;flex-shrink:0}
 @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 /* Home Dashboard */
 .home-wrap{flex:1;overflow-y:auto;padding:20px}
@@ -227,6 +241,7 @@ select.inp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns
       <div class="sep"></div>
       <div class="nav-label">Tools</div>
       <div class="ni" data-v="skills"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg> Skills <span class="cnt" id="cntSk">0</span></div>
+      <div class="ni" data-v="workflows"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M6 21V9a9 9 0 0 0 9 9"/></svg> Workflows <span class="cnt" id="cntWf">0</span></div>
       <div class="ni" data-v="sched"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Scheduler <span class="cnt" id="cntJob">0</span></div>
       <div class="ni" data-v="browser"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg> Browser</div>
       <div class="sep"></div>
@@ -427,6 +442,16 @@ select.inp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns
       </div>
       <div class="mem-list" id="inboxList"></div>
     </div>
+    <!-- WORKFLOWS -->
+    <div class="view" id="v-workflows">
+      <div class="skills-head"><h2><svg style="width:18px;height:18px;opacity:.7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M6 21V9a9 9 0 0 0 9 9"/></svg> Workflows</h2><button class="btn btn-p btn-sm" onclick="openWorkflowEditor()">+ New Workflow</button></div>
+      <div style="padding:16px 20px;border-bottom:1px solid var(--border);background:var(--bg1);display:flex;gap:8px;align-items:center">
+        <input class="inp" id="wfSearch" placeholder="Search workflows..." style="flex:1;max-width:320px" oninput="filterWorkflows()">
+        <span style="flex:1"></span>
+        <span style="font-size:12px;color:var(--muted)" id="wfStats">0 workflows</span>
+      </div>
+      <div class="wf-list" id="wfList" style="flex:1;overflow-y:auto;padding:16px 20px"></div>
+    </div>
     <!-- SETTINGS -->
     <div class="view" id="v-settings">
       <div class="panel-head"><h2>Settings</h2><p>LLM provider, model, and system configuration</p></div>
@@ -484,7 +509,7 @@ function switchView(v){
   document.querySelector('.ni[data-v="'+v+'"]').classList.add('a');
   document.querySelectorAll('.view').forEach(function(x){x.classList.remove('active')});
   document.getElementById('v-'+v).classList.add('active');
-  if(v==='memory')loadMem();if(v==='skills')loadSk();if(v==='sched')loadJobs();if(v==='settings')loadSett();if(v==='inbox')loadInbox();
+  if(v==='memory')loadMem();if(v==='skills')loadSk();if(v==='sched')loadJobs();if(v==='settings')loadSett();if(v==='inbox')loadInbox();if(v==='workflows')loadWorkflows();
 }
 // NAV
 document.querySelectorAll('.ni[data-v]').forEach(function(n){n.addEventListener('click',function(){
@@ -737,6 +762,48 @@ function checkMail(){toast('Checking for new emails...','info');fetch('/api/inbo
 function markRead(id){fetch('/api/inbox/messages/'+id+'/read',{method:'POST'}).then(function(){loadInbox();});}
 function markAllRead(){fetch('/api/inbox/mark-all-read',{method:'POST'}).then(function(){toast('All messages marked read','ok');loadInbox();});}
 function delMsg(id){fetch('/api/inbox/messages/'+id,{method:'DELETE'}).then(function(){loadInbox();});}
+// WORKFLOWS
+var _wfData=[];
+function loadWorkflows(){
+  fetch('/api/workflows').then(function(r){return r.json()}).then(function(wfs){
+    _wfData=wfs||[];document.getElementById('cntWf').textContent=_wfData.length;
+    document.getElementById('wfStats').textContent=_wfData.length+' workflow'+(_wfData.length===1?'':'s');
+    renderWorkflows(_wfData);
+  }).catch(function(){document.getElementById('wfList').innerHTML='<div class="es"><p>Failed to load workflows.</p></div>'})
+}
+function renderWorkflows(wfs){
+  if(!wfs.length){document.getElementById('wfList').innerHTML='<div class="es"><svg style="width:48px;height:48px;color:var(--muted);opacity:.3;margin-bottom:12px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M6 21V9a9 9 0 0 0 9 9"/></svg><p>No workflows yet</p><button class="btn btn-p" onclick="openWorkflowEditor()">Create your first workflow</button></div>';return}
+  var h='';for(var i=0;i<wfs.length;i++){var w=wfs[i];
+    h+='<div class="wf-item" onclick="openWorkflowEditor(\''+esc(w.id)+'\')">';
+    h+='<div class="wf-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M6 21V9a9 9 0 0 0 9 9"/></svg></div>';
+    h+='<div class="wf-info"><div class="wf-name">'+esc(w.name)+'</div>';
+    if(w.description)h+='<div class="wf-desc">'+esc(w.description)+'</div>';
+    h+='<div class="wf-meta"><span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/></svg> '+(w.nodes?w.nodes.length:0)+' nodes</span>';
+    h+='<span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> '+esc(w.createdAt?new Date(w.createdAt).toLocaleDateString():'')+'</span></div></div>';
+    h+='<span class="wf-badge '+(w.active?'active':'draft')+'">'+(w.active?'Active':'Draft')+'</span>';
+    h+='<div class="wf-acts">';
+    h+='<button class="btn btn-g btn-sm" onclick="event.stopPropagation();execWf(\''+w.id+'\')">Run</button>';
+    h+='<button class="btn btn-g btn-sm" onclick="event.stopPropagation();dupeWf(\''+w.id+'\')">Duplicate</button>';
+    h+='<button class="btn btn-d btn-sm" onclick="event.stopPropagation();delWf(\''+w.id+'\',\''+esc(w.name)+'\')">Delete</button>';
+    h+='</div></div>';
+  }
+  document.getElementById('wfList').innerHTML=h;
+}
+function filterWorkflows(){var q=document.getElementById('wfSearch').value.toLowerCase();
+  var f=_wfData.filter(function(w){return w.name.toLowerCase().includes(q)||(w.description||'').toLowerCase().includes(q)});
+  renderWorkflows(f);
+}
+function openWorkflowEditor(id){window.open('/workflow-editor.html'+(id?'?id='+id:''),'_blank')}
+function execWf(id){toast('Executing workflow...','info');
+  fetch('/api/workflows/'+id+'/execute',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({})})
+  .then(function(r){return r.json()}).then(function(d){
+    if(d.error)toast('Error: '+d.error,'err');
+    else toast('Workflow '+(d.status==='success'?'completed':'failed')+' in '+(d.duration/1000).toFixed(1)+'s',d.status==='success'?'ok':'err');
+  }).catch(function(e){toast(e.message,'err')})}
+function dupeWf(id){fetch('/api/workflows/'+id+'/duplicate',{method:'POST'}).then(function(r){return r.json()}).then(function(d){
+  if(d.id){toast('Duplicated','ok');loadWorkflows()}else toast('Error','err')}).catch(function(e){toast(e.message,'err')})}
+function delWf(id,name){if(!confirm('Delete workflow "'+name+'"?'))return;
+  fetch('/api/workflows/'+id,{method:'DELETE'}).then(function(){toast('Deleted','ok');loadWorkflows()}).catch(function(e){toast(e.message,'err')})}
 // WEBSOCKET
 try{var ws=new WebSocket('ws://'+location.host);
   ws.onopen=function(){document.getElementById('wsDot').className='dot on';document.getElementById('wsLabel').textContent='Connected'};
