@@ -1,10 +1,12 @@
 <div align="center">
 
-# LinguClaw
+# 🦾 LinguClaw
+
+<img width="2038" height="512" alt="Gemini_Generated_Image_h22oa1h22oa1h22o" src="https://github.com/user-attachments/assets/ca6404ef-fa21-4b79-ae99-108f6463a33c" />
+
 
 **Codebase-Aware Multi-Agent AI System**
 
-[![CI/CD](https://github.com/LinguDeep/LinguClaw/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/LinguDeep/LinguClaw/actions/workflows/ci-cd.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-%3E%3D20-green?logo=node.js&logoColor=white)](https://nodejs.org/)
