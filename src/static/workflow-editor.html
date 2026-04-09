@@ -103,13 +103,14 @@ body{font-family:'Inter','SF Pro Display',-apple-system,sans-serif;background:va
 .port.connected{background:var(--accent);border-color:var(--accent)}
 
 /* Connection SVG */
-.conn-svg{position:absolute;inset:0;pointer-events:none;z-index:5}
-.conn-svg path{fill:none;stroke:var(--border);stroke-width:2;transition:stroke .2s}
+.conn-svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none;z-index:5}
+.conn-svg path{fill:none;stroke:var(--border);stroke-width:2;pointer-events:stroke;cursor:pointer;transition:stroke .2s}
 .conn-svg path:hover{stroke:var(--accent);stroke-width:2.5}
 .conn-svg path.active{stroke:var(--accent)}
 .conn-svg path.running{stroke:var(--yellow);stroke-dasharray:8 4;animation:dash .5s linear infinite}
 .conn-svg path.success{stroke:var(--green)}
 .conn-svg path.error{stroke:var(--red)}
+.conn-svg path.drop-target{stroke:var(--accent3);stroke-width:3.5;filter:drop-shadow(0 0 6px var(--accent))}
 @keyframes dash{to{stroke-dashoffset:-12}}
 
 /* Properties panel */
@@ -177,7 +178,7 @@ body{font-family:'Inter','SF Pro Display',-apple-system,sans-serif;background:va
   </div>
   <div class="canvas-wrap" id="canvasWrap">
     <div class="canvas-bg" id="canvasBg"></div>
-    <svg class="conn-svg" id="connSvg"></svg>
+    <svg class="conn-svg" id="connSvg" overflow="visible"></svg>
     <div id="nodeLayer"></div>
     <div class="empty-canvas" id="emptyCanvas">
       <div class="ec-inner">
@@ -248,9 +249,26 @@ function closeModal(id){document.getElementById(id).classList.remove('open')}
 function genId(){return 'n_'+Math.random().toString(36).substr(2,9)}
 
 /* ==================== Init ==================== */
+var defaultNodeDefs=[
+  {id:'trigger-manual',name:'Manual Trigger',type:'trigger',category:'Triggers',icon:'play',inputs:0,outputs:1,configFields:[]},
+  {id:'trigger-schedule',name:'Schedule',type:'trigger',category:'Triggers',icon:'clock',inputs:0,outputs:1,configFields:[{key:'cron',label:'Cron','type':'text','default':'0 * * * *'}]},
+  {id:'trigger-webhook',name:'Webhook',type:'trigger',category:'Triggers',icon:'webhook',inputs:0,outputs:1,configFields:[{key:'path',label:'Path','type':'text','default':'/hook'}]},
+  {id:'action-http',name:'HTTP Request',type:'action',category:'Actions',icon:'globe',inputs:1,outputs:1,configFields:[{key:'url',label:'URL','type':'text','default':'https://'},  {key:'method',label:'Method','type':'select','default':'GET'}]},
+  {id:'action-code',name:'Run Code',type:'action',category:'Actions',icon:'code',inputs:1,outputs:1,configFields:[{key:'code',label:'Code','type':'code','default':'return items;'}]},
+  {id:'action-email',name:'Send Email',type:'action',category:'Actions',icon:'mail',inputs:1,outputs:1,configFields:[{key:'to',label:'To','type':'text'},{key:'subject',label:'Subject','type':'text'}]},
+  {id:'action-llm',name:'AI / LLM',type:'action',category:'Actions',icon:'brain',inputs:1,outputs:1,configFields:[{key:'prompt',label:'Prompt','type':'code','default':'Summarize:'}]},
+  {id:'transform-set',name:'Set Fields',type:'transform',category:'Transform',icon:'braces',inputs:1,outputs:1,configFields:[{key:'fields',label:'Fields','type':'code','default':'{}'}]},
+  {id:'transform-filter',name:'Filter',type:'transform',category:'Transform',icon:'type',inputs:1,outputs:1,configFields:[{key:'condition',label:'Condition','type':'text','default':'item.value > 0'}]},
+  {id:'condition-if',name:'IF',type:'condition',category:'Logic',icon:'git-branch',inputs:1,outputs:2,configFields:[{key:'condition',label:'Condition','type':'text','default':'true'}]},
+  {id:'condition-switch',name:'Switch',type:'condition',category:'Logic',icon:'git-merge',inputs:1,outputs:3,configFields:[{key:'field',label:'Field','type':'text'}]},
+  {id:'output-respond',name:'Respond',type:'output',category:'Output',icon:'send',inputs:1,outputs:0,configFields:[{key:'body',label:'Body','type':'code','default':'{}'}]},
+  {id:'output-file',name:'Write File',type:'output',category:'Output',icon:'file-plus',inputs:1,outputs:0,configFields:[{key:'path',label:'Path','type':'text'}]}
+];
+
 async function init(){
   // Load node definitions
-  try{var r=await fetch('/api/workflows/node-definitions');nodeDefs=await r.json();renderPalette()}catch(e){console.error('Failed to load node defs:',e)}
+  try{var r=await fetch('/api/workflows/node-definitions');nodeDefs=await r.json()}catch(e){console.warn('API unavailable, using default node defs');nodeDefs=defaultNodeDefs}
+  renderPalette();
 
   // Load or create workflow
   if(workflowId){
@@ -299,19 +317,93 @@ function findNode(e){
   for(var i=0;i<els.length;i++){if(els[i].classList.contains('wf-node'))return els[i];if(els[i].closest&&els[i].closest('.wf-node'))return els[i].closest('.wf-node')}
   return null;
 }
+function findConnectionAtPoint(cx,cy){
+  // Check SVG paths under point
+  var els=document.elementsFromPoint(cx,cy);
+  for(var i=0;i<els.length;i++){
+    var el=els[i];
+    if(el.tagName==='path'&&el.dataset.connId){
+      return workflow.connections.find(function(c){return c.id===el.dataset.connId})||null;
+    }
+  }
+  // Fallback: distance-based check for nearby connections
+  var wrap=document.getElementById('canvasWrap');
+  var rect=wrap.getBoundingClientRect();
+  var px=(cx-rect.left-panX)/zoom;
+  var py=(cy-rect.top-panY)/zoom;
+  var bestDist=20,bestConn=null;
+  workflow.connections.forEach(function(conn){
+    var src=workflow.nodes.find(function(n){return n.id===conn.sourceNodeId});
+    var tgt=workflow.nodes.find(function(n){return n.id===conn.targetNodeId});
+    if(!src||!tgt)return;
+    var srcEl=document.getElementById('node_'+conn.sourceNodeId);
+    var tgtEl=document.getElementById('node_'+conn.targetNodeId);
+    if(!srcEl||!tgtEl)return;
+    var x1=src.position.x+srcEl.offsetWidth,y1=src.position.y+42+(conn.sourceOutput||0)*20;
+    var x2=tgt.position.x,y2=tgt.position.y+42+(conn.targetInput||0)*20;
+    var d=distToBeizer(px,py,x1,y1,x2,y2);
+    if(d<bestDist){bestDist=d;bestConn=conn}
+  });
+  return bestConn;
+}
+function distToBeizer(px,py,x1,y1,x2,y2){
+  // Sample bezier at N points and find min distance
+  var cp=Math.max(60,Math.abs(x2-x1)*0.5);
+  var min=Infinity;
+  for(var t=0;t<=1;t+=0.05){
+    var it=1-t;
+    var bx=it*it*it*x1+3*it*it*t*(x1+cp)+3*it*t*t*(x2-cp)+t*t*t*x2;
+    var by=it*it*it*y1+3*it*it*t*y1+3*it*t*t*y2+t*t*t*y2;
+    var dx=px-bx,dy=py-by;
+    var d=Math.sqrt(dx*dx+dy*dy);
+    if(d<min)min=d;
+  }
+  return min;
+}
 
 function setupCanvasEvents(){
   var wrap=document.getElementById('canvasWrap');
 
   // Drop from palette
-  wrap.addEventListener('dragover',function(e){e.preventDefault();e.dataTransfer.dropEffect='copy'});
+  wrap.addEventListener('dragover',function(e){
+    e.preventDefault();e.dataTransfer.dropEffect='copy';
+    // Highlight connection under cursor
+    document.querySelectorAll('.conn-svg path.drop-target').forEach(function(p){p.classList.remove('drop-target')});
+    var conn=findConnectionAtPoint(e.clientX,e.clientY);
+    if(conn){document.querySelectorAll('.conn-svg path[data-conn-id="'+conn.id+'"]').forEach(function(p){p.classList.add('drop-target')})}
+  });
+  wrap.addEventListener('dragleave',function(){document.querySelectorAll('.conn-svg path.drop-target').forEach(function(p){p.classList.remove('drop-target')})});
   wrap.addEventListener('drop',function(e){
     e.preventDefault();
+    document.querySelectorAll('.conn-svg path.drop-target').forEach(function(p){p.classList.remove('drop-target')});
     var defId=e.dataTransfer.getData('defId');if(!defId)return;
+    var def=nodeDefs.find(function(d){return d.id===defId});
+    if(!def)return;
     var rect=wrap.getBoundingClientRect();
     var x=(e.clientX-rect.left-panX)/zoom;
     var y=(e.clientY-rect.top-panY)/zoom;
-    addNode(defId,x,y);
+
+    // Check if dropped on a connection
+    var conn=findConnectionAtPoint(e.clientX,e.clientY);
+    if(conn&&def.inputs>0&&def.outputs>0){
+      // Insert node between the two connected nodes
+      var newNode=addNode(defId,x,y,true);
+      if(newNode){
+        var oldConn=workflow.connections.find(function(c){return c.id===conn.id});
+        if(oldConn){
+          // Remove old connection
+          workflow.connections=workflow.connections.filter(function(c){return c.id!==conn.id});
+          // Add: source → new node
+          workflow.connections.push({id:'c_'+Math.random().toString(36).substr(2,9),sourceNodeId:oldConn.sourceNodeId,sourceOutput:oldConn.sourceOutput,targetNodeId:newNode.id,targetInput:0});
+          // Add: new node → target
+          workflow.connections.push({id:'c_'+Math.random().toString(36).substr(2,9),sourceNodeId:newNode.id,sourceOutput:0,targetNodeId:oldConn.targetNodeId,targetInput:oldConn.targetInput});
+          renderConnections();
+          pushUndo();
+        }
+      }
+    }else{
+      addNode(defId,x,y);
+    }
   });
 
   // Single delegated mousedown on wrap
@@ -438,16 +530,17 @@ function zoomFit(){
 }
 
 /* ==================== Node Management ==================== */
-function addNode(defId,x,y){
-  var def=nodeDefs.find(function(d){return d.id===defId});if(!def)return;
-  var node={id:genId(),definitionId:defId,type:def.type,name:def.name,config:{},position:{x:x||200,y:y||200}};
+function addNode(defId,x,y,returnNode){
+  var def=nodeDefs.find(function(d){return d.id===defId});if(!def)return null;
+  var node={id:genId(),definitionId:defId,type:def.type,name:def.name,config:{},position:{x:Math.round(x/12)*12||200,y:Math.round(y/12)*12||200}};
   // Set defaults
   def.configFields.forEach(function(f){if(f.default!==undefined)node.config[f.key]=f.default});
   workflow.nodes.push(node);
   renderNode(node);
   selectNode(node.id);
   updateEmptyState();
-  pushUndo();
+  if(!returnNode)pushUndo();
+  return returnNode?node:null;
 }
 
 function deleteNode(id){
@@ -563,25 +656,39 @@ function renderConnections(){
     if(!srcNode||!tgtNode)return;
 
     var x1=srcNode.position.x+srcEl.offsetWidth;
-    var y1=srcNode.position.y+35+c.sourceOutput*20;
+    var y1=srcNode.position.y+42+c.sourceOutput*20;
     var x2=tgtNode.position.x;
-    var y2=tgtNode.position.y+35+c.targetInput*20;
+    var y2=tgtNode.position.y+42+c.targetInput*20;
 
     var dx=Math.abs(x2-x1)*0.5;
     var d='M'+x1+','+y1+' C'+(x1+dx)+','+y1+' '+(x2-dx)+','+y2+' '+x2+','+y2;
+    // Invisible wide hit area for drag detection
+    var hitPath=document.createElementNS('http://www.w3.org/2000/svg','path');
+    hitPath.setAttribute('d',d);
+    hitPath.dataset.connId=c.id;
+    hitPath.setAttribute('fill','none');
+    hitPath.setAttribute('stroke','transparent');
+    hitPath.setAttribute('stroke-width','18');
+    hitPath.style.pointerEvents='stroke';
+    hitPath.style.cursor='pointer';
+    // Visible path
     var path=document.createElementNS('http://www.w3.org/2000/svg','path');
     path.setAttribute('d',d);
     path.dataset.connId=c.id;
-    path.style.pointerEvents='stroke';
-    path.style.cursor='pointer';
-    path.addEventListener('click',function(e){
+    path.setAttribute('fill','none');
+    path.setAttribute('stroke','#6b7280');
+    path.setAttribute('stroke-width','2');
+    path.style.pointerEvents='none';
+    var clickHandler=function(conn){return function(e){
       e.stopPropagation();
       if(confirm('Remove this connection?')){
-        workflow.connections=workflow.connections.filter(function(cn){return cn.id!==c.id});
+        workflow.connections=workflow.connections.filter(function(cn){return cn.id!==conn.id});
         renderConnections();
         pushUndo();
       }
-    });
+    }}(c);
+    hitPath.addEventListener('click',clickHandler);
+    svg.appendChild(hitPath);
     svg.appendChild(path);
   });
 
@@ -606,7 +713,7 @@ function renderTempConnection(mx,my){
 
   var wrap=document.getElementById('canvasWrap').getBoundingClientRect();
   var x1=srcNode.position.x+srcEl.offsetWidth;
-  var y1=srcNode.position.y+35+connecting.sourceOutput*20;
+  var y1=srcNode.position.y+42+connecting.sourceOutput*20;
   var x2=(mx-wrap.left-panX)/zoom;
   var y2=(my-wrap.top-panY)/zoom;
 
@@ -615,9 +722,11 @@ function renderTempConnection(mx,my){
   var svg=document.getElementById('connSvg');
   var path=document.createElementNS('http://www.w3.org/2000/svg','path');
   path.setAttribute('d',d);
+  path.setAttribute('fill','none');
+  path.setAttribute('stroke','#5b5bd6');
+  path.setAttribute('stroke-width','2');
+  path.setAttribute('stroke-dasharray','6 3');
   path.id='tempConn';
-  path.classList.add('active');
-  path.style.strokeDasharray='6 3';
   svg.appendChild(path);
 }
 
