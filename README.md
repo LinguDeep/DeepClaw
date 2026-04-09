@@ -7,9 +7,9 @@
 
 **Codebase-Aware Multi-Agent AI System**
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Node.js](https://img.shields.io/badge/Node.js-%3E%3D20-green?logo=node.js&logoColor=white)](https://nodejs.org/)
+# [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+# [![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+# [![Node.js](https://img.shields.io/badge/Node.js-%3E%3D20-green?logo=node.js&logoColor=white)](https://nodejs.org/)
 
 LinguClaw is a TypeScript-powered AI platform that combines multi-agent orchestration, static code analysis across 7 languages, a visual workflow engine, real-time messaging integrations, and a professional web dashboard — all in one system.
 
