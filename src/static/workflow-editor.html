@@ -55,7 +55,7 @@ body{font-family:'Inter','SF Pro Display',-apple-system,sans-serif;background:va
 
 /* Canvas */
 .canvas-wrap{flex:1;position:relative;overflow:hidden;background:var(--bg0)}
-.canvas-bg{position:absolute;inset:0;background-image:radial-gradient(circle,var(--border) 1px,transparent 1px);background-size:24px 24px}
+.canvas-bg{position:absolute;inset:0;background-image:radial-gradient(circle,var(--border) 1px,transparent 1px);background-size:24px 24px;pointer-events:none}
 #canvas{position:absolute;inset:0;width:100%;height:100%}
 #nodeLayer{position:absolute;inset:0;pointer-events:none}
 
@@ -289,6 +289,17 @@ function filterNodes(){
 }
 
 /* ==================== Canvas ==================== */
+function findPort(e){
+  var els=document.elementsFromPoint(e.clientX,e.clientY);
+  for(var i=0;i<els.length;i++){if(els[i].classList.contains('port'))return els[i]}
+  return null;
+}
+function findNode(e){
+  var els=document.elementsFromPoint(e.clientX,e.clientY);
+  for(var i=0;i<els.length;i++){if(els[i].classList.contains('wf-node'))return els[i];if(els[i].closest&&els[i].closest('.wf-node'))return els[i].closest('.wf-node')}
+  return null;
+}
+
 function setupCanvasEvents(){
   var wrap=document.getElementById('canvasWrap');
 
@@ -303,16 +314,51 @@ function setupCanvasEvents(){
     addNode(defId,x,y);
   });
 
-  // Pan with middle mouse / right-click drag
+  // Single delegated mousedown on wrap
   var panning=false,lastX,lastY;
   wrap.addEventListener('mousedown',function(e){
-    if(e.button===1||e.button===2||(e.button===0&&e.target===wrap.querySelector('.canvas-bg'))){
-      if(e.target.closest('.wf-node')||e.target.closest('.port'))return;
+    if(e.button!==0){
+      // Middle/right click = pan
       panning=true;lastX=e.clientX;lastY=e.clientY;wrap.style.cursor='grabbing';e.preventDefault();
-      // Deselect
-      if(e.button===0){selectNode(null)}
+      return;
     }
+
+    // Check if clicking on a port
+    var port=findPort(e);
+    if(port&&port.classList.contains('output')){
+      // Start connection drag
+      e.preventDefault();
+      e.stopPropagation();
+      connecting={sourceNodeId:port.dataset.nodeId,sourceOutput:parseInt(port.dataset.idx)};
+      port.style.borderColor='var(--accent)';
+      port.style.transform='scale(1.4)';
+      return;
+    }
+
+    // Check if clicking on a delete button
+    var del=null;
+    var els=document.elementsFromPoint(e.clientX,e.clientY);
+    for(var i=0;i<els.length;i++){if(els[i].classList.contains('n-del')){del=els[i];break}}
+    if(del)return; // let the onclick handle it
+
+    // Check if clicking on a node (not a port)
+    var nodeEl=findNode(e);
+    if(nodeEl&&nodeEl.id&&nodeEl.id.startsWith('node_')){
+      var nid=nodeEl.id.replace('node_','');
+      selectNode(nid);
+      draggingNode=nid;
+      var rect=nodeEl.getBoundingClientRect();
+      dragOffX=(e.clientX-rect.left)/zoom;
+      dragOffY=(e.clientY-rect.top)/zoom;
+      e.preventDefault();
+      return;
+    }
+
+    // Click on empty canvas = deselect + pan
+    selectNode(null);
+    panning=true;lastX=e.clientX;lastY=e.clientY;wrap.style.cursor='grabbing';
   });
+
   window.addEventListener('mousemove',function(e){
     if(panning){panX+=e.clientX-lastX;panY+=e.clientY-lastY;lastX=e.clientX;lastY=e.clientY;applyTransform()}
     if(draggingNode){
@@ -486,25 +532,8 @@ function renderNode(node){
     port.dataset.idx=i;
     port.style.top=(35+i*20)+'px';
     if(workflow.connections.some(function(c){return c.sourceNodeId===node.id&&c.sourceOutput===i}))port.classList.add('connected');
-    port.addEventListener('mousedown',function(e){
-      e.stopPropagation();
-      e.preventDefault();
-      connecting={sourceNodeId:this.dataset.nodeId,sourceOutput:parseInt(this.dataset.idx)};
-    }.bind(port));
     el.appendChild(port);
   }
-
-  // Node drag
-  el.addEventListener('mousedown',function(e){
-    if(e.target.closest('.port')||e.target.closest('.n-del'))return;
-    e.stopPropagation();
-    selectNode(node.id);
-    draggingNode=node.id;
-    var rect=el.getBoundingClientRect();
-    var wrap=document.getElementById('canvasWrap').getBoundingClientRect();
-    dragOffX=(e.clientX-rect.left)/zoom;
-    dragOffY=(e.clientY-rect.top)/zoom;
-  });
 
   el.addEventListener('dblclick',function(e){
     e.stopPropagation();
@@ -596,11 +625,9 @@ function removeTempLine(){var t=document.getElementById('tempConn');if(t)t.remov
 
 function endConnection(e){
   if(!connecting)return;
-  // Find target port under mouse - check elements at point
-  var els=document.elementsFromPoint(e.clientX,e.clientY);
-  var el=null;
-  for(var i=0;i<els.length;i++){if(els[i].classList.contains('port')&&els[i].classList.contains('input')){el=els[i];break}}
-  if(!el)return;
+  // Find target input port under mouse
+  var el=findPort(e);
+  if(!el||!el.classList.contains('input'))return;
 
   var targetNodeId=el.dataset.nodeId;
   var targetInput=parseInt(el.dataset.idx);
