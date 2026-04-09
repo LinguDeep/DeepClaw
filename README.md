@@ -100,6 +100,7 @@ git clone https://github.com/LinguDeep/LinguClaw.git
 cd LinguClaw
 npm install
 npm run build
+npm start web
 ```
 
 Open Web Dashboard: [http://localhost:3000](http://localhost:3000)
