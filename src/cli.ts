@@ -460,6 +460,81 @@ program
     }
   });
 
+// Hub install command
+program
+  .command('hub')
+  .description('Install community skills from ClawLing Hub')
+  .argument('<action>', 'Action: install, list, remove')
+  .argument('[name]', 'Skill name')
+  .action(async (action, name) => {
+    const fs = require('fs');
+    const https = require('https');
+    const pluginDir = path.join(process.env.HOME || '~', '.linguclaw', 'plugins');
+
+    if (action === 'install') {
+      if (!name) { console.log(chalk.red('Skill name required: linguclaw hub install <name>')); process.exit(1); }
+      console.log(chalk.cyan('🔍 Searching ClawLing Hub for "' + name + '"...'));
+
+      // Fetch skill from Firestore REST API
+      const projectId = 'linguclaw';
+      const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/skills`;
+      const data: any = await new Promise((resolve, reject) => {
+        https.get(url, (res: any) => {
+          let d = ''; res.on('data', (c: any) => d += c);
+          res.on('end', () => { try { resolve(JSON.parse(d)); } catch { reject(new Error('Parse error')); } });
+        }).on('error', reject);
+      });
+
+      if (!data.documents) { console.log(chalk.red('No skills found on hub')); return; }
+      const doc = data.documents.find((d: any) => {
+        const fields = d.fields;
+        return fields.name?.stringValue?.toLowerCase() === name.toLowerCase();
+      });
+      if (!doc) { console.log(chalk.red('Skill "' + name + '" not found')); return; }
+
+      const fields = doc.fields;
+      const downloadUrl = fields.downloadUrl?.stringValue;
+      const fileName = fields.fileName?.stringValue || name + '.js';
+
+      if (!downloadUrl) { console.log(chalk.red('No download file for this skill')); return; }
+
+      // Download file
+      if (!fs.existsSync(pluginDir)) fs.mkdirSync(pluginDir, { recursive: true });
+      const dest = path.join(pluginDir, fileName);
+      console.log(chalk.dim('Downloading to ' + dest + '...'));
+
+      await new Promise<void>((resolve, reject) => {
+        const download = (urlStr: string) => {
+          https.get(urlStr, (res: any) => {
+            if (res.statusCode === 302 || res.statusCode === 301) { download(res.headers.location); return; }
+            const file = fs.createWriteStream(dest);
+            res.pipe(file);
+            file.on('finish', () => { file.close(); resolve(); });
+          }).on('error', reject);
+        };
+        download(downloadUrl);
+      });
+
+      console.log(chalk.green('✓ Installed "' + fields.name.stringValue + '" → ' + dest));
+      console.log(chalk.dim('  Auto-loaded on next linguclaw start'));
+
+    } else if (action === 'list') {
+      if (!fs.existsSync(pluginDir)) { console.log(chalk.dim('No community skills installed')); return; }
+      const files = fs.readdirSync(pluginDir).filter((f: string) => f.endsWith('.js') || f.endsWith('.ts'));
+      if (files.length === 0) { console.log(chalk.dim('No community skills installed')); return; }
+      console.log(chalk.bold.cyan('Installed community skills:'));
+      files.forEach((f: string) => console.log('  • ' + f));
+
+    } else if (action === 'remove') {
+      if (!name) { console.log(chalk.red('Skill name required')); process.exit(1); }
+      const files = fs.existsSync(pluginDir) ? fs.readdirSync(pluginDir) : [];
+      const match = files.find((f: string) => f.toLowerCase().includes(name.toLowerCase()));
+      if (!match) { console.log(chalk.red('Skill "' + name + '" not found locally')); return; }
+      fs.unlinkSync(path.join(pluginDir, match));
+      console.log(chalk.green('✓ Removed ' + match));
+    }
+  });
+
 export function cliEntry(): void {
   program.parse();
 }

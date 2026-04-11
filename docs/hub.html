@@ -46,6 +46,10 @@ section{padding:120px 0;position:relative;overflow:hidden}
 .nav-link.active{color:var(--accent2)}
 .nav-cta{padding:9px 22px;border-radius:10px;font-size:13.5px;font-weight:700;background:var(--accent);color:#fff;border:none;cursor:pointer;transition:all .3s;margin-left:8px}
 .nav-cta:hover{background:var(--accent3);transform:translateY(-1px);box-shadow:0 6px 24px var(--glow)}
+.nav-auth{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:10px;font-size:13.5px;font-weight:700;background:transparent;color:var(--dim);border:1.5px solid rgba(255,255,255,.12);cursor:pointer;transition:all .3s;margin-left:8px;font-family:inherit}
+.nav-auth:hover{border-color:var(--accent);color:#fff;box-shadow:0 4px 16px var(--glow)}
+.nav-auth.signed-in{border-color:var(--green);color:var(--green)}
+.nav-auth .auth-avatar{width:22px;height:22px;border-radius:50%;margin-right:2px}
 .hamburger{display:none;background:none;border:none;color:var(--dim);padding:8px;cursor:pointer}
 .hamburger svg{width:24px;height:24px}
 
@@ -117,9 +121,11 @@ section{padding:120px 0;position:relative;overflow:hidden}
 .sk-foot{padding:8px 18px 14px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .sk-tag{padding:2px 8px;border-radius:6px;font-size:10px;font-weight:600;background:var(--bg3);color:var(--muted)}
 .sk-tag.lang{color:var(--cyan);border:1px solid rgba(24,255,255,.12);background:rgba(24,255,255,.04)}
-.sk-stats{margin-left:auto;display:flex;gap:10px;font-size:11px;color:var(--muted)}
+.sk-stats{margin-left:auto;display:flex;gap:10px;font-size:11px;color:var(--muted);align-items:center}
 .sk-stats span{display:flex;align-items:center;gap:3px}
 .sk-stats svg{width:12px;height:12px}
+.install-btn{padding:3px 10px;border-radius:6px;font-size:10px;font-weight:700;background:var(--green);color:#000;border:none;cursor:pointer;transition:all .2s;letter-spacing:.3px}
+.install-btn:hover{transform:translateY(-1px);box-shadow:0 3px 12px rgba(0,230,118,.3)}
 
 /* categories */
 .categories{background:var(--bg)}
@@ -205,6 +211,10 @@ section{padding:120px 0;position:relative;overflow:hidden}
         <svg viewBox="0 0 24 24" fill="currentColor" style="width:16px;height:16px"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/></svg>
         GitHub
       </a>
+      <button class="nav-auth" id="authBtn" onclick="handleAuth()">
+        <svg viewBox="0 0 24 24" fill="currentColor" style="width:16px;height:16px"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/></svg>
+        <span id="authLabel">Sign in</span>
+      </button>
     </div>
     <button class="hamburger" id="hamburger" aria-label="Menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
   </div>
@@ -387,7 +397,12 @@ section{padding:120px 0;position:relative;overflow:hidden}
         </ul>
         <p style="font-size:13px;color:var(--muted);margin-top:18px;line-height:1.7">Skills extend <code style="color:var(--cyan)">BaseSkill</code> and implement <code style="color:var(--cyan)">execute()</code>. Drop a <code style="color:var(--cyan)">.ts</code> or <code style="color:var(--cyan)">.js</code> file and you're live.</p>
       </div>
-      <form class="publish-form reveal-right" id="publishForm" onsubmit="return false">
+      <form class="publish-form reveal-right" id="publishForm" onsubmit="return false" style="position:relative">
+        <div id="authOverlay" style="position:absolute;inset:0;background:rgba(6,6,10,.92);backdrop-filter:blur(6px);border-radius:18px;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10;gap:14px">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent2)" stroke-width="2" style="width:40px;height:40px"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+          <span style="color:var(--dim);font-size:15px;font-weight:600">Sign in with GitHub to publish</span>
+          <button onclick="handleAuth()" style="padding:10px 24px;border-radius:10px;background:var(--accent);color:#fff;border:none;cursor:pointer;font-weight:700;font-size:14px;font-family:inherit">Sign in with GitHub</button>
+        </div>
         <div>
           <label>Skill Name</label>
           <input type="text" id="pubName" placeholder="e.g. My Awesome Skill" required>
@@ -487,6 +502,8 @@ section{padding:120px 0;position:relative;overflow:hidden}
 
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script>
 firebase.initializeApp({
   apiKey:"AIzaSyB81SRksmveSEEEdsWoIykAm38q_FtvQvo",
@@ -497,6 +514,48 @@ firebase.initializeApp({
   appId:"1:182415196892:web:cbd3bc9a033653ff7a2a19"
 });
 var db=firebase.firestore();
+var storage=firebase.storage();
+var auth=firebase.auth();
+var currentUser=null;
+
+// GitHub Auth
+var githubProvider=new firebase.auth.GithubAuthProvider();
+
+function handleAuth(){
+  if(currentUser){
+    auth.signOut();
+  }else{
+    auth.signInWithPopup(githubProvider).catch(function(err){
+      console.error('Auth error:',err);
+      alert('Sign-in failed: '+err.message);
+    });
+  }
+}
+
+auth.onAuthStateChanged(function(user){
+  currentUser=user;
+  var btn=document.getElementById('authBtn');
+  var label=document.getElementById('authLabel');
+  var overlay=document.getElementById('authOverlay');
+  var authorInput=document.getElementById('pubAuthor');
+  if(user){
+    btn.classList.add('signed-in');
+    var name=user.displayName||user.email||'User';
+    var photo=user.photoURL;
+    if(photo){
+      label.innerHTML='<img class="auth-avatar" src="'+photo+'" alt="">'+name;
+    }else{
+      label.textContent=name;
+    }
+    if(overlay)overlay.style.display='none';
+    if(authorInput){authorInput.value=name;authorInput.readOnly=true;}
+  }else{
+    btn.classList.remove('signed-in');
+    label.textContent='Sign in';
+    if(overlay)overlay.style.display='flex';
+    if(authorInput){authorInput.value='';authorInput.readOnly=false;}
+  }
+});
 </script>
 
 <script>
@@ -606,9 +665,19 @@ function renderSkills(filter,search){
       +'<div class="sk-foot">';
     s.tags.forEach(function(t){h+='<span class="sk-tag">'+t+'</span>'});
     h+='<span class="sk-tag lang">'+s.lang+'</span>'
-      +'<div class="sk-stats"><span style="color:var(--accent2);font-weight:600">'+s.type+'</span></div></div></div>';
+      +'<div class="sk-stats"><span style="color:var(--accent2);font-weight:600">'+s.type+'</span>'
+      +(s.type==='community'?'<button class="install-btn" data-name="'+s.name+'" title="Copy install command">Install</button>':'')
+      +'</div></div></div>';
   });
   g.innerHTML=h;
+  g.querySelectorAll('.install-btn').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var cmd='linguclaw hub install '+this.dataset.name;
+      navigator.clipboard.writeText(cmd).then(function(){showToast('Copied: '+cmd)}).catch(function(){
+        prompt('Run this command:',cmd);
+      });
+    });
+  });
   g.querySelectorAll('.reveal').forEach(function(el){obs.observe(el)});
 }
 
@@ -632,7 +701,7 @@ renderSkills();
 db.collection('skills').orderBy('createdAt','desc').get().then(function(snap){
   snap.forEach(function(doc){
     var d=doc.data();
-    skills.push({name:d.name,author:d.author,icon:'🧩',desc:d.desc,tags:d.tags||[d.cat],cat:d.cat,lang:d.lang||'TypeScript',ver:d.ver||'1.0.0',type:'community'});
+    skills.push({name:d.name,author:d.author,icon:'🧩',desc:d.desc,tags:d.tags||[d.cat],cat:d.cat||'plugin',lang:d.lang||'TypeScript',ver:d.ver||'1.0.0',type:'community',downloadUrl:!!d.downloadUrl});
   });
   // update counter
   var countEl=document.querySelector('[data-count]');if(countEl){countEl.dataset.count=skills.length;countEl.textContent=skills.length}
@@ -654,17 +723,25 @@ function handleFile(f){
 }
 
 document.getElementById('publishBtn').addEventListener('click',function(){
+  if(!currentUser){showToast('Please sign in with GitHub first');return}
   var nm=document.getElementById('pubName').value.trim();
   var au=document.getElementById('pubAuthor').value.trim();
   var ct=document.getElementById('pubCat').value;
   var ds=document.getElementById('pubDesc').value.trim();
   if(!nm||!au||!ds){showToast('Please fill in all fields');return}
   if(!selectedFile){showToast('Please upload a skill file');return}
-  var btn=this;btn.disabled=true;btn.textContent='Publishing...';
+  var btn=this;btn.disabled=true;btn.textContent='Uploading...';
   var lang=selectedFile.name.endsWith('.ts')?'TypeScript':'JavaScript';
-  var skillData={name:nm,author:au,desc:ds,cat:ct,tags:[ct],lang:lang,ver:'1.0.0',fileName:selectedFile.name,createdAt:firebase.firestore.FieldValue.serverTimestamp()};
-  db.collection('skills').add(skillData).then(function(){
-    skills.push({name:nm,author:au,icon:'🧩',desc:ds,tags:[ct],cat:ct,lang:lang,ver:'1.0.0',type:'community'});
+  var safeFileName=Date.now()+'_'+selectedFile.name.replace(/[^a-zA-Z0-9._-]/g,'');
+  var storageRef=storage.ref('skills/'+safeFileName);
+  storageRef.put(selectedFile).then(function(snap){
+    btn.textContent='Saving...';
+    return snap.ref.getDownloadURL();
+  }).then(function(url){
+    var skillData={name:nm,author:au,desc:ds,cat:ct,tags:[ct],lang:lang,ver:'1.0.0',fileName:selectedFile.name,downloadUrl:url,createdAt:firebase.firestore.FieldValue.serverTimestamp(),uid:currentUser.uid,authorPhoto:currentUser.photoURL||'',authorGithub:currentUser.providerData[0]&&currentUser.providerData[0].uid||''};
+    return db.collection('skills').add(skillData);
+  }).then(function(){
+    skills.push({name:nm,author:au,icon:'🧩',desc:ds,tags:[ct],cat:ct,lang:lang,ver:'1.0.0',type:'community',downloadUrl:true});
     renderSkills(activeFilter,document.getElementById('skillSearch').value);
     var countEl=document.querySelector('[data-count]');if(countEl){countEl.dataset.count=skills.length;countEl.textContent=skills.length}
     document.getElementById('publishForm').reset();selectedFile=null;
