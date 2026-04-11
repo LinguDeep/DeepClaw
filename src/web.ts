@@ -79,6 +79,12 @@ export class WebUIManager {
   async start(): Promise<void> {
     // Setup middleware
     this.app.use(express.json());
+
+    // Root serves dashboard, not the promotional index.html
+    this.app.get('/', (_req: Request, res: Response) => {
+      res.sendFile(path.join(__dirname, 'static', 'dashboard.html'));
+    });
+
     this.app.use(express.static(path.join(__dirname, 'static')));
 
     // Setup routes

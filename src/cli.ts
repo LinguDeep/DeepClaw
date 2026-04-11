@@ -159,7 +159,7 @@ program
   .command('web')
   .description('Start LinguClaw Web UI server')
   .option('-p, --path <path>', 'Project root', '.')
-  .option('-h, --host <host>', 'Host to bind', '127.0.0.1')
+  .option('-H, --host <host>', 'Host to bind', '127.0.0.1')
   .option('--port <port>', 'Port to listen on', '8080')
   .action(async (options) => {
     console.log(chalk.bold.cyan('🌐 Starting LinguClaw Web UI...\n'));
