@@ -10,7 +10,7 @@
 
 <p align="center">
   <a href="https://lingudeep.github.io/LinguClaw/">
-    https://lingudeep.github.io/LinguClaw/
+    <img src="https://img.shields.io/badge/Visit%20Site-0ea5e9?style=for-the-badge&logo=google-chrome&logoColor=white">
   </a>
 </p>
 
