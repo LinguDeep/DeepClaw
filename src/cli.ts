@@ -539,3 +539,5 @@ program
 export function cliEntry(): void {
   program.parse();
 }
+
+cliEntry();
