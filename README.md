@@ -4,7 +4,7 @@
 
 **⚡ Codebase-Aware Multi-Agent AI Platform**
 *Analyze · Orchestrate · Automate · Optimize*
-# Web Site 
+# WebSite 
 
 <h1 align="center">🤖 Website</h1>
 
