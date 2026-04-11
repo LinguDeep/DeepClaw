@@ -485,6 +485,20 @@ section{padding:120px 0;position:relative;overflow:hidden}
   </div>
 </footer>
 
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script>
+firebase.initializeApp({
+  apiKey:"AIzaSyB81SRksmveSEEEdsWoIykAm38q_FtvQvo",
+  authDomain:"linguclaw.firebaseapp.com",
+  projectId:"linguclaw",
+  storageBucket:"linguclaw.firebasestorage.app",
+  messagingSenderId:"182415196892",
+  appId:"1:182415196892:web:cbd3bc9a033653ff7a2a19"
+});
+var db=firebase.firestore();
+</script>
+
 <script>
 // navbar scroll
 window.addEventListener('scroll',function(){document.getElementById('navbar').classList.toggle('scrolled',window.scrollY>40)});
@@ -613,8 +627,17 @@ document.getElementById('skillSearch').addEventListener('input',function(){
   renderSkills(activeFilter,this.value);
 });
 
-// initial render
+// initial render (built-in + Firestore community skills)
 renderSkills();
+db.collection('skills').orderBy('createdAt','desc').get().then(function(snap){
+  snap.forEach(function(doc){
+    var d=doc.data();
+    skills.push({name:d.name,author:d.author,icon:'🧩',desc:d.desc,tags:d.tags||[d.cat],cat:d.cat,lang:d.lang||'TypeScript',ver:d.ver||'1.0.0',type:'community'});
+  });
+  // update counter
+  var countEl=document.querySelector('[data-count]');if(countEl){countEl.dataset.count=skills.length;countEl.textContent=skills.length}
+  renderSkills(activeFilter,document.getElementById('skillSearch').value);
+}).catch(function(e){console.warn('Firestore load:',e)});
 
 // publish form
 var fileDrop=document.getElementById('fileDrop');
@@ -637,17 +660,21 @@ document.getElementById('publishBtn').addEventListener('click',function(){
   var ds=document.getElementById('pubDesc').value.trim();
   if(!nm||!au||!ds){showToast('Please fill in all fields');return}
   if(!selectedFile){showToast('Please upload a skill file');return}
-  // add to local skills list
-  skills.push({name:nm,author:au,icon:'🧩',desc:ds,tags:[ct],cat:ct,lang:selectedFile.name.endsWith('.ts')?'TypeScript':'JavaScript',ver:'1.0.0',type:'community'});
-  renderSkills(activeFilter,document.getElementById('skillSearch').value);
-  // update counter
-  var countEl=document.querySelector('[data-count]');if(countEl){countEl.dataset.count=skills.length;countEl.textContent=skills.length}
-  // reset form
-  document.getElementById('publishForm').reset();selectedFile=null;
-  document.getElementById('fileLabel').innerHTML='Drop your .ts/.js file here or <span style="color:var(--accent2);text-decoration:underline">click to browse</span>';
-  showToast('Skill "'+nm+'" published successfully!');
-  // scroll to skills
-  setTimeout(function(){document.getElementById('skills').scrollIntoView({behavior:'smooth'})},800);
+  var btn=this;btn.disabled=true;btn.textContent='Publishing...';
+  var lang=selectedFile.name.endsWith('.ts')?'TypeScript':'JavaScript';
+  var skillData={name:nm,author:au,desc:ds,cat:ct,tags:[ct],lang:lang,ver:'1.0.0',fileName:selectedFile.name,createdAt:firebase.firestore.FieldValue.serverTimestamp()};
+  db.collection('skills').add(skillData).then(function(){
+    skills.push({name:nm,author:au,icon:'🧩',desc:ds,tags:[ct],cat:ct,lang:lang,ver:'1.0.0',type:'community'});
+    renderSkills(activeFilter,document.getElementById('skillSearch').value);
+    var countEl=document.querySelector('[data-count]');if(countEl){countEl.dataset.count=skills.length;countEl.textContent=skills.length}
+    document.getElementById('publishForm').reset();selectedFile=null;
+    document.getElementById('fileLabel').innerHTML='Drop your .ts/.js file here or <span style="color:var(--accent2);text-decoration:underline">click to browse</span>';
+    showToast('Skill "'+nm+'" published to ClawLing Hub!');
+    setTimeout(function(){document.getElementById('skills').scrollIntoView({behavior:'smooth'})},800);
+  }).catch(function(e){
+    console.error('Publish error:',e);
+    showToast('Error publishing — check console');
+  }).finally(function(){btn.disabled=false;btn.textContent='Publish Skill'});
 });
 
 function showToast(msg){
