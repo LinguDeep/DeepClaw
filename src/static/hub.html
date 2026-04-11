@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ClawLing Hub — Community Skills Marketplace</title>
+<meta name="description" content="Discover, share, and install community-built skills for LinguClaw. Browse automation, AI, data, and messaging skills.">
+<meta property="og:title" content="ClawLing Hub — Community Skills Marketplace">
+<meta property="og:description" content="Browse, create, and share AI skills for the LinguClaw multi-agent system.">
+<link rel="icon" type="image/svg+xml" href="logo.svg">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap');
+:root{--bg:#06060a;--bg1:#0c0c12;--bg2:#12121a;--bg3:#1a1a24;--border:#1e1e2a;--accent:#6c5ce7;--accent2:#a29bfe;--accent3:#5b4cdb;--glow:rgba(108,92,231,.18);--glow2:rgba(108,92,231,.06);--green:#00e676;--cyan:#18ffff;--pink:#ff6b9d;--orange:#ffa726;--yellow:#ffee58;--text:#eeeef0;--dim:#9e9eb0;--muted:#5e5e72;--r:12px;--r2:20px;--r3:28px}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;overflow-x:hidden}
+body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;-webkit-font-smoothing:antialiased}
+::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+::selection{background:var(--accent);color:#fff}
+a{color:inherit;text-decoration:none;transition:color .2s}
+code,pre{font-family:'JetBrains Mono',monospace}
+
+/* animations */
+@keyframes gradient-shift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+@keyframes slide-up{from{opacity:0;transform:translateY(40px)}to{opacity:1;transform:translateY(0)}}
+@keyframes morph{0%,100%{border-radius:60% 40% 30% 70%/60% 30% 70% 40%}50%{border-radius:30% 60% 70% 40%/50% 60% 30% 60%}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+.reveal{opacity:0;transform:translateY(30px);transition:opacity .8s cubic-bezier(.16,1,.3,1),transform .8s cubic-bezier(.16,1,.3,1)}.reveal.visible{opacity:1;transform:translateY(0)}
+.reveal-left{opacity:0;transform:translateX(-40px);transition:opacity .8s cubic-bezier(.16,1,.3,1),transform .8s cubic-bezier(.16,1,.3,1)}.reveal-left.visible{opacity:1;transform:translateX(0)}
+.reveal-right{opacity:0;transform:translateX(40px);transition:opacity .8s cubic-bezier(.16,1,.3,1),transform .8s cubic-bezier(.16,1,.3,1)}.reveal-right.visible{opacity:1;transform:translateX(0)}
+.d1{transition-delay:.1s}.d2{transition-delay:.2s}.d3{transition-delay:.3s}.d4{transition-delay:.4s}.d5{transition-delay:.5s}.d6{transition-delay:.6s}
+
+.container{max-width:1200px;margin:0 auto;padding:0 24px}
+section{padding:120px 0;position:relative;overflow:hidden}
+
+/* navbar */
+.navbar{position:fixed;top:0;left:0;right:0;z-index:1000;padding:14px 0;transition:all .35s ease}
+.navbar.scrolled{background:rgba(6,6,10,.88);backdrop-filter:blur(20px) saturate(1.4);border-bottom:1px solid var(--border);padding:10px 0}
+.nav-inner{display:flex;align-items:center;justify-content:space-between}
+.nav-brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:20px}
+.nav-logo{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#0ea5e9,#2563eb);display:flex;align-items:center;justify-content:center;padding:4px;box-shadow:0 2px 12px rgba(14,165,233,.3)}
+.nav-logo img{width:100%;height:100%;filter:brightness(10)}
+.nav-brand-text{background:linear-gradient(135deg,var(--accent2),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.nav-links{display:flex;align-items:center;gap:4px}
+.nav-link{padding:8px 16px;border-radius:8px;font-size:13.5px;font-weight:500;color:var(--dim);transition:all .2s}
+.nav-link:hover{color:var(--text);background:rgba(255,255,255,.04)}
+.nav-link.active{color:var(--accent2)}
+.nav-cta{padding:9px 22px;border-radius:10px;font-size:13.5px;font-weight:700;background:var(--accent);color:#fff;border:none;cursor:pointer;transition:all .3s;margin-left:8px}
+.nav-cta:hover{background:var(--accent3);transform:translateY(-1px);box-shadow:0 6px 24px var(--glow)}
+.hamburger{display:none;background:none;border:none;color:var(--dim);padding:8px;cursor:pointer}
+.hamburger svg{width:24px;height:24px}
+
+/* hero */
+.hub-hero{padding:160px 0 100px;position:relative;text-align:center}
+.hub-hero-bg{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+.hub-hero-orb{position:absolute;border-radius:50%;filter:blur(120px);opacity:.2;animation:morph 20s ease-in-out infinite}
+.hub-hero-orb.a{width:500px;height:500px;background:var(--cyan);top:-20%;left:20%}
+.hub-hero-orb.b{width:400px;height:400px;background:var(--accent);bottom:-10%;right:10%;animation-delay:-8s}
+.hub-hero-content{position:relative;z-index:2;max-width:700px;margin:0 auto}
+.hub-hero-badge{display:inline-flex;align-items:center;gap:8px;padding:6px 16px 6px 8px;border-radius:100px;font-size:12px;font-weight:600;background:rgba(24,255,255,.08);border:1px solid rgba(24,255,255,.2);color:var(--cyan);margin-bottom:24px;animation:slide-up .7s ease both}
+.hub-hero-badge .tag{padding:3px 10px;border-radius:100px;background:rgba(24,255,255,.15);font-weight:700;font-size:11px}
+.hub-hero h1{font-size:clamp(40px,7vw,72px);font-weight:900;letter-spacing:-2.5px;line-height:1.05;margin-bottom:20px;animation:slide-up .7s ease .08s both}
+.hub-hero h1 .grad{background:linear-gradient(135deg,var(--cyan) 0%,var(--accent2) 50%,var(--cyan) 100%);background-size:200% 200%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:gradient-shift 5s ease infinite}
+.hub-hero .sub{font-size:clamp(15px,2.2vw,18px);color:var(--dim);max-width:520px;margin:0 auto 36px;animation:slide-up .7s ease .15s both;line-height:1.75}
+.btn-h{padding:14px 30px;border-radius:var(--r);font-size:15px;font-weight:700;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:9px;transition:all .3s ease;text-decoration:none}
+.btn-h svg{width:18px;height:18px}
+.btn-h.primary{background:linear-gradient(135deg,var(--accent),var(--accent3));color:#fff;box-shadow:0 4px 24px var(--glow)}
+.btn-h.primary:hover{transform:translateY(-2px);box-shadow:0 8px 36px rgba(108,92,231,.35)}
+.btn-h.secondary{background:var(--bg2);color:var(--text);border:1px solid var(--border)}
+.btn-h.secondary:hover{border-color:var(--accent);background:var(--bg3);transform:translateY(-2px)}
+.hub-hero-stats{display:flex;gap:40px;justify-content:center;margin-top:56px;animation:slide-up .7s ease .3s both}
+.hs{text-align:center}
+.hs .val{font-size:32px;font-weight:800;letter-spacing:-1px;background:linear-gradient(135deg,var(--text),var(--dim));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hs .lbl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-top:2px}
+
+/* section header */
+.sh{text-align:center;max-width:620px;margin:0 auto 64px}
+.sh-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:100px;font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;background:var(--bg2);border:1px solid var(--border);color:var(--accent2);margin-bottom:18px}
+.sh h2{font-size:clamp(30px,4.5vw,46px);font-weight:800;letter-spacing:-1.5px;margin-bottom:14px}
+.sh p{color:var(--dim);font-size:15.5px;line-height:1.7}
+
+/* how publishing works */
+.how-pub{background:linear-gradient(180deg,var(--bg),var(--bg1))}
+.how-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+.how-card{text-align:center;padding:36px 24px;border-radius:var(--r2);background:var(--bg2);border:1px solid var(--border);transition:all .3s}
+.how-card:hover{border-color:rgba(108,92,231,.3);transform:translateY(-4px)}
+.how-card .step{width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent3));color:#fff;font-weight:800;font-size:18px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;box-shadow:0 4px 16px var(--glow)}
+.how-card h3{font-size:15px;font-weight:700;margin-bottom:8px}
+.how-card p{font-size:12.5px;color:var(--dim);line-height:1.7}
+
+/* skill code example */
+.code-show{background:var(--bg1)}
+.code-grid{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center}
+.code-text h3{font-size:clamp(24px,3.5vw,36px);font-weight:800;letter-spacing:-1px;margin-bottom:16px}
+.code-text p{font-size:14.5px;color:var(--dim);line-height:1.8;margin-bottom:20px}
+.code-features{list-style:none}
+.code-features li{display:flex;align-items:center;gap:10px;padding:8px 0;font-size:13.5px;color:var(--dim)}
+.code-features li::before{content:'✓';width:22px;height:22px;border-radius:50%;background:rgba(0,230,118,.1);color:var(--green);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+.code-block{border-radius:var(--r2);overflow:hidden;border:1px solid var(--border);background:var(--bg);box-shadow:0 16px 48px rgba(0,0,0,.3)}
+.code-block-bar{padding:10px 14px;background:var(--bg2);border-bottom:1px solid var(--border);font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace;display:flex;align-items:center;gap:8px}
+.code-block-bar .dot{width:8px;height:8px;border-radius:50%;background:var(--cyan)}
+.code-block pre{padding:20px;font-size:12.5px;line-height:1.9;color:var(--dim);overflow-x:auto;margin:0;white-space:pre}
+.code-block .kw{color:var(--accent2)}.code-block .fn{color:var(--cyan)}.code-block .str{color:var(--green)}.code-block .cm{color:var(--muted);font-style:italic}.code-block .tp{color:var(--orange)}
+
+/* featured skills */
+.featured{background:linear-gradient(180deg,var(--bg1),var(--bg))}
+.skills-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+.skill-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;transition:all .4s cubic-bezier(.16,1,.3,1)}
+.skill-card:hover{border-color:rgba(108,92,231,.35);transform:translateY(-4px);box-shadow:0 12px 40px rgba(0,0,0,.25)}
+.sk-head{padding:18px 18px 0;display:flex;align-items:center;gap:12px}
+.sk-ico{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;background:linear-gradient(135deg,var(--glow),var(--glow2));border:1px solid rgba(108,92,231,.15);flex-shrink:0}
+.sk-meta{flex:1;min-width:0}
+.sk-meta h4{font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sk-meta .author{font-size:11px;color:var(--muted)}
+.sk-ver{font-size:10px;color:var(--muted);padding:2px 8px;border-radius:6px;background:var(--bg3);flex-shrink:0}
+.sk-body{padding:12px 18px}
+.sk-body p{font-size:12.5px;color:var(--dim);line-height:1.7;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.sk-foot{padding:8px 18px 14px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.sk-tag{padding:2px 8px;border-radius:6px;font-size:10px;font-weight:600;background:var(--bg3);color:var(--muted)}
+.sk-tag.lang{color:var(--cyan);border:1px solid rgba(24,255,255,.12);background:rgba(24,255,255,.04)}
+.sk-stats{margin-left:auto;display:flex;gap:10px;font-size:11px;color:var(--muted)}
+.sk-stats span{display:flex;align-items:center;gap:3px}
+.sk-stats svg{width:12px;height:12px}
+
+/* categories */
+.categories{background:var(--bg)}
+.cat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px}
+.cat-card{padding:28px 20px;border-radius:var(--r2);background:var(--bg2);border:1px solid var(--border);text-align:center;transition:all .3s;cursor:default}
+.cat-card:hover{border-color:rgba(108,92,231,.3);transform:translateY(-3px);box-shadow:0 8px 28px rgba(0,0,0,.2)}
+.cat-card .cat-ico{font-size:32px;margin-bottom:12px;display:block}
+.cat-card .cat-name{font-size:14px;font-weight:700;margin-bottom:4px}
+.cat-card .cat-count{font-size:11px;color:var(--muted)}
+
+/* cta */
+.cta{text-align:center;padding:100px 0 120px;position:relative}
+.cta::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(24,255,255,.04),transparent 70%);pointer-events:none}
+.cta h2{font-size:clamp(28px,4vw,42px);font-weight:900;letter-spacing:-1.5px;margin-bottom:14px}
+.cta p{color:var(--dim);font-size:15px;margin-bottom:36px;max-width:480px;margin-left:auto;margin-right:auto;line-height:1.7}
+
+/* filter buttons */
+.sk-filter{padding:6px 16px;border-radius:100px;font-size:12px;font-weight:600;background:var(--bg2);border:1px solid var(--border);color:var(--muted);cursor:pointer;transition:all .2s}
+.sk-filter:hover{border-color:var(--accent);color:var(--text)}
+.sk-filter.active{background:var(--accent);border-color:var(--accent);color:#fff}
+
+/* publish section */
+.publish-sec{background:linear-gradient(180deg,var(--bg),var(--bg1));position:relative}
+.publish-grid{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center}
+.publish-form{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:32px;display:flex;flex-direction:column;gap:16px}
+.publish-form label{font-size:12px;font-weight:600;color:var(--dim);text-transform:uppercase;letter-spacing:.5px}
+.publish-form input,.publish-form textarea,.publish-form select{width:100%;padding:10px 14px;border-radius:var(--r);background:var(--bg);border:1px solid var(--border);color:var(--text);font-size:14px;outline:none;transition:border-color .2s;font-family:inherit}
+.publish-form input:focus,.publish-form textarea:focus,.publish-form select:focus{border-color:var(--accent)}
+.publish-form textarea{resize:vertical;min-height:100px;font-family:'JetBrains Mono',monospace;font-size:12px}
+.publish-form .file-drop{border:2px dashed var(--border);border-radius:var(--r);padding:32px;text-align:center;color:var(--muted);cursor:pointer;transition:all .2s}
+.publish-form .file-drop:hover{border-color:var(--accent);color:var(--dim)}
+.publish-form .file-drop.dragover{border-color:var(--cyan);background:rgba(24,255,255,.03)}
+.publish-btn{padding:12px 28px;border-radius:var(--r);background:linear-gradient(135deg,var(--accent),var(--accent3));color:#fff;font-size:14px;font-weight:700;border:none;cursor:pointer;transition:all .3s}
+.publish-btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px var(--glow)}
+.toast{position:fixed;bottom:32px;right:32px;padding:14px 24px;border-radius:var(--r);background:var(--green);color:#000;font-weight:600;font-size:13px;z-index:9999;transform:translateY(100px);opacity:0;transition:all .4s cubic-bezier(.16,1,.3,1)}
+.toast.show{transform:translateY(0);opacity:1}
+
+@media(max-width:768px){.publish-grid{grid-template-columns:1fr}}
+
+/* footer */
+.footer{border-top:1px solid var(--border);padding:48px 0 32px;background:var(--bg)}
+.footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:40px;margin-bottom:32px}
+.footer-brand{display:flex;align-items:center;gap:8px;font-weight:800;font-size:17px;margin-bottom:12px}
+.footer-brand .fl{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,var(--accent),var(--accent3));display:flex;align-items:center;justify-content:center;font-size:14px}
+.footer-brand-text{background:linear-gradient(135deg,var(--accent2),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.footer-desc{font-size:13px;color:var(--muted);line-height:1.7;max-width:280px}
+.footer-col h4{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--dim);margin-bottom:14px}
+.footer-col a{display:block;font-size:13px;color:var(--muted);padding:4px 0;transition:color .2s}
+.footer-col a:hover{color:var(--accent2)}
+.footer-bottom{display:flex;justify-content:space-between;align-items:center;padding-top:24px;border-top:1px solid var(--border);font-size:12px;color:var(--muted)}
+.footer-social{display:flex;gap:12px}
+.footer-social a{width:32px;height:32px;border-radius:8px;background:var(--bg2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--muted);transition:all .2s}
+.footer-social a:hover{border-color:var(--accent);color:var(--accent2)}
+.footer-social a svg{width:15px;height:15px}
+
+@media(max-width:1024px){.code-grid{grid-template-columns:1fr}.footer-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:768px){
+  .how-grid,.skills-grid{grid-template-columns:1fr}
+  .code-grid{grid-template-columns:1fr}
+  .cat-grid{grid-template-columns:repeat(2,1fr)}
+  .nav-links{display:none}.hamburger{display:block}
+  .footer-grid{grid-template-columns:1fr}
+  .hub-hero-stats{gap:20px;flex-wrap:wrap}
+  section{padding:80px 0}
+}
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar" id="navbar">
+  <div class="container nav-inner">
+    <a href="index.html" class="nav-brand">
+      <div class="nav-logo"><img src="logo.svg" alt="LinguClaw"></div>
+      <span class="nav-brand-text">LinguClaw</span>
+    </a>
+    <div class="nav-links" id="navLinks">
+      <a href="index.html" class="nav-link">Home</a>
+      <a href="index.html#features" class="nav-link">Features</a>
+      <a href="#" class="nav-link active">ClawLing Hub</a>
+      <a href="#skills" class="nav-link">Skills</a>
+      <a href="https://github.com/LinguDeep/LinguClaw" target="_blank" class="nav-cta">
+        <svg viewBox="0 0 24 24" fill="currentColor" style="width:16px;height:16px"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/></svg>
+        GitHub
+      </a>
+    </div>
+    <button class="hamburger" id="hamburger" aria-label="Menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hub-hero">
+  <div class="hub-hero-bg">
+    <div class="hub-hero-orb a"></div>
+    <div class="hub-hero-orb b"></div>
+  </div>
+  <div class="container hub-hero-content">
+    <div class="hub-hero-badge">
+      <span class="tag">Open Source</span>
+      Community Skills Marketplace
+    </div>
+    <h1><span class="grad">ClawLing Hub</span></h1>
+    <p class="sub">Discover and install powerful integrations — from Telegram bots to AI providers, smart home control to 1Password secrets. All open source.</p>
+    <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap;animation:slide-up .7s ease .22s both">
+      <a href="#skills" class="btn-h primary">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        Browse All Modules
+      </a>
+      <a href="#publish" class="btn-h secondary">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Publish Your Skill
+      </a>
+    </div>
+    <div class="hub-hero-stats">
+      <div class="hs"><div class="val" data-count="49">0</div><div class="lbl">Modules</div></div>
+      <div class="hs"><div class="val" data-count="8">0</div><div class="lbl">Categories</div></div>
+      <div class="hs"><div class="val" data-count="22">0</div><div class="lbl">Workflow Nodes</div></div>
+      <div class="hs"><div class="val" data-count="6">0</div><div class="lbl">Languages</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- CATEGORIES -->
+<section class="categories">
+  <div class="container">
+    <div class="sh reveal">
+      <div class="sh-badge">📂 Categories</div>
+      <h2>Skills for every use case</h2>
+      <p>Browse skills by category or search for exactly what you need.</p>
+    </div>
+    <div class="cat-grid">
+      <div class="cat-card reveal d1"><span class="cat-ico">🖥️</span><div class="cat-name">System</div><div class="cat-count">Shell, Filesystem, Browser, Scheduler, Memory, Inbox</div></div>
+      <div class="cat-card reveal d2"><span class="cat-ico">💬</span><div class="cat-name">Messaging</div><div class="cat-count">Telegram, Discord, Slack, WhatsApp, Signal +6</div></div>
+      <div class="cat-card reveal d3"><span class="cat-ico">🧠</span><div class="cat-name">AI Providers</div><div class="cat-count">OpenAI, Anthropic, Google, Mistral, DeepSeek +4</div></div>
+      <div class="cat-card reveal d4"><span class="cat-ico">📋</span><div class="cat-name">Productivity</div><div class="cat-count">Notion, Trello, GitHub, Obsidian, Apple Notes</div></div>
+      <div class="cat-card reveal d5"><span class="cat-ico">🏠</span><div class="cat-name">Smart Home</div><div class="cat-count">Home Assistant, Hue, Spotify, Sonos</div></div>
+      <div class="cat-card reveal d6"><span class="cat-ico">🔧</span><div class="cat-name">Utility</div><div class="cat-count">Weather, Webhooks, Image Gen, 1Password, Gmail</div></div>
+      <div class="cat-card reveal d1"><span class="cat-ico">🌐</span><div class="cat-name">Languages</div><div class="cat-count">C++, C#, Go, Java, Python, Rust</div></div>
+      <div class="cat-card reveal d2"><span class="cat-ico">🔌</span><div class="cat-name">Plugins</div><div class="cat-count">Weather, Notes, System Info</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURED SKILLS -->
+<section class="featured" id="skills">
+  <div class="container">
+    <div class="sh reveal">
+      <div class="sh-badge">🧩 All Modules</div>
+      <h2>Browse <span style="color:var(--accent2)">49</span> integrations</h2>
+      <p>Filter by category, search by name — every module is built-in and ready to use.</p>
+    </div>
+    <div style="max-width:480px;margin:0 auto 32px;position:relative" class="reveal">
+      <input type="text" id="skillSearch" placeholder="Search modules..." style="width:100%;padding:12px 16px 12px 42px;border-radius:var(--r);background:var(--bg2);border:1px solid var(--border);color:var(--text);font-size:14px;outline:none;transition:border-color .2s">
+      <svg style="position:absolute;left:14px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--muted)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:28px" class="reveal" id="filterBtns">
+      <button class="sk-filter active" data-cat="all">All</button>
+      <button class="sk-filter" data-cat="system">System</button>
+      <button class="sk-filter" data-cat="messaging">Messaging</button>
+      <button class="sk-filter" data-cat="ai">AI Providers</button>
+      <button class="sk-filter" data-cat="productivity">Productivity</button>
+      <button class="sk-filter" data-cat="smart-home">Smart Home</button>
+      <button class="sk-filter" data-cat="utility">Utility</button>
+      <button class="sk-filter" data-cat="language">Languages</button>
+      <button class="sk-filter" data-cat="plugin">Plugins</button>
+    </div>
+    <div class="skills-grid" id="skillsGrid"></div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how-pub" id="howto">
+  <div class="container">
+    <div class="sh reveal">
+      <div class="sh-badge">🔌 Easy Integration</div>
+      <h2>Add a skill in 3 steps</h2>
+      <p>Extend LinguClaw with your own logic — zero config, hot-reloadable.</p>
+    </div>
+    <div class="how-grid">
+      <div class="how-card reveal d1">
+        <div class="step">1</div>
+        <h3>Extend BaseSkill</h3>
+        <p>Create a TypeScript class with NAME, DESCRIPTION, VERSION, and an execute() method. That's it.</p>
+      </div>
+      <div class="how-card reveal d2">
+        <div class="step">2</div>
+        <h3>Drop in plugins/</h3>
+        <p>Place your file in the plugins directory or ~/.linguclaw/plugins/. Auto-discovered on startup.</p>
+      </div>
+      <div class="how-card reveal d3">
+        <div class="step">3</div>
+        <h3>Use Immediately</h3>
+        <p>Your skill is available to all agents instantly. Hot-reload means no restart needed during dev.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CODE EXAMPLE -->
+<section class="code-show">
+  <div class="container">
+    <div class="code-grid">
+      <div class="code-text reveal-left">
+        <h3>Simple, powerful<br>skill API</h3>
+        <p>Every skill follows the same pattern: define metadata, implement execute(), and declare a schema. LinguClaw handles the rest — discovery, validation, sandboxing.</p>
+        <ul class="code-features">
+          <li>TypeScript-first with full type safety</li>
+          <li>Automatic input validation from schema</li>
+          <li>Sandboxed execution with resource limits</li>
+          <li>Built-in versioning and dependency management</li>
+          <li>Hot-reload during development</li>
+        </ul>
+      </div>
+      <div class="code-block reveal-right">
+        <div class="code-block-bar"><span class="dot"></span> web-scraper.ts</div>
+        <pre><span class="kw">import</span> { BaseSkill, SkillInput, SkillResult } <span class="kw">from</span> <span class="str">'linguclaw'</span>;
+
+<span class="kw">export class</span> <span class="fn">WebScraperSkill</span> <span class="kw">extends</span> BaseSkill {
+  NAME = <span class="str">'web-scraper'</span>;
+  DESCRIPTION = <span class="str">'Scrape websites with CSS selectors'</span>;
+  VERSION = <span class="str">'2.1.0'</span>;
+  AUTHOR = <span class="str">'LinguClaw'</span>;
+  TYPE = <span class="str">'automation'</span> <span class="kw">as const</span>;
+
+  <span class="kw">async</span> <span class="fn">execute</span>(input: <span class="tp">SkillInput</span>): Promise&lt;<span class="tp">SkillResult</span>&gt; {
+    <span class="kw">const</span> { url, selector } = input;
+    <span class="kw">const</span> page = <span class="kw">await</span> this.<span class="fn">browser</span>().<span class="fn">goto</span>(url);
+    <span class="kw">const</span> data = <span class="kw">await</span> page.<span class="fn">$$eval</span>(selector, <span class="fn">els</span> =&gt;
+      els.<span class="fn">map</span>(<span class="fn">el</span> =&gt; el.textContent)
+    );
+    <span class="kw">return</span> { success: <span class="tp">true</span>, data };
+  }
+
+  <span class="fn">getSchema</span>() {
+    <span class="kw">return</span> {
+      input: {
+        url: { type: <span class="str">'string'</span>, required: <span class="tp">true</span> },
+        selector: { type: <span class="str">'string'</span>, required: <span class="tp">true</span> }
+      }
+    };
+  }
+}</pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PUBLISH YOUR SKILL -->
+<section class="publish-sec" id="publish">
+  <div class="container">
+    <div class="sh reveal">
+      <div class="sh-badge">🚀 Publish</div>
+      <h2>Share your skill with the world</h2>
+      <p>Upload your skill file and it gets added to the Hub instantly. TypeScript or JavaScript — both work.</p>
+    </div>
+    <div class="publish-grid">
+      <div class="reveal-left">
+        <h3 style="font-size:22px;font-weight:800;margin-bottom:14px">Why publish?</h3>
+        <ul class="code-features">
+          <li>Your skill becomes available to all LinguClaw users</li>
+          <li>Get credit as the author — your name stays on it</li>
+          <li>Community reviews and improves your code</li>
+          <li>Helps the ecosystem grow and diversify</li>
+          <li>Listed right here on the ClawLing Hub</li>
+        </ul>
+        <p style="font-size:13px;color:var(--muted);margin-top:18px;line-height:1.7">Skills extend <code style="color:var(--cyan)">BaseSkill</code> and implement <code style="color:var(--cyan)">execute()</code>. Drop a <code style="color:var(--cyan)">.ts</code> or <code style="color:var(--cyan)">.js</code> file and you're live.</p>
+      </div>
+      <form class="publish-form reveal-right" id="publishForm" onsubmit="return false">
+        <div>
+          <label>Skill Name</label>
+          <input type="text" id="pubName" placeholder="e.g. My Awesome Skill" required>
+        </div>
+        <div>
+          <label>Author</label>
+          <input type="text" id="pubAuthor" placeholder="Your name or handle" required>
+        </div>
+        <div>
+          <label>Category</label>
+          <select id="pubCat">
+            <option value="communication">Communication</option>
+            <option value="file">File & Data</option>
+            <option value="web">Web & API</option>
+            <option value="system">System & DevOps</option>
+            <option value="ai">AI & NLP</option>
+            <option value="devtools">Dev Tools</option>
+            <option value="analytics">Analytics</option>
+            <option value="plugin">Plugin</option>
+          </select>
+        </div>
+        <div>
+          <label>Description</label>
+          <input type="text" id="pubDesc" placeholder="One-line description of what it does" required>
+        </div>
+        <div>
+          <label>Skill File (.ts or .js)</label>
+          <div class="file-drop" id="fileDrop">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:32px;height:32px;margin-bottom:8px;color:var(--accent2)"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <div id="fileLabel">Drop your .ts/.js file here or <span style="color:var(--accent2);text-decoration:underline">click to browse</span></div>
+            <input type="file" id="fileInput" accept=".ts,.js" style="display:none">
+          </div>
+        </div>
+        <button type="submit" class="publish-btn" id="publishBtn">Publish Skill</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta">
+  <div class="container reveal">
+    <h2>Ready to extend LinguClaw?</h2>
+    <p>Add your own skills in minutes. Fork the repo, create a skill class, and you're live.</p>
+    <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap">
+      <a href="https://github.com/LinguDeep/LinguClaw" target="_blank" class="btn-h primary">
+        <svg viewBox="0 0 24 24" fill="currentColor" style="width:18px;height:18px"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/></svg>
+        Get Started
+      </a>
+      <a href="index.html" class="btn-h secondary">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Back to LinguClaw
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-brand">
+          <div class="fl"><img src="logo.svg" alt="" style="width:24px;height:24px;filter:brightness(10)"></div>
+          <span class="footer-brand-text">LinguClaw</span>
+        </div>
+        <p class="footer-desc">Open-source AI multi-agent system with visual workflows, semantic memory, and a community skill marketplace.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Product</h4>
+        <a href="index.html#features">Features</a>
+        <a href="index.html#workflows">Workflows</a>
+        <a href="index.html#architecture">Architecture</a>
+        <a href="index.html#getstarted">Get Started</a>
+      </div>
+      <div class="footer-col">
+        <h4>Community</h4>
+        <a href="#">ClawLing Hub</a>
+        <a href="https://github.com/LinguDeep/LinguClaw/blob/main/CONTRIBUTING.md" target="_blank">Contributing</a>
+        <a href="https://github.com/LinguDeep/LinguClaw/blob/main/CHANGELOG.md" target="_blank">Changelog</a>
+      </div>
+      <div class="footer-col">
+        <h4>Resources</h4>
+        <a href="https://github.com/LinguDeep/LinguClaw" target="_blank">GitHub</a>
+        <a href="https://github.com/LinguDeep/LinguClaw/blob/main/LICENSE" target="_blank">MIT License</a>
+        <a href="https://github.com/LinguDeep/LinguClaw/issues" target="_blank">Issues</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; 2026 LinguDeep. Open source under MIT.</span>
+      <div class="footer-social">
+        <a href="https://github.com/LinguDeep/LinguClaw" target="_blank" aria-label="GitHub"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/></svg></a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+// navbar scroll
+window.addEventListener('scroll',function(){document.getElementById('navbar').classList.toggle('scrolled',window.scrollY>40)});
+
+// mobile menu
+document.getElementById('hamburger').addEventListener('click',function(){
+  var l=document.getElementById('navLinks');var o=l.style.display==='flex';
+  l.style.display=o?'none':'flex';l.style.position='fixed';l.style.top='60px';l.style.left='0';l.style.right='0';
+  l.style.background='rgba(6,6,10,.96)';l.style.flexDirection='column';l.style.padding='16px';
+  l.style.borderBottom='1px solid var(--border)';l.style.backdropFilter='blur(20px)';
+  if(o)l.removeAttribute('style');
+});
+
+// reveal
+var obs=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('visible');obs.unobserve(e.target)}})},{threshold:.08,rootMargin:'0px 0px -30px 0px'});
+document.querySelectorAll('.reveal,.reveal-left,.reveal-right').forEach(function(el){obs.observe(el)});
+
+// counters
+var cd={};
+function ac(el){var id=el.parentElement.textContent;if(cd[id])return;cd[id]=true;
+var t=parseInt(el.dataset.count),dur=1400,s=Date.now();
+!function tick(){var p=Math.min((Date.now()-s)/dur,1);el.textContent=Math.round(t*(1-Math.pow(1-p,3))).toLocaleString();if(p<1)requestAnimationFrame(tick)}()}
+var co=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting)ac(e.target)})},{threshold:.5});
+document.querySelectorAll('[data-count]').forEach(function(el){co.observe(el)});
+
+// skills data — real integrations from web.ts + codebase modules
+var skills=[
+  // System Builtins (6) — web.ts
+  {name:'Shell',author:'LinguClaw',icon:'🖥️',desc:'Execute shell commands',tags:['shell','cli'],cat:'system',lang:'TypeScript',ver:'1.0.0',type:'builtin'},
+  {name:'Filesystem',author:'LinguClaw',icon:'📁',desc:'Read/write files',tags:['files','io'],cat:'system',lang:'TypeScript',ver:'1.0.0',type:'builtin'},
+  {name:'Browser',author:'LinguClaw',icon:'🌐',desc:'Browse websites & extract data',tags:['web','scraping'],cat:'system',lang:'TypeScript',ver:'1.0.0',type:'builtin'},
+  {name:'Scheduler',author:'LinguClaw',icon:'⏰',desc:'Schedule background tasks',tags:['cron','tasks'],cat:'system',lang:'TypeScript',ver:'1.0.0',type:'builtin'},
+  {name:'Memory',author:'LinguClaw',icon:'🧠',desc:'Persistent memory storage',tags:['memory','storage'],cat:'system',lang:'TypeScript',ver:'1.0.0',type:'builtin'},
+  {name:'Inbox',author:'LinguClaw',icon:'📥',desc:'Track and reply to messages',tags:['inbox','messages'],cat:'system',lang:'TypeScript',ver:'1.0.0',type:'builtin'},
+
+  // Messaging (11) — web.ts
+  {name:'Email',author:'LinguClaw',icon:'📧',desc:'Send/receive emails via IMAP',tags:['email','imap'],cat:'messaging',lang:'TypeScript',ver:'1.0.0',type:'integration'},
+  {name:'Telegram',author:'LinguClaw',icon:'✈️',desc:'Telegram bot integration',tags:['telegram','bot'],cat:'messaging',lang:'TypeScript',ver:'1.0.0',type:'integration'},
+  {name:'Discord',author:'LinguClaw',icon:'🎮',desc:'Discord bot integration',tags:['discord','bot'],cat:'messaging',lang:'TypeScript',ver:'1.0.0',type:'integration'},
+  {name:'Slack',author:'LinguClaw',icon:'💬',desc:'Slack bot integration',tags:['slack','bot'],cat:'messaging',lang:'TypeScript',ver:'1.0.0',type:'integration'},
+  {name:'WhatsApp',author:'LinguClaw',icon:'📱',desc:'WhatsApp via Twilio',tags:['whatsapp','twilio'],cat:'messaging',lang:'TypeScript',ver:'1.0.0',type:'integration'},
+  {name:'Signal',author:'LinguClaw',icon:'🔒',desc:'Signal via signal-cli',tags:['signal','privacy'],cat:'messaging',lang:'TypeScript',ver:'1.0.0',type:'integration'},
+  {name:'iMessage',author:'LinguClaw',icon:'🍎',desc:'iMessage via BlueBubbles',tags:['imessage','apple'],cat:'messaging',lang:'TypeScript',ver:'1.0.0',type:'integration'},
+  {name:'Teams',author:'LinguClaw',icon:'🏢',desc:'Microsoft Teams integration',tags:['teams','microsoft'],cat:'messaging',lang:'TypeScript',ver:'1.0.0',type:'integration'},
+  {name:'Matrix',author:'LinguClaw',icon:'🔗',desc:'Matrix protocol integration',tags:['matrix','decentralized'],cat:'messaging',lang:'TypeScript',ver:'1.0.0',type:'integration'},
+  {name:'Nostr',author:'LinguClaw',icon:'🟣',desc:'Nostr NIP-04 messages',tags:['nostr','decentralized'],cat:'messaging',lang:'TypeScript',ver:'1.0.0',type:'integration'},
+  {name:'Zalo',author:'LinguClaw',icon:'💙',desc:'Zalo bot integration',tags:['zalo','vietnam'],cat:'messaging',lang:'TypeScript',ver:'1.0.0',type:'integration'},
+
+  // AI Providers (9) — web.ts
+  {name:'OpenAI',author:'LinguClaw',icon:'🤖',desc:'OpenAI GPT-4, o1, GPT-5',tags:['openai','gpt'],cat:'ai',lang:'TypeScript',ver:'1.0.0',type:'integration'},
+  {name:'Anthropic',author:'LinguClaw',icon:'🧠',desc:'Anthropic Claude 3.5/4',tags:['anthropic','claude'],cat:'ai',lang:'TypeScript',ver:'1.0.0',type:'integration'},
+  {name:'Google',author:'LinguClaw',icon:'🔵',desc:'Google Gemini 1.5/2.5',tags:['google','gemini'],cat:'ai',lang:'TypeScript',ver:'1.0.0',type:'integration'},
+  {name:'xAI',author:'LinguClaw',icon:'✖️',desc:'xAI Grok',tags:['xai','grok'],cat:'ai',lang:'TypeScript',ver:'1.0.0',type:'integration'},
+  {name:'Mistral',author:'LinguClaw',icon:'🌬️',desc:'Mistral AI models',tags:['mistral'],cat:'ai',lang:'TypeScript',ver:'1.0.0',type:'integration'},
+  {name:'DeepSeek',author:'LinguClaw',icon:'🔍',desc:'DeepSeek V3 & R1',tags:['deepseek'],cat:'ai',lang:'TypeScript',ver:'1.0.0',type:'integration'},
+  {name:'Perplexity',author:'LinguClaw',icon:'🔎',desc:'Perplexity Search-augmented',tags:['perplexity','search'],cat:'ai',lang:'TypeScript',ver:'1.0.0',type:'integration'},
+  {name:'Ollama',author:'LinguClaw',icon:'🦙',desc:'Ollama local models',tags:['ollama','local'],cat:'ai',lang:'TypeScript',ver:'1.0.0',type:'integration'},
+  {name:'LM Studio',author:'LinguClaw',icon:'💻',desc:'LM Studio local models',tags:['lmstudio','local'],cat:'ai',lang:'TypeScript',ver:'1.0.0',type:'integration'},
+
+  // Productivity (5) — web.ts
+  {name:'Notion',author:'LinguClaw',icon:'📓',desc:'Notion pages & databases',tags:['notion','workspace'],cat:'productivity',lang:'TypeScript',ver:'1.0.0',type:'integration'},
+  {name:'Trello',author:'LinguClaw',icon:'📋',desc:'Trello boards & cards',tags:['trello','kanban'],cat:'productivity',lang:'TypeScript',ver:'1.0.0',type:'integration'},
+  {name:'GitHub',author:'LinguClaw',icon:'🐙',desc:'GitHub repos, issues, PRs',tags:['github','git'],cat:'productivity',lang:'TypeScript',ver:'1.0.0',type:'integration'},
+  {name:'Obsidian',author:'LinguClaw',icon:'💎',desc:'Obsidian vault access',tags:['obsidian','notes'],cat:'productivity',lang:'TypeScript',ver:'1.0.0',type:'integration'},
+  {name:'Apple Notes',author:'LinguClaw',icon:'🍎',desc:'Apple Notes (macOS)',tags:['apple-notes','macos'],cat:'productivity',lang:'TypeScript',ver:'1.0.0',type:'integration'},
+
+  // Smart Home & Media (4) — web.ts
+  {name:'Home Assistant',author:'LinguClaw',icon:'🏠',desc:'Home Assistant hub',tags:['home-assistant','iot'],cat:'smart-home',lang:'TypeScript',ver:'1.0.0',type:'integration'},
+  {name:'Philips Hue',author:'LinguClaw',icon:'💡',desc:'Philips Hue lighting',tags:['hue','lights'],cat:'smart-home',lang:'TypeScript',ver:'1.0.0',type:'integration'},
+  {name:'Spotify',author:'LinguClaw',icon:'🎵',desc:'Spotify control',tags:['spotify','music'],cat:'smart-home',lang:'TypeScript',ver:'1.0.0',type:'integration'},
+  {name:'Sonos',author:'LinguClaw',icon:'🔊',desc:'Sonos multi-room audio',tags:['sonos','audio'],cat:'smart-home',lang:'TypeScript',ver:'1.0.0',type:'integration'},
+
+  // Utility (5) — web.ts
+  {name:'Weather',author:'LinguClaw',icon:'🌤️',desc:'Weather forecasts',tags:['weather','api'],cat:'utility',lang:'TypeScript',ver:'1.0.0',type:'integration'},
+  {name:'Webhooks',author:'LinguClaw',icon:'🔗',desc:'HTTP webhook triggers',tags:['webhooks','http'],cat:'utility',lang:'TypeScript',ver:'1.0.0',type:'integration'},
+  {name:'Image Gen',author:'LinguClaw',icon:'🖼️',desc:'AI Image Generation',tags:['image','dalle'],cat:'utility',lang:'TypeScript',ver:'1.0.0',type:'integration'},
+  {name:'1Password',author:'LinguClaw',icon:'🔐',desc:'1Password secrets',tags:['1password','secrets'],cat:'utility',lang:'TypeScript',ver:'1.0.0',type:'integration'},
+  {name:'Gmail',author:'LinguClaw',icon:'📨',desc:'Gmail Pub/Sub triggers',tags:['gmail','google'],cat:'utility',lang:'TypeScript',ver:'1.0.0',type:'integration'},
+
+  // Language Analyzers (6) — src/languages/
+  {name:'C++ Analyzer',author:'LinguClaw',icon:'⚡',desc:'C++ code analysis, refactoring, and diagnostics',tags:['cpp','analysis'],cat:'language',lang:'TypeScript',ver:'1.0.0',type:'builtin'},
+  {name:'C# Analyzer',author:'LinguClaw',icon:'🟦',desc:'C# code analysis, refactoring, and diagnostics',tags:['csharp','analysis'],cat:'language',lang:'TypeScript',ver:'1.0.0',type:'builtin'},
+  {name:'Go Analyzer',author:'LinguClaw',icon:'🐹',desc:'Go code analysis, refactoring, and diagnostics',tags:['go','analysis'],cat:'language',lang:'TypeScript',ver:'1.0.0',type:'builtin'},
+  {name:'Java Analyzer',author:'LinguClaw',icon:'☕',desc:'Java code analysis, refactoring, and diagnostics',tags:['java','analysis'],cat:'language',lang:'TypeScript',ver:'1.0.0',type:'builtin'},
+  {name:'Python Analyzer',author:'LinguClaw',icon:'🐍',desc:'Python code analysis, refactoring, and diagnostics',tags:['python','analysis'],cat:'language',lang:'TypeScript',ver:'1.0.0',type:'builtin'},
+  {name:'Rust Analyzer',author:'LinguClaw',icon:'🦀',desc:'Rust code analysis, refactoring, and diagnostics',tags:['rust','analysis'],cat:'language',lang:'TypeScript',ver:'1.0.0',type:'builtin'},
+
+  // Plugins (3) — plugins/
+  {name:'Weather Plugin',author:'LinguClaw',icon:'🌦️',desc:'Get weather data for any city using the Open-Meteo API. No API key required.',tags:['weather','api'],cat:'plugin',lang:'JavaScript',ver:'1.0.0',type:'plugin'},
+  {name:'Notes Plugin',author:'LinguClaw',icon:'🗒️',desc:'Persistent notes management plugin with tags and search. File-based JSON storage.',tags:['notes'],cat:'plugin',lang:'JavaScript',ver:'1.0.0',type:'plugin'},
+  {name:'System Info Plugin',author:'LinguClaw',icon:'💻',desc:'Monitor CPU, memory, disk, and OS details. Real-time system resource diagnostics.',tags:['system'],cat:'plugin',lang:'JavaScript',ver:'1.0.0',type:'plugin'},
+];
+
+function renderSkills(filter,search){
+  var g=document.getElementById('skillsGrid'),h='',filtered=skills;
+  if(filter&&filter!=='all')filtered=filtered.filter(function(s){return s.cat===filter});
+  if(search){var q=search.toLowerCase();filtered=filtered.filter(function(s){return s.name.toLowerCase().indexOf(q)>-1||s.desc.toLowerCase().indexOf(q)>-1||s.tags.join(' ').indexOf(q)>-1})}
+  if(filtered.length===0){g.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:60px 0;color:var(--muted)"><p style="font-size:18px;margin-bottom:8px">No skills found</p><p style="font-size:13px">Try a different search or category.</p></div>';return}
+  filtered.forEach(function(s,i){
+    h+='<div class="skill-card reveal d'+(i%3+1)+'">'
+      +'<div class="sk-head"><div class="sk-ico">'+s.icon+'</div>'
+      +'<div class="sk-meta"><h4>'+s.name+'</h4><div class="author">by '+s.author+'</div></div>'
+      +'<span class="sk-ver">v'+s.ver+'</span></div>'
+      +'<div class="sk-body"><p>'+s.desc+'</p></div>'
+      +'<div class="sk-foot">';
+    s.tags.forEach(function(t){h+='<span class="sk-tag">'+t+'</span>'});
+    h+='<span class="sk-tag lang">'+s.lang+'</span>'
+      +'<div class="sk-stats"><span style="color:var(--accent2);font-weight:600">'+s.type+'</span></div></div></div>';
+  });
+  g.innerHTML=h;
+  g.querySelectorAll('.reveal').forEach(function(el){obs.observe(el)});
+}
+
+// filter buttons
+var activeFilter='all';
+document.getElementById('filterBtns').addEventListener('click',function(e){
+  if(!e.target.classList.contains('sk-filter'))return;
+  document.querySelectorAll('.sk-filter').forEach(function(b){b.classList.remove('active')});
+  e.target.classList.add('active');
+  activeFilter=e.target.dataset.cat;
+  renderSkills(activeFilter,document.getElementById('skillSearch').value);
+});
+
+// search
+document.getElementById('skillSearch').addEventListener('input',function(){
+  renderSkills(activeFilter,this.value);
+});
+
+// initial render
+renderSkills();
+
+// publish form
+var fileDrop=document.getElementById('fileDrop');
+var fileInput=document.getElementById('fileInput');
+var selectedFile=null;
+fileDrop.addEventListener('click',function(){fileInput.click()});
+fileDrop.addEventListener('dragover',function(e){e.preventDefault();fileDrop.classList.add('dragover')});
+fileDrop.addEventListener('dragleave',function(){fileDrop.classList.remove('dragover')});
+fileDrop.addEventListener('drop',function(e){e.preventDefault();fileDrop.classList.remove('dragover');if(e.dataTransfer.files.length){handleFile(e.dataTransfer.files[0])}});
+fileInput.addEventListener('change',function(){if(this.files.length)handleFile(this.files[0])});
+function handleFile(f){
+  if(!f.name.endsWith('.ts')&&!f.name.endsWith('.js')){showToast('Only .ts or .js files allowed');return}
+  selectedFile=f;document.getElementById('fileLabel').innerHTML='<span style="color:var(--green)">✓ '+f.name+' ('+Math.round(f.size/1024)+'KB)</span>';
+}
+
+document.getElementById('publishBtn').addEventListener('click',function(){
+  var nm=document.getElementById('pubName').value.trim();
+  var au=document.getElementById('pubAuthor').value.trim();
+  var ct=document.getElementById('pubCat').value;
+  var ds=document.getElementById('pubDesc').value.trim();
+  if(!nm||!au||!ds){showToast('Please fill in all fields');return}
+  if(!selectedFile){showToast('Please upload a skill file');return}
+  // add to local skills list
+  skills.push({name:nm,author:au,icon:'🧩',desc:ds,tags:[ct],cat:ct,lang:selectedFile.name.endsWith('.ts')?'TypeScript':'JavaScript',ver:'1.0.0',type:'community'});
+  renderSkills(activeFilter,document.getElementById('skillSearch').value);
+  // update counter
+  var countEl=document.querySelector('[data-count]');if(countEl){countEl.dataset.count=skills.length;countEl.textContent=skills.length}
+  // reset form
+  document.getElementById('publishForm').reset();selectedFile=null;
+  document.getElementById('fileLabel').innerHTML='Drop your .ts/.js file here or <span style="color:var(--accent2);text-decoration:underline">click to browse</span>';
+  showToast('Skill "'+nm+'" published successfully!');
+  // scroll to skills
+  setTimeout(function(){document.getElementById('skills').scrollIntoView({behavior:'smooth'})},800);
+});
+
+function showToast(msg){
+  var t=document.createElement('div');t.className='toast';t.textContent=msg;document.body.appendChild(t);
+  setTimeout(function(){t.classList.add('show')},10);
+  setTimeout(function(){t.classList.remove('show');setTimeout(function(){t.remove()},400)},3000);
+}
+
+// smooth scroll
+document.querySelectorAll('a[href^="#"]').forEach(function(a){
+  a.addEventListener('click',function(e){
+    var t=document.querySelector(this.getAttribute('href'));
+    if(t){e.preventDefault();t.scrollIntoView({behavior:'smooth',block:'start'})}
+  });
+});
+</script>
+</body>
+</html>

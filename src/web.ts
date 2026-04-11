@@ -1269,12 +1269,20 @@ Provide a brief summary and suggested reply.` }
     });
 
     this.app.get('/', (_req: Request, res: Response) => {
-      const dashboardPath = path.join(__dirname, 'static', 'dashboard.html');
-      if (require('fs').existsSync(dashboardPath)) {
-        res.sendFile(dashboardPath);
+      const landingPath = path.join(__dirname, 'static', 'index.html');
+      if (require('fs').existsSync(landingPath)) {
+        res.sendFile(landingPath);
       } else {
         res.send(this.generateHTML());
       }
+    });
+
+    this.app.get('/dashboard', (_req: Request, res: Response) => {
+      res.sendFile(path.join(__dirname, 'static', 'dashboard.html'));
+    });
+
+    this.app.get('/hub', (_req: Request, res: Response) => {
+      res.sendFile(path.join(__dirname, 'static', 'hub.html'));
     });
   }
 

@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none" stroke="#4F6BF6" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Head circle -->
+  <circle cx="100" cy="62" r="36"/>
+  <!-- Inner eye circle -->
+  <circle cx="100" cy="62" r="16"/>
+  <!-- Left claw -->
+  <path d="M52 52 L32 38 Q14 28 18 48 L24 62 Q28 76 44 72 L58 66"/>
+  <path d="M32 38 Q22 44 24 62"/>
+  <!-- Right claw -->
+  <path d="M148 52 L168 38 Q186 28 182 48 L176 62 Q172 76 156 72 L142 66"/>
+  <path d="M168 38 Q178 44 176 62"/>
+  <!-- Tentacles -->
+  <path d="M82 94 Q78 120 72 140"/>
+  <path d="M90 96 Q88 124 86 144"/>
+  <path d="M100 98 Q100 128 100 148"/>
+  <path d="M110 96 Q112 124 114 144"/>
+  <path d="M118 94 Q122 120 128 140"/>
+  <!-- Left foot -->
+  <rect x="52" y="150" rx="18" ry="18" width="36" height="28"/>
+  <rect x="60" y="158" rx="10" ry="10" width="20" height="12"/>
+  <!-- Right foot -->
+  <rect x="112" y="150" rx="18" ry="18" width="36" height="28"/>
+  <rect x="120" y="158" rx="10" ry="10" width="20" height="12"/>
+</svg>
