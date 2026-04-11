@@ -99,9 +99,11 @@ export class PrivacyManager {
         if (file.endsWith('.log')) {
           const filePath = path.join(logDir, file);
           if (this.settings.secure_delete) {
-            // Overwrite before delete
+            // Overwrite with random data before delete
             const stats = fs.statSync(filePath);
-            fs.writeFileSync(filePath, Buffer.alloc(stats.size, 0));
+            const randomBuf = Buffer.alloc(Math.min(stats.size, 1024 * 1024));
+            for (let i = 0; i < randomBuf.length; i++) randomBuf[i] = Math.floor(Math.random() * 256);
+            fs.writeFileSync(filePath, randomBuf);
           }
           fs.unlinkSync(filePath);
           count++;

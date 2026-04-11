@@ -5,6 +5,7 @@
 
 import { getLogger } from './logger';
 import { PluginInfo, PluginConfig, PluginContext, Logger } from './types';
+import path from 'path';
 
 const logger = getLogger();
 
@@ -140,7 +141,15 @@ export class PluginManager {
 
   async loadPlugin(pluginPath: string, context: PluginContext): Promise<boolean> {
     try {
-      const pluginModule = require(pluginPath);
+      // Validate plugin path is within plugin directory
+      const resolvedPath = path.resolve(pluginPath);
+      const resolvedPluginDir = path.resolve(this.pluginDir);
+      if (!resolvedPath.startsWith(resolvedPluginDir)) {
+        logger.error(`Plugin path ${pluginPath} is outside plugin directory ${this.pluginDir}`);
+        return false;
+      }
+
+      const pluginModule = require(resolvedPath);
       const PluginClass = pluginModule.default || Object.values(pluginModule)[0];
 
       if (!PluginClass || typeof PluginClass !== 'function') {

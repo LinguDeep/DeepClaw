@@ -117,7 +117,11 @@ export class LongTermMemory {
         WHERE key = ?
       `).run(new Date().toISOString(), key);
 
-      return JSON.parse(row.value);
+      try {
+        return JSON.parse(row.value);
+      } catch {
+        return row.value; // Return raw string if not valid JSON
+      }
     } catch (error) {
       logger.error(`Failed to retrieve memory: ${error}`);
       return null;
@@ -140,13 +144,17 @@ export class LongTermMemory {
       params.push(limit.toString());
 
       const rows = this.db.prepare(sql).all(...params);
-      return rows.map((row: any) => ({
-        key: row.key,
-        value: JSON.parse(row.value),
-        category: row.category,
-        timestamp: row.timestamp,
-        access_count: row.access_count,
-      }));
+      return rows.map((row: any) => {
+        let value;
+        try { value = JSON.parse(row.value); } catch { value = row.value; }
+        return {
+          key: row.key,
+          value,
+          category: row.category,
+          timestamp: row.timestamp,
+          access_count: row.access_count,
+        };
+      });
     } catch (error) {
       logger.error(`Failed to search memories: ${error}`);
       return [];
@@ -162,12 +170,16 @@ export class LongTermMemory {
          WHERE category = ? ORDER BY last_accessed DESC LIMIT ?`
       ).all(category, limit);
 
-      return rows.map((row: any) => ({
-        key: row.key,
-        value: JSON.parse(row.value),
-        timestamp: row.timestamp,
-        access_count: row.access_count,
-      }));
+      return rows.map((row: any) => {
+        let value;
+        try { value = JSON.parse(row.value); } catch { value = row.value; }
+        return {
+          key: row.key,
+          value,
+          timestamp: row.timestamp,
+          access_count: row.access_count,
+        };
+      });
     } catch (error) {
       logger.error(`Failed to get memories by category: ${error}`);
       return [];

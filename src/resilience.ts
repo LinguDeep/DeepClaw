@@ -167,11 +167,10 @@ export class CircuitBreaker {
   private onSuccess(): void {
     if (this.state === 'half-open') {
       this.state = 'closed';
-      this.failures = 0;
       logger.info(`Circuit breaker ${this.name} closed`);
-    } else {
-      this.failures = Math.max(0, this.failures - 1);
     }
+    // Reset failures on success
+    this.failures = 0;
   }
 
   private onFailure(): void {

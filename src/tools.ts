@@ -200,15 +200,39 @@ export class FileSystemTool {
   }
 
   /**
-   * Validate path is within root
+   * Validate path is within root (prevents path traversal)
    */
   private validate(targetPath: string): string {
-    const target = path.resolve(targetPath);
-    if (!target.startsWith(this.root)) {
-      throw new Error(`Access denied: ${targetPath} outside ${this.root}`);
+    const target = path.resolve(this.root, targetPath);
+    const realRoot = fs.realpathSync(this.root);
+    // Resolve symlinks to prevent traversal via symlinks
+    let realTarget: string;
+    try {
+      realTarget = fs.realpathSync(target);
+    } catch {
+      // File may not exist yet (for write), check parent
+      const parent = path.dirname(target);
+      try {
+        const realParent = fs.realpathSync(parent);
+        if (!realParent.startsWith(realRoot)) {
+          throw new Error(`Access denied: ${targetPath} outside project root`);
+        }
+      } catch {
+        // Parent doesn't exist either, just check resolved path
+        if (!target.startsWith(realRoot)) {
+          throw new Error(`Access denied: ${targetPath} outside project root`);
+        }
+      }
+      return target;
     }
-    return target;
+    if (!realTarget.startsWith(realRoot)) {
+      throw new Error(`Access denied: ${targetPath} outside project root`);
+    }
+    return realTarget;
   }
+
+  private static readonly MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+  private static readonly MAX_DIR_ENTRIES = 5000;
 
   /**
    * Read file contents
@@ -219,8 +243,12 @@ export class FileSystemTool {
       if (!fs.existsSync(target)) {
         return { success: false, error: `Not found: ${filePath}` };
       }
-      if (!fs.statSync(target).isFile()) {
+      const stat = fs.statSync(target);
+      if (!stat.isFile()) {
         return { success: false, error: `Not a file: ${filePath}` };
+      }
+      if (stat.size > FileSystemTool.MAX_FILE_SIZE) {
+        return { success: false, error: `File too large (${Math.round(stat.size / 1024 / 1024)}MB > 10MB limit)` };
       }
 
       let content = fs.readFileSync(target, 'utf-8');
@@ -270,6 +298,9 @@ export class FileSystemTool {
       }
 
       const entries = fs.readdirSync(target);
+      if (entries.length > FileSystemTool.MAX_DIR_ENTRIES) {
+        return { success: false, error: `Directory has ${entries.length} entries (limit: ${FileSystemTool.MAX_DIR_ENTRIES})` };
+      }
       const formatted = entries.map(e => {
         const fullPath = path.join(target, e);
         const isDir = fs.statSync(fullPath).isDirectory();

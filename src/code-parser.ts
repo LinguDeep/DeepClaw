@@ -30,11 +30,18 @@ export interface CallGraph {
   calledBy: Map<string, Set<string>>; // callee -> callers
 }
 
+const MAX_PARSE_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+
 /**
  * Parse TypeScript/JavaScript file using TypeScript compiler API
  */
 export function parseTypeScriptFile(filePath: string): ParsedChunk[] {
   try {
+    const stat = fs.statSync(filePath);
+    if (stat.size > MAX_PARSE_FILE_SIZE) {
+      logger.warn(`Skipping ${filePath}: file too large (${Math.round(stat.size / 1024 / 1024)}MB)`);
+      return [];
+    }
     const content = fs.readFileSync(filePath, 'utf-8');
     const sourceFile = ts.createSourceFile(
       filePath,

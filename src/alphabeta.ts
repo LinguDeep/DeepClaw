@@ -147,9 +147,15 @@ export class AlphaBeta {
       return { success: false, conflicts, fitness: beta.fitness, result: null };
     }
 
-    // Perform merge
-    this.alpha.changes.push(...beta.changes);
-    this.alpha.tests.push(...beta.tests);
+    // Perform merge (avoid duplicates)
+    const existingChanges = new Set(this.alpha.changes);
+    const existingTests = new Set(this.alpha.tests);
+    for (const change of beta.changes) {
+      if (!existingChanges.has(change)) this.alpha.changes.push(change);
+    }
+    for (const test of beta.tests) {
+      if (!existingTests.has(test)) this.alpha.tests.push(test);
+    }
     beta.merged = true;
 
     // Recalculate fitness

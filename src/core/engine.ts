@@ -4,6 +4,7 @@
  */
 
 import { EventEmitter } from 'events';
+import path from 'path';
 
 // ============================================
 // CORE ARCHITECTURE
@@ -469,11 +470,14 @@ export class LinguClawEngine extends EventEmitter {
   }
 
   async analyzeFile(filePath: string, source: string): Promise<AnalysisResult> {
-    const ext = filePath.split('.').pop() || '';
+    const ext = path.extname(filePath).slice(1).toLowerCase();
+    if (!ext) {
+      throw new Error(`Cannot determine file extension for: ${filePath}`);
+    }
     const language = this.findLanguageByExtension(ext);
     
     if (!language) {
-      throw new Error(`No language support for extension: ${ext}`);
+      throw new Error(`No language support for extension: .${ext}`);
     }
 
     // Run pre-parse hooks

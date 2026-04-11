@@ -13,6 +13,19 @@ export { ProviderType } from './types';
 
 const logger = getLogger();
 
+/** Safely extract content from OpenAI-compatible response */
+function parseOpenAIResponse(data: any, model: string): LLMResponse {
+  if (!data?.choices?.length || !data.choices[0]?.message?.content) {
+    return { content: '', error: 'Empty or malformed response from provider', model };
+  }
+  return {
+    content: data.choices[0].message.content,
+    usage: data.usage || {},
+    model: data.model || model,
+    finish_reason: data.choices[0].finish_reason,
+  };
+}
+
 export abstract class BaseProvider {
   model: string;
   apiKey: string | null;
@@ -162,20 +175,13 @@ export class OpenRouterProvider extends BaseProvider {
       );
 
       const data = response.data;
-      return {
-        content: data.choices[0].message.content,
-        usage: data.usage || {},
-        model: data.model || this.model,
-        finish_reason: data.choices[0].finish_reason,
-      };
+      return parseOpenAIResponse(data, this.model);
     } catch (error: any) {
-      // Log full error details for debugging
-      console.error('=== OpenRouter API Error ===');
-      console.error('Error message:', error.message);
-      console.error('Error code:', error.code);
-      console.error('Error response:', error.response?.data);
-      console.error('Status:', error.response?.status);
-      logger.error(`OpenRouter error: ${error.message}`);
+      logger.error(`OpenRouter error: ${error.message}`, {
+        code: error.code,
+        status: error.response?.status,
+        response: error.response?.data,
+      });
       return { content: '', error: error.message, model: '' };
     }
   }
@@ -216,12 +222,7 @@ export class OpenAIProvider extends BaseProvider {
       );
 
       const data = response.data;
-      return {
-        content: data.choices[0].message.content,
-        usage: data.usage || {},
-        model: data.model || this.model,
-        finish_reason: data.choices[0].finish_reason,
-      };
+      return parseOpenAIResponse(data, this.model);
     } catch (error: any) {
       logger.error(`OpenAI error: ${error.message}`);
       return { content: '', error: error.message, model: '' };
@@ -281,6 +282,9 @@ export class AnthropicProvider extends BaseProvider {
       );
 
       const data = response.data;
+      if (!data?.content?.length || !data.content[0]?.text) {
+        return { content: '', error: 'Empty or malformed response from Anthropic', model: this.model };
+      }
       return {
         content: data.content[0].text,
         usage: data.usage || {},
@@ -445,11 +449,7 @@ export class LMStudioProvider extends BaseProvider {
       );
 
       const data = response.data;
-      return {
-        content: data.choices[0].message.content,
-        usage: data.usage || {},
-        model: 'local',
-      };
+      return parseOpenAIResponse(data, 'local');
     } catch (error: any) {
       logger.error(`LM Studio error: ${error.message}`);
       return { content: '', error: error.message, model: '' };

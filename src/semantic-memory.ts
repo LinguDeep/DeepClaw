@@ -335,13 +335,17 @@ export class SemanticMemory {
     params.push(limit);
 
     const rows = this.db.prepare(sql).all(...params) as any[];
-    return rows.map(row => ({
-      id: row.id,
-      content: row.content,
-      category: row.category,
-      metadata: JSON.parse(row.metadata || '{}'),
-      score: 0.5, // Default score for text matches
-    }));
+    return rows.map(row => {
+      let metadata = {};
+      try { metadata = JSON.parse(row.metadata || '{}'); } catch { /* skip invalid */ }
+      return {
+        id: row.id,
+        content: row.content,
+        category: row.category,
+        metadata,
+        score: 0.5,
+      };
+    });
   }
 
   /**

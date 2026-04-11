@@ -34,7 +34,6 @@ export interface SearchResult {
 export class BrowserAutomation {
   private browser: any;
   private page: any;
-  private pages: Map<string, any> = new Map();
   private available: boolean;
   private puppeteer: any;
   private history: { url: string; title: string; timestamp: string }[] = [];
@@ -51,7 +50,6 @@ export class BrowserAutomation {
       this.browser = await this.puppeteer.launch({
         headless: 'new',
         args: [
-          '--no-sandbox',
           '--disable-setuid-sandbox',
           '--disable-dev-shm-usage',
           '--disable-gpu',
@@ -259,7 +257,6 @@ export class BrowserAutomation {
       await this.browser.close();
       this.browser = null;
       this.page = null;
-      this.pages.clear();
       this.available = false;
       logger.info('Browser closed');
     }

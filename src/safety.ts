@@ -11,11 +11,11 @@ const logger = getLogger();
 // Risk patterns matching the Python implementation
 const RISK_PATTERNS: Array<{ pattern: RegExp; score: number; reason: string }> = [
   // CRITICAL (100) - Permanent system destruction
-  { pattern: /rm\s+-rf\s+\/|mkfs\.|dd\s+if=.*of=\/dev\/sd|>:\(\)\s*\{.*:\}\&.*\;/, score: RiskLevel.CRITICAL, reason: 'System destruction detected' },
+  { pattern: /rm\s+-r?f?\s+\/(?:\s|$)|rm\s+-f?r?\s+\/(?:\s|$)|mkfs\.|dd\s+if=.*of=\/dev\/sd|>:\(\)\s*\{.*:\}\&.*\;/, score: RiskLevel.CRITICAL, reason: 'System destruction detected' },
   
   // HIGH (90-95) - System-level dangerous operations
   { pattern: /diskutil\s+eraseDisk|csrutil\s+disable|reg\s+delete.*\/f/, score: RiskLevel.HIGH, reason: 'System-level modification' },
-  { pattern: /chmod\s+-R\s+777\s+\//, score: RiskLevel.HIGH, reason: 'Global permission change' },
+  { pattern: /chmod\s+(-R\s+)?777\s+\/|chmod\s+777\s+(-R\s+)?\//, score: RiskLevel.HIGH, reason: 'Global permission change' },
   
   // ELEVATED (70) - Network/download risks
   { pattern: /curl.*\|\s*(ba)?sh|wget.*\|\s*(ba)?sh|python.*-c.*import.*url/, score: RiskLevel.ELEVATED, reason: 'Download and execute pattern' },

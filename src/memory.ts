@@ -64,7 +64,8 @@ export class RAGMemory {
     const extensions = ['.ts', '.tsx', '.js', '.jsx', '.py', '.java', '.go', '.rs', '.cpp', '.c', '.h'];
     const files: string[] = [];
     
-    const findFiles = (dir: string) => {
+    const findFiles = (dir: string, depth: number = 0) => {
+      if (depth > 15) return; // Prevent excessive recursion
       try {
         const entries = fs.readdirSync(dir);
         for (const entry of entries) {
@@ -72,7 +73,7 @@ export class RAGMemory {
           const stat = fs.statSync(fullPath);
           
           if (stat.isDirectory() && !entry.startsWith('.') && entry !== 'node_modules' && entry !== 'dist' && entry !== 'tests' && entry !== '__pycache__') {
-            findFiles(fullPath);
+            findFiles(fullPath, depth + 1);
           } else if (stat.isFile() && extensions.some(ext => entry.endsWith(ext))) {
             files.push(fullPath);
           }

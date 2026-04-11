@@ -132,9 +132,20 @@ export class LinguClawDaemon extends EventEmitter {
   isRunning(): boolean {
     if (fs.existsSync(this.pidFile)) {
       try {
-        const pid = parseInt(fs.readFileSync(this.pidFile, 'utf-8'));
-        // Check if process exists (simplified)
-        return true;
+        const pid = parseInt(fs.readFileSync(this.pidFile, 'utf-8').trim());
+        if (isNaN(pid)) {
+          this.removePid();
+          return false;
+        }
+        // Check if process actually exists
+        try {
+          process.kill(pid, 0); // signal 0 = check existence
+          return true;
+        } catch {
+          // Process doesn't exist, stale PID file
+          this.removePid();
+          return false;
+        }
       } catch (err: any) {
         logger.debug(`PID check failed: ${err.message}`);
         this.removePid();
