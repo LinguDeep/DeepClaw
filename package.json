@@ -4,6 +4,14 @@
   "description": "Codebase-Aware Multi-Agent System - TypeScript Edition",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "bin": {
+    "linguclaw": "dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "tsc && cp -r src/static dist/",
     "dev": "ts-node src/index.ts",
