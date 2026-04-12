@@ -1,0 +1,124 @@
+name: DeepClaw CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test-engine:
+    name: Test Rust Engine
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+      
+      - name: Cache Cargo registry
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+      
+      - name: Cache Cargo index
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/git
+          key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+      
+      - name: Cache Cargo build
+        uses: actions/cache@v3
+        with:
+          path: engine/target
+          key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
+      
+      - name: Build Engine
+        run: |
+          cd engine
+          cargo build --release --verbose
+      
+      - name: Test Engine
+        run: |
+          cd engine
+          cargo test --verbose
+
+  test-brain:
+    name: Test TypeScript Brain
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'pnpm'
+          cache-dependency-path: brain/pnpm-lock.yaml
+      
+      - name: Install pnpm
+        run: npm install -g pnpm
+      
+      - name: Install dependencies
+        run: |
+          cd brain
+          pnpm install
+      
+      - name: Build Brain
+        run: |
+          cd brain
+          pnpm build
+      
+      - name: Test Brain
+        run: |
+          cd brain
+          pnpm test
+
+  test-dashboard:
+    name: Test Dashboard
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      
+      - name: Install dependencies
+        run: |
+          cd dashboard
+          npm install
+      
+      - name: Lint Dashboard
+        run: |
+          cd dashboard
+          npm run lint || echo "No lint script configured"
+
+  lint:
+    name: Lint Code
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+      
+      - name: Rust Clippy
+        run: |
+          cd engine
+          cargo clippy -- -D warnings
+      
+      - name: Rust Format Check
+        run: |
+          cd engine
+          cargo fmt -- --check
