@@ -329,7 +329,7 @@ section{padding:120px 0;position:relative;overflow:hidden}
   </div>
   <div class="container hero-content">
     <div class="hero-eyebrow">
-      <span class="tag">v0.4.3</span>
+      <span class="tag">v0.5.1</span>
       <span class="dot"></span>
       Open Source &middot; Multi-Agent &middot; TypeScript
     </div>
@@ -369,12 +369,13 @@ section{padding:120px 0;position:relative;overflow:hidden}
       </div>
       <div class="sc-body">
         <div class="sc-line"><span class="t-prompt">❯</span> <span class="t-cmd">npm install -g linguclaw</span></div>
-        <div class="sc-line"><span class="t-prompt">❯</span> <span class="t-cmd">linguclaw init</span> <span class="t-flag">--provider ollama</span></div>
-        <div class="sc-line"><span class="t-out">🦀 LinguClaw v0.4.3 initialized</span></div>
-        <div class="sc-line"><span class="t-out">   ✓ Multi-agent system ready (Coder, Reviewer, Architect)</span></div>
-        <div class="sc-line"><span class="t-out">   ✓ Semantic memory indexed files across <strong style="color:var(--text)">6</strong> languages</span></div>
-        <div class="sc-line"><span class="t-out">   ✓ Workflow engine loaded <strong style="color:var(--text)">22</strong> node types</span></div>
-        <div class="sc-line"><span class="t-out">   🌐 Web UI → <span class="t-link">http://localhost:3000</span></span></div>
+        <div class="sc-line"><span class="t-prompt">❯</span> <span class="t-cmd">linguclaw status</span></div>
+        <div class="sc-line"><span class="t-out">🦀 LinguClaw v0.5.1</span></div>
+        <div class="sc-line"><span class="t-out">   🔒 Docker: Available</span></div>
+        <div class="sc-line"><span class="t-out">   🧠 Memory: Ready (<strong style="color:var(--text)">128</strong> chunks)</span></div>
+        <div class="sc-line"><span class="t-out">   🔑 API Key: sk-or-v1...****</span></div>
+        <div class="sc-line"><span class="t-prompt">❯</span> <span class="t-cmd">linguclaw web</span></div>
+        <div class="sc-line"><span class="t-out">   🌐 Web UI → <span class="t-link">http://localhost:8080</span></span></div>
       </div>
     </div>
   </div>
@@ -642,15 +643,15 @@ section{padding:120px 0;position:relative;overflow:hidden}
       </div>
       <div class="gs-card reveal d2">
         <div class="gs-step">2</div>
-        <h3>Initialize</h3>
-        <p>Set up your project with your preferred LLM provider. <a href="#apikeys" style="color:var(--accent2);font-weight:600">Configure API keys ↓</a></p>
-        <code>linguclaw init</code>
+        <h3>Configure</h3>
+        <p>Set your LLM provider and API key. <a href="#apikeys" style="color:var(--accent2);font-weight:600">Configure API keys ↓</a></p>
+        <code>linguclaw settings set llm.provider openai</code>
       </div>
       <div class="gs-card reveal d3">
         <div class="gs-step">3</div>
         <h3>Launch</h3>
         <p>Start the web dashboard and begin creating workflows.</p>
-        <code>linguclaw --web</code>
+        <code>linguclaw web</code>
       </div>
     </div>
   </div>
@@ -682,16 +683,20 @@ section{padding:120px 0;position:relative;overflow:hidden}
     </div>
 
     <div class="ak-methods reveal">
-      <h3><span class="num">2</span> Interactive Setup via CLI</h3>
+      <h3><span class="num">2</span> Configure via CLI</h3>
       <div class="ak-code">
         <div class="ak-code-bar">terminal</div>
-        <pre><span class="env-cm"># Initialize with a specific provider</span>
-<span class="env-key">❯</span> linguclaw init <span class="env-val">--provider openai</span>
-<span class="env-cm"># You'll be prompted for your API key interactively</span>
+        <pre><span class="env-cm"># Set your LLM provider</span>
+<span class="env-key">❯</span> linguclaw settings <span class="env-val">set llm.provider openai</span>
+<span class="env-cm"># Set your API key</span>
+<span class="env-key">❯</span> linguclaw settings <span class="env-val">set llm.apiKey sk-proj-...</span>
 
-<span class="env-cm"># Or switch providers anytime</span>
-<span class="env-key">❯</span> linguclaw config <span class="env-val">set provider anthropic</span>
-<span class="env-key">❯</span> linguclaw config <span class="env-val">set api-key sk-ant-...</span></pre>
+<span class="env-cm"># Switch providers anytime</span>
+<span class="env-key">❯</span> linguclaw settings <span class="env-val">set llm.provider anthropic</span>
+<span class="env-key">❯</span> linguclaw settings <span class="env-val">set llm.apiKey sk-ant-api03-...</span>
+
+<span class="env-cm"># View all settings</span>
+<span class="env-key">❯</span> linguclaw settings <span class="env-val">list</span></pre>
       </div>
     </div>
 
@@ -700,60 +705,141 @@ section{padding:120px 0;position:relative;overflow:hidden}
       <span>Using <strong style="color:var(--text)">Ollama</strong> or <strong style="color:var(--text)">LM Studio</strong>? No API key needed — just install and run locally. LinguClaw auto-detects local providers on <code style="color:var(--cyan)">localhost:11434</code> (Ollama) or <code style="color:var(--cyan)">localhost:1234</code> (LM Studio).</span>
     </div>
 
+    <div class="ak-methods reveal" style="margin-top:40px">
+      <h3><span class="num">3</span> Step-by-Step: Get Your API Key</h3>
+    </div>
+
     <div class="ak-grid">
       <div class="ak-card reveal d1">
-        <span class="ak-ico">🤖</span>
-        <div class="ak-name">OpenAI</div>
-        <div class="ak-desc">GPT-4o, o1, GPT-5</div>
-        <div class="ak-env">OPENAI_API_KEY</div>
+        <span class="ak-ico">🌐</span>
+        <div class="ak-name">OpenRouter <span style="font-size:10px;color:var(--green);font-weight:700">(Recommended)</span></div>
+        <div class="ak-desc">100+ models with a single key. Best for getting started.</div>
+        <div style="font-size:11.5px;color:var(--dim);line-height:1.8;margin:10px 0">
+          1. Go to <a href="https://openrouter.ai/keys" target="_blank" style="color:var(--cyan);text-decoration:underline">openrouter.ai/keys</a><br>
+          2. Sign up or log in with Google/GitHub<br>
+          3. Click <strong style="color:var(--text)">"Create Key"</strong><br>
+          4. Copy the key (starts with <code style="color:var(--green);font-size:10px">sk-or-v1-</code>)
+        </div>
+        <div class="ak-env">OPENROUTER_API_KEY</div>
       </div>
       <div class="ak-card reveal d2">
+        <span class="ak-ico">�</span>
+        <div class="ak-name">OpenAI</div>
+        <div class="ak-desc">GPT-4o, o1, GPT-5</div>
+        <div style="font-size:11.5px;color:var(--dim);line-height:1.8;margin:10px 0">
+          1. Go to <a href="https://platform.openai.com/api-keys" target="_blank" style="color:var(--cyan);text-decoration:underline">platform.openai.com/api-keys</a><br>
+          2. Sign up and add billing<br>
+          3. Click <strong style="color:var(--text)">"Create new secret key"</strong><br>
+          4. Copy the key (starts with <code style="color:var(--green);font-size:10px">sk-proj-</code>)
+        </div>
+        <div class="ak-env">OPENAI_API_KEY</div>
+      </div>
+      <div class="ak-card reveal d3">
         <span class="ak-ico">🧠</span>
         <div class="ak-name">Anthropic</div>
         <div class="ak-desc">Claude 3.5 / Claude 4</div>
+        <div style="font-size:11.5px;color:var(--dim);line-height:1.8;margin:10px 0">
+          1. Go to <a href="https://console.anthropic.com/settings/keys" target="_blank" style="color:var(--cyan);text-decoration:underline">console.anthropic.com</a><br>
+          2. Sign up and add billing<br>
+          3. Navigate to <strong style="color:var(--text)">Settings &rarr; API Keys</strong><br>
+          4. Copy the key (starts with <code style="color:var(--green);font-size:10px">sk-ant-</code>)
+        </div>
         <div class="ak-env">ANTHROPIC_API_KEY</div>
-      </div>
-      <div class="ak-card reveal d3">
-        <span class="ak-ico">🌐</span>
-        <div class="ak-name">OpenRouter</div>
-        <div class="ak-desc">100+ models, one key</div>
-        <div class="ak-env">OPENROUTER_API_KEY</div>
       </div>
       <div class="ak-card reveal d1">
         <span class="ak-ico">🔵</span>
         <div class="ak-name">Google</div>
         <div class="ak-desc">Gemini 1.5 / 2.5</div>
+        <div style="font-size:11.5px;color:var(--dim);line-height:1.8;margin:10px 0">
+          1. Go to <a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--cyan);text-decoration:underline">aistudio.google.com/apikey</a><br>
+          2. Sign in with Google account<br>
+          3. Click <strong style="color:var(--text)">"Create API Key"</strong><br>
+          4. Copy the key (starts with <code style="color:var(--green);font-size:10px">AIza</code>)
+        </div>
         <div class="ak-env">GOOGLE_API_KEY</div>
       </div>
       <div class="ak-card reveal d2">
         <span class="ak-ico">✖️</span>
         <div class="ak-name">xAI</div>
         <div class="ak-desc">Grok models</div>
+        <div style="font-size:11.5px;color:var(--dim);line-height:1.8;margin:10px 0">
+          1. Go to <a href="https://console.x.ai" target="_blank" style="color:var(--cyan);text-decoration:underline">console.x.ai</a><br>
+          2. Sign up with X account<br>
+          3. Create an API key<br>
+          4. Copy the key (starts with <code style="color:var(--green);font-size:10px">xai-</code>)
+        </div>
         <div class="ak-env">XAI_API_KEY</div>
       </div>
       <div class="ak-card reveal d3">
         <span class="ak-ico">🦙</span>
         <div class="ak-name">Ollama</div>
-        <div class="ak-desc">Free local models</div>
+        <div class="ak-desc">Free, 100% local, no cloud</div>
+        <div style="font-size:11.5px;color:var(--dim);line-height:1.8;margin:10px 0">
+          1. Install: <a href="https://ollama.com/download" target="_blank" style="color:var(--cyan);text-decoration:underline">ollama.com/download</a><br>
+          2. Run: <code style="color:var(--green);font-size:10px">ollama pull llama3.1</code><br>
+          3. Ollama runs at <code style="color:var(--cyan);font-size:10px">localhost:11434</code><br>
+          4. LinguClaw auto-detects it
+        </div>
         <span class="ak-free">No API Key Required</span>
       </div>
       <div class="ak-card reveal d1">
         <span class="ak-ico">💻</span>
         <div class="ak-name">LM Studio</div>
-        <div class="ak-desc">Desktop local models</div>
+        <div class="ak-desc">Desktop app, local models</div>
+        <div style="font-size:11.5px;color:var(--dim);line-height:1.8;margin:10px 0">
+          1. Download from <a href="https://lmstudio.ai" target="_blank" style="color:var(--cyan);text-decoration:underline">lmstudio.ai</a><br>
+          2. Download a model from the UI<br>
+          3. Click <strong style="color:var(--text)">"Start Server"</strong> tab<br>
+          4. Runs at <code style="color:var(--cyan);font-size:10px">localhost:1234</code>
+        </div>
         <span class="ak-free">No API Key Required</span>
       </div>
       <div class="ak-card reveal d2">
         <span class="ak-ico">🌬️</span>
         <div class="ak-name">Mistral</div>
         <div class="ak-desc">Mistral AI models</div>
+        <div style="font-size:11.5px;color:var(--dim);line-height:1.8;margin:10px 0">
+          1. Go to <a href="https://console.mistral.ai/api-keys" target="_blank" style="color:var(--cyan);text-decoration:underline">console.mistral.ai</a><br>
+          2. Sign up and add billing<br>
+          3. Create a new API key<br>
+          4. Copy the key
+        </div>
         <div class="ak-env">MISTRAL_API_KEY</div>
       </div>
       <div class="ak-card reveal d3">
         <span class="ak-ico">🔍</span>
         <div class="ak-name">DeepSeek</div>
         <div class="ak-desc">DeepSeek V3 &amp; R1</div>
+        <div style="font-size:11.5px;color:var(--dim);line-height:1.8;margin:10px 0">
+          1. Go to <a href="https://platform.deepseek.com/api_keys" target="_blank" style="color:var(--cyan);text-decoration:underline">platform.deepseek.com</a><br>
+          2. Sign up and add billing<br>
+          3. Create a new API key<br>
+          4. Copy the key
+        </div>
         <div class="ak-env">DEEPSEEK_API_KEY</div>
+      </div>
+    </div>
+
+    <div class="ak-methods reveal" style="margin-top:40px">
+      <h3><span class="num">4</span> Quick Setup Example (Full)</h3>
+      <div class="ak-code">
+        <div class="ak-code-bar">terminal &mdash; complete setup in 30 seconds</div>
+        <pre><span class="env-cm"># Step 1: Install globally</span>
+<span class="env-key">❯</span> npm install -g linguclaw
+
+<span class="env-cm"># Step 2: Set provider (choose one)</span>
+<span class="env-key">❯</span> linguclaw settings <span class="env-val">set llm.provider openrouter</span>
+
+<span class="env-cm"># Step 3: Set your API key</span>
+<span class="env-key">❯</span> linguclaw settings <span class="env-val">set llm.apiKey sk-or-v1-your-key-here</span>
+
+<span class="env-cm"># Step 4: Verify everything works</span>
+<span class="env-key">❯</span> linguclaw status
+
+<span class="env-cm"># Step 5: Launch!</span>
+<span class="env-key">❯</span> linguclaw web
+<span class="env-cm"># Or run a task directly:</span>
+<span class="env-key">❯</span> linguclaw dev <span class="env-val">"refactor the auth module"</span></pre>
       </div>
     </div>
   </div>
