@@ -1,0 +1,113 @@
+name: Issue & PR Automation
+
+on:
+  issues:
+    types: [opened, edited, closed, reopened]
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+jobs:
+  # ============================================
+  # LABEL ISSUES AUTOMATICALLY
+  # ============================================
+  label-issues:
+    name: Label Issues
+    runs-on: ubuntu-latest
+    if: github.event_name == 'issues'
+
+    steps:
+    - name: Label based on content
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const title = context.payload.issue.title.toLowerCase();
+          const body = context.payload.issue.body?.toLowerCase() || '';
+          const labels = [];
+          
+          if (title.includes('bug') || title.includes('fix') || title.includes('error')) {
+            labels.push('bug');
+          }
+          if (title.includes('feature') || title.includes('add') || title.includes('implement')) {
+            labels.push('enhancement');
+          }
+          if (title.includes('doc') || title.includes('readme')) {
+            labels.push('documentation');
+          }
+          if (title.includes('test') || title.includes('coverage')) {
+            labels.push('testing');
+          }
+          if (title.includes('security') || title.includes('vulnerability')) {
+            labels.push('security');
+          }
+          if (title.includes('refactor') || title.includes('cleanup')) {
+            labels.push('refactoring');
+          }
+          if (title.includes('performance') || title.includes('slow') || title.includes('optimize')) {
+            labels.push('performance');
+          }
+          
+          if (labels.length > 0) {
+            github.rest.issues.addLabels({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: labels
+            });
+          }
+
+  # ============================================
+  # WELCOME CONTRIBUTORS
+  # ============================================
+  welcome:
+    name: Welcome Contributors
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Welcome first-time contributors
+      uses: actions/first-interaction@v1
+      with:
+        repo-token: ${{ secrets.GITHUB_TOKEN }}
+        issue-message: |
+          👋 Welcome to LinguClaw!
+          
+          Thank you for opening your first issue. We appreciate your contribution!
+          
+          Our team will review this soon. In the meantime:
+          - Make sure you've provided enough context
+          - Check if there's an existing issue about this
+          - Feel free to join our discussions
+        pr-message: |
+          🎉 Welcome to LinguClaw!
+          
+          Thank you for your first pull request! We're excited to review your contribution.
+          
+          Please ensure:
+          - Tests pass (`npm test`)
+          - Code follows our style guidelines
+          - Documentation is updated if needed
+          
+          Our maintainers will review this soon!
+
+  # ============================================
+  # STALE ISSUE MANAGEMENT
+  # ============================================
+  stale:
+    name: Mark Stale Issues
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+
+    steps:
+    - name: Mark stale issues and PRs
+      uses: actions/stale@v9
+      with:
+        repo-token: ${{ secrets.GITHUB_TOKEN }}
+        stale-issue-message: |
+          This issue has been automatically marked as stale because it has not had recent activity.
+          It will be closed if no further activity occurs. Thank you for your contributions!
+        stale-pr-message: |
+          This pull request has been automatically marked as stale because it has not had recent activity.
+          It will be closed if no further activity occurs. Thank you for your contributions!
+        stale-issue-label: 'stale'
+        stale-pr-label: 'stale'
+        days-before-stale: 60
+        days-before-close: 7

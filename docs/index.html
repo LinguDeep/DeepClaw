@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LinguClaw — AI-Powered Multi-Agent System</title>
+<meta name="description" content="Open-source codebase-aware multi-agent orchestration with visual workflows, semantic memory, 6-language analysis, and a community skill marketplace.">
+<meta property="og:title" content="LinguClaw — Build Smarter with AI Agent Teams">
+<meta property="og:description" content="Multi-agent orchestration with visual workflows, semantic memory, and a community skill hub.">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#6c5ce7">
+<link rel="icon" type="image/svg+xml" href="logo.svg">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap');
+:root{--bg:#06060a;--bg1:#0c0c12;--bg2:#12121a;--bg3:#1a1a24;--border:#1e1e2a;--accent:#6c5ce7;--accent2:#a29bfe;--accent3:#5b4cdb;--glow:rgba(108,92,231,.18);--glow2:rgba(108,92,231,.06);--green:#00e676;--cyan:#18ffff;--pink:#ff6b9d;--orange:#ffa726;--yellow:#ffee58;--text:#eeeef0;--dim:#9e9eb0;--muted:#5e5e72;--r:12px;--r2:20px;--r3:28px}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;overflow-x:hidden}
+body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+::selection{background:var(--accent);color:#fff}
+a{color:inherit;text-decoration:none;transition:color .2s}
+img{max-width:100%;display:block}
+
+/* ============ ANIMATIONS ============ */
+@keyframes pulse-glow{0%,100%{box-shadow:0 0 20px var(--glow),0 0 60px var(--glow2)}50%{box-shadow:0 0 40px var(--glow),0 0 100px var(--glow2)}}
+@keyframes gradient-shift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+@keyframes slide-up{from{opacity:0;transform:translateY(40px)}to{opacity:1;transform:translateY(0)}}
+@keyframes particle{0%{transform:translateY(0) scale(1);opacity:.5}100%{transform:translateY(-100vh) scale(0);opacity:0}}
+@keyframes morph{0%,100%{border-radius:60% 40% 30% 70%/60% 30% 70% 40%}50%{border-radius:30% 60% 70% 40%/50% 60% 30% 60%}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-14px)}}
+@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+@keyframes spin-slow{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes dash{to{stroke-dashoffset:0}}
+@keyframes scale-in{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:scale(1)}}
+
+.reveal{opacity:0;transform:translateY(30px);transition:opacity .8s cubic-bezier(.16,1,.3,1),transform .8s cubic-bezier(.16,1,.3,1)}.reveal.visible{opacity:1;transform:translateY(0)}
+.reveal-left{opacity:0;transform:translateX(-40px);transition:opacity .8s cubic-bezier(.16,1,.3,1),transform .8s cubic-bezier(.16,1,.3,1)}.reveal-left.visible{opacity:1;transform:translateX(0)}
+.reveal-right{opacity:0;transform:translateX(40px);transition:opacity .8s cubic-bezier(.16,1,.3,1),transform .8s cubic-bezier(.16,1,.3,1)}.reveal-right.visible{opacity:1;transform:translateX(0)}
+.reveal-scale{opacity:0;transform:scale(.9);transition:opacity .8s cubic-bezier(.16,1,.3,1),transform .8s cubic-bezier(.16,1,.3,1)}.reveal-scale.visible{opacity:1;transform:scale(1)}
+.d1{transition-delay:.1s}.d2{transition-delay:.2s}.d3{transition-delay:.3s}.d4{transition-delay:.4s}.d5{transition-delay:.5s}.d6{transition-delay:.6s}
+
+/* ============ LAYOUT ============ */
+.container{max-width:1200px;margin:0 auto;padding:0 24px}
+section{padding:120px 0;position:relative;overflow:hidden}
+
+/* ============ NAVBAR ============ */
+.navbar{position:fixed;top:0;left:0;right:0;z-index:1000;padding:14px 0;transition:all .35s ease}
+.navbar.scrolled{background:rgba(6,6,10,.88);backdrop-filter:blur(20px) saturate(1.4);border-bottom:1px solid var(--border);padding:10px 0}
+.nav-inner{display:flex;align-items:center;justify-content:space-between}
+.nav-brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:20px;letter-spacing:-.5px}
+.nav-logo{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#0ea5e9,#2563eb);display:flex;align-items:center;justify-content:center;padding:4px;box-shadow:0 2px 12px rgba(14,165,233,.3)}
+.nav-logo img{width:100%;height:100%;filter:brightness(10)}
+.nav-brand-text{background:linear-gradient(135deg,var(--accent2),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.nav-links{display:flex;align-items:center;gap:4px}
+.nav-link{padding:8px 16px;border-radius:8px;font-size:13.5px;font-weight:500;color:var(--dim);transition:all .2s}
+.nav-link:hover{color:var(--text);background:rgba(255,255,255,.04)}
+.nav-link.active{color:var(--accent2)}
+.nav-cta{padding:9px 22px;border-radius:10px;font-size:13.5px;font-weight:700;background:var(--accent);color:#fff;border:none;cursor:pointer;transition:all .3s;margin-left:8px}
+.nav-cta:hover{background:var(--accent3);transform:translateY(-1px);box-shadow:0 6px 24px var(--glow)}
+.hamburger{display:none;background:none;border:none;color:var(--dim);padding:8px;cursor:pointer}
+.hamburger svg{width:24px;height:24px}
+
+/* ============ HERO ============ */
+.hero{min-height:100vh;display:flex;align-items:center;position:relative;padding-top:80px;padding-bottom:40px}
+.hero-bg{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+.hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(108,92,231,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(108,92,231,.06) 1px,transparent 1px);background-size:64px 64px;mask-image:radial-gradient(ellipse 70% 60% at 50% 40%,black 20%,transparent 70%)}
+.hero-orb{position:absolute;border-radius:50%;filter:blur(100px);opacity:.25;animation:morph 18s ease-in-out infinite}
+.hero-orb.a{width:550px;height:550px;background:var(--accent);top:-15%;right:5%}
+.hero-orb.b{width:400px;height:400px;background:var(--cyan);bottom:0;left:0;animation-delay:-6s}
+.hero-orb.c{width:300px;height:300px;background:var(--pink);bottom:10%;right:25%;animation-delay:-12s}
+.particles{position:absolute;inset:0;overflow:hidden}
+.ptcl{position:absolute;width:2px;height:2px;background:var(--accent2);border-radius:50%;animation:particle linear infinite;opacity:0}
+
+.hero-content{position:relative;z-index:2;text-align:center;max-width:820px;margin:0 auto}
+.hero-eyebrow{display:inline-flex;align-items:center;gap:8px;padding:6px 16px 6px 8px;border-radius:100px;font-size:12px;font-weight:600;letter-spacing:.3px;background:rgba(108,92,231,.1);border:1px solid rgba(108,92,231,.25);color:var(--accent2);margin-bottom:28px;animation:slide-up .7s ease both}
+.hero-eyebrow .dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green)}
+.hero-eyebrow .tag{padding:3px 10px;border-radius:100px;background:rgba(108,92,231,.2);font-weight:700;font-size:11px;margin-right:4px}
+
+.hero h1{font-size:clamp(42px,7.5vw,80px);font-weight:900;letter-spacing:-2.5px;line-height:1.05;margin-bottom:24px;animation:slide-up .7s ease .08s both}
+.hero h1 .grad{background:linear-gradient(135deg,var(--accent2) 0%,var(--cyan) 50%,var(--accent2) 100%);background-size:200% 200%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:gradient-shift 5s ease infinite}
+.hero .sub{font-size:clamp(15px,2.2vw,19px);color:var(--dim);max-width:580px;margin:0 auto 40px;animation:slide-up .7s ease .15s both;font-weight:400;line-height:1.75}
+
+.hero-actions{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;animation:slide-up .7s ease .22s both}
+.btn-h{padding:15px 32px;border-radius:var(--r);font-size:15px;font-weight:700;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:9px;transition:all .3s ease;text-decoration:none}
+.btn-h svg{width:18px;height:18px}
+.btn-h.primary{background:linear-gradient(135deg,var(--accent),var(--accent3));color:#fff;box-shadow:0 4px 24px var(--glow)}
+.btn-h.primary:hover{transform:translateY(-2px);box-shadow:0 8px 36px rgba(108,92,231,.35)}
+.btn-h.secondary{background:var(--bg2);color:var(--text);border:1px solid var(--border)}
+.btn-h.secondary:hover{border-color:var(--accent);background:var(--bg3);transform:translateY(-2px)}
+
+/* trusted by */
+.trusted{margin-top:64px;animation:slide-up .7s ease .3s both}
+.trusted-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:16px}
+.trusted-logos{display:flex;justify-content:center;gap:36px;align-items:center;flex-wrap:wrap;opacity:.5}
+.trusted-logos span{font-size:15px;font-weight:700;letter-spacing:-.3px;color:var(--dim)}
+
+/* ============ SHOWCASE TERMINAL ============ */
+.showcase{padding:0 0 100px;position:relative}
+.showcase .container{position:relative;z-index:2}
+.sc-terminal{max-width:780px;margin:0 auto;border-radius:var(--r2);overflow:hidden;border:1px solid var(--border);background:var(--bg1);box-shadow:0 24px 80px rgba(0,0,0,.5),0 0 0 1px rgba(108,92,231,.05)}
+.sc-bar{display:flex;align-items:center;gap:8px;padding:14px 18px;background:var(--bg2);border-bottom:1px solid var(--border)}
+.sc-dot{width:11px;height:11px;border-radius:50%}
+.sc-dot.r{background:#ff5f57}.sc-dot.y{background:#febc2e}.sc-dot.g{background:#28c840}
+.sc-title{font-size:11px;color:var(--muted);margin-left:auto;font-family:'JetBrains Mono',monospace}
+.sc-body{padding:24px;font-family:'JetBrains Mono',monospace;font-size:13px;line-height:2}
+.sc-line{display:flex;gap:8px;opacity:0;animation:slide-up .4s ease both}
+.sc-line:nth-child(1){animation-delay:.3s}.sc-line:nth-child(2){animation-delay:.7s}
+.sc-line:nth-child(3){animation-delay:1.1s}.sc-line:nth-child(4){animation-delay:1.5s}
+.sc-line:nth-child(5){animation-delay:1.9s}.sc-line:nth-child(6){animation-delay:2.3s}
+.sc-line:nth-child(7){animation-delay:2.7s}
+.t-prompt{color:var(--accent2);white-space:nowrap}.t-cmd{color:var(--green)}.t-out{color:var(--dim)}.t-flag{color:var(--orange)}.t-link{color:var(--cyan)}
+
+/* ============ FEATURES ============ */
+.features{background:linear-gradient(180deg,var(--bg),var(--bg1))}
+.sh{text-align:center;max-width:620px;margin:0 auto 72px}
+.sh-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:100px;font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;background:var(--bg2);border:1px solid var(--border);color:var(--accent2);margin-bottom:18px}
+.sh h2{font-size:clamp(30px,4.5vw,46px);font-weight:800;letter-spacing:-1.5px;margin-bottom:14px}
+.sh p{color:var(--dim);font-size:15.5px;line-height:1.7}
+.feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.feat{padding:30px;border-radius:var(--r2);background:var(--bg2);border:1px solid var(--border);transition:all .4s cubic-bezier(.16,1,.3,1);position:relative;overflow:hidden}
+.feat::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--accent2),transparent);opacity:0;transition:opacity .4s}
+.feat:hover{border-color:rgba(108,92,231,.35);transform:translateY(-4px);box-shadow:0 12px 40px rgba(0,0,0,.25)}
+.feat:hover::after{opacity:1}
+.feat-ico{width:48px;height:48px;border-radius:var(--r);display:flex;align-items:center;justify-content:center;margin-bottom:20px;font-size:24px;background:linear-gradient(135deg,var(--glow),var(--glow2));border:1px solid rgba(108,92,231,.15)}
+.feat h3{font-size:16px;font-weight:700;margin-bottom:8px;letter-spacing:-.2px}
+.feat p{font-size:13px;color:var(--dim);line-height:1.7}
+.feat .tag{display:inline-block;margin-top:14px;font-size:10px;padding:3px 10px;border-radius:6px;background:var(--bg3);color:var(--muted);font-weight:600;letter-spacing:.3px}
+
+/* ============ WORKFLOW SHOWCASE ============ */
+.wf-section{background:var(--bg1);position:relative}
+.wf-section::before{content:'';position:absolute;top:50%;left:50%;width:800px;height:800px;transform:translate(-50%,-50%);background:radial-gradient(circle,rgba(108,92,231,.06),transparent 70%);pointer-events:none}
+.wf-grid{display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:center}
+.wf-text h3{font-size:clamp(24px,3.5vw,36px);font-weight:800;letter-spacing:-1px;margin-bottom:16px}
+.wf-text p{color:var(--dim);font-size:14.5px;line-height:1.8;margin-bottom:28px}
+.wf-features{list-style:none}
+.wf-features li{display:flex;align-items:center;gap:12px;padding:8px 0;font-size:14px;color:var(--dim)}
+.wf-features li .ico{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;background:var(--bg3);border:1px solid var(--border);flex-shrink:0}
+.wf-visual{position:relative}
+.wf-mock{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+.wf-mock-bar{padding:10px 14px;background:var(--bg3);border-bottom:1px solid var(--border);display:flex;gap:6px;align-items:center}
+.wf-mock-dot{width:8px;height:8px;border-radius:50%;background:var(--border)}
+.wf-canvas{padding:32px;min-height:340px;position:relative}
+.wf-node{position:absolute;padding:12px 18px;border-radius:12px;background:var(--bg3);border:1px solid var(--border);font-size:12px;font-weight:600;display:flex;align-items:center;gap:8px;transition:all .3s;animation:float 4s ease-in-out infinite}
+.wf-node .nd{width:8px;height:8px;border-radius:50%}
+.wf-node:hover{border-color:var(--accent);transform:translateY(-2px)!important}
+
+/* ============ LANGUAGES ============ */
+.langs{background:linear-gradient(180deg,var(--bg1),var(--bg))}
+.lang-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:16px;margin-top:48px}
+.lang-card{text-align:center;padding:28px 16px;border-radius:var(--r2);background:var(--bg2);border:1px solid var(--border);transition:all .3s}
+.lang-card:hover{border-color:rgba(108,92,231,.3);transform:translateY(-4px);box-shadow:0 8px 32px rgba(0,0,0,.2)}
+.lang-card .lang-icon{font-size:36px;margin-bottom:12px;display:block}
+.lang-card .lang-name{font-size:13px;font-weight:700;margin-bottom:4px}
+.lang-card .lang-info{font-size:11px;color:var(--muted)}
+
+/* ============ PROVIDERS ============ */
+.providers{background:var(--bg)}
+.prov-row{display:flex;justify-content:center;gap:20px;flex-wrap:wrap;margin-top:48px}
+.prov-card{padding:24px 32px;border-radius:var(--r2);background:var(--bg2);border:1px solid var(--border);text-align:center;min-width:180px;transition:all .3s}
+.prov-card:hover{border-color:rgba(108,92,231,.3);transform:translateY(-3px)}
+.prov-card .prov-name{font-size:15px;font-weight:700;margin-bottom:4px}
+.prov-card .prov-type{font-size:11px;color:var(--muted)}
+
+/* ============ CLAWLING HUB ============ */
+.hub{background:linear-gradient(180deg,var(--bg),var(--bg1));position:relative}
+.hub::before{content:'';position:absolute;top:-100px;left:50%;transform:translateX(-50%);width:700px;height:700px;background:radial-gradient(circle,rgba(24,255,255,.04),transparent 70%);pointer-events:none}
+.hub-intro{display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:center;margin-bottom:72px}
+.hub-intro-text h3{font-size:clamp(24px,3.5vw,36px);font-weight:800;letter-spacing:-1px;margin-bottom:16px}
+.hub-intro-text h3 .grad{background:linear-gradient(135deg,var(--cyan),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hub-intro-text p{color:var(--dim);font-size:14.5px;line-height:1.8;margin-bottom:20px}
+.hub-intro-text .hub-stats{display:flex;gap:24px}
+.hub-intro-text .hs{text-align:center}
+.hub-intro-text .hs .val{font-size:28px;font-weight:800;color:var(--text)}
+.hub-intro-text .hs .lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px}
+.hub-code{border-radius:var(--r2);overflow:hidden;border:1px solid var(--border);background:var(--bg1);box-shadow:0 16px 48px rgba(0,0,0,.3)}
+.hub-code-bar{padding:10px 14px;background:var(--bg2);border-bottom:1px solid var(--border);font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace;display:flex;align-items:center;gap:8px}
+.hub-code-bar .lang-dot{width:8px;height:8px;border-radius:50%;background:var(--cyan)}
+.hub-code-body{padding:20px;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.9;color:var(--dim);overflow-x:auto;white-space:pre}
+.hub-code-body .kw{color:var(--accent2)}.hub-code-body .fn{color:var(--cyan)}.hub-code-body .str{color:var(--green)}.hub-code-body .cm{color:var(--muted);font-style:italic}.hub-code-body .tp{color:var(--orange)}
+
+.hub-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+.hub-card{border-radius:var(--r2);background:var(--bg2);border:1px solid var(--border);overflow:hidden;transition:all .4s cubic-bezier(.16,1,.3,1)}
+.hub-card:hover{border-color:rgba(108,92,231,.35);transform:translateY(-4px);box-shadow:0 12px 40px rgba(0,0,0,.25)}
+.hc-head{padding:18px 18px 0;display:flex;align-items:center;gap:12px}
+.hc-ico{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;background:linear-gradient(135deg,var(--glow),var(--glow2));border:1px solid rgba(108,92,231,.15);flex-shrink:0}
+.hc-meta{flex:1;min-width:0}
+.hc-meta h4{font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hc-meta .author{font-size:11px;color:var(--muted)}
+.hc-body{padding:12px 18px}
+.hc-body p{font-size:12px;color:var(--dim);line-height:1.7;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.hc-foot{padding:8px 18px 14px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.hc-tag{padding:2px 8px;border-radius:6px;font-size:10px;font-weight:600;background:var(--bg3);color:var(--muted)}
+.hc-tag.lang{color:var(--cyan);border:1px solid rgba(24,255,255,.12);background:rgba(24,255,255,.04)}
+.hc-stats{margin-left:auto;display:flex;gap:10px;font-size:11px;color:var(--muted)}
+.hc-stats span{display:flex;align-items:center;gap:3px}
+.hc-stats svg{width:12px;height:12px}
+.hub-more{text-align:center;margin-top:48px}
+
+/* ============ HOW IT WORKS ============ */
+.how{background:var(--bg1)}
+.how-steps{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;position:relative;margin-top:8px}
+.how-step{text-align:center;position:relative;padding:32px 16px}
+.step-num{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;margin:0 auto 18px;background:linear-gradient(135deg,var(--accent),var(--accent3));color:#fff;box-shadow:0 4px 20px var(--glow)}
+.how-step h3{font-size:15px;font-weight:700;margin-bottom:8px}
+.how-step p{font-size:12.5px;color:var(--dim);line-height:1.7}
+.how-line{position:absolute;top:58px;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--border),var(--border),transparent);z-index:0;pointer-events:none}
+
+/* ============ ARCHITECTURE ============ */
+.arch{background:linear-gradient(180deg,var(--bg1),var(--bg))}
+.arch-grid{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center}
+.arch-text h3{font-size:clamp(24px,3.5vw,34px);font-weight:800;letter-spacing:-1px;margin-bottom:16px}
+.arch-text p{color:var(--dim);font-size:14px;line-height:1.8;margin-bottom:24px}
+.arch-checks{list-style:none}
+.arch-checks li{display:flex;align-items:center;gap:10px;padding:8px 0;font-size:13px;color:var(--dim)}
+.arch-checks li::before{content:'✓';width:22px;height:22px;border-radius:50%;background:rgba(0,230,118,.1);color:var(--green);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+.arch-diagram{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:28px;font-family:'JetBrains Mono',monospace;font-size:11.5px}
+.arch-diagram .ad-label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:14px}
+.ad-node{padding:11px 16px;border-radius:10px;border:1px solid var(--border);margin:5px 0;display:flex;align-items:center;gap:10px;transition:all .25s;background:var(--bg3)}
+.ad-node:hover{border-color:var(--accent);transform:translateX(4px)}
+.ad-node .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.ad-node .name{font-weight:600;color:var(--text);font-size:12px}
+.ad-node .desc{color:var(--muted);margin-left:auto;font-size:10px}
+
+/* ============ GET STARTED ============ */
+.getstarted{background:var(--bg);position:relative}
+.gs-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.gs-card{padding:32px;border-radius:var(--r2);background:var(--bg2);border:1px solid var(--border);transition:all .3s;text-align:center}
+.gs-card:hover{border-color:rgba(108,92,231,.3);transform:translateY(-3px)}
+.gs-card .gs-step{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent3));color:#fff;font-weight:800;font-size:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px}
+.gs-card h3{font-size:15px;font-weight:700;margin-bottom:8px}
+.gs-card p{font-size:12.5px;color:var(--dim);line-height:1.7}
+.gs-card code{display:inline-block;margin-top:12px;padding:8px 16px;border-radius:8px;background:var(--bg);border:1px solid var(--border);font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--green)}
+
+/* ============ API KEY CONFIG ============ */
+.apikeys{background:var(--bg1);position:relative}
+.apikeys::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 30% 50%,rgba(108,92,231,.04),transparent 60%);pointer-events:none}
+.ak-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;margin-top:40px}
+.ak-card{padding:24px;border-radius:var(--r2);background:var(--bg2);border:1px solid var(--border);transition:all .3s;position:relative}
+.ak-card:hover{border-color:rgba(108,92,231,.3);transform:translateY(-3px);box-shadow:0 8px 28px rgba(0,0,0,.2)}
+.ak-card .ak-ico{font-size:28px;margin-bottom:12px;display:block}
+.ak-card .ak-name{font-size:15px;font-weight:700;margin-bottom:4px}
+.ak-card .ak-desc{font-size:12px;color:var(--dim);line-height:1.6;margin-bottom:12px}
+.ak-card .ak-env{font-family:'JetBrains Mono',monospace;font-size:10.5px;padding:6px 10px;border-radius:8px;background:var(--bg);border:1px solid var(--border);color:var(--cyan);word-break:break-all}
+.ak-card .ak-free{display:inline-block;padding:3px 10px;border-radius:100px;font-size:10px;font-weight:700;background:rgba(0,230,118,.1);color:var(--green);border:1px solid rgba(0,230,118,.15);margin-top:8px}
+.ak-methods{max-width:720px;margin:0 auto 32px}
+.ak-methods h3{font-size:17px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:10px}
+.ak-methods h3 .num{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent3));color:#fff;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.ak-code{border-radius:var(--r2);overflow:hidden;border:1px solid var(--border);background:var(--bg);margin-bottom:8px}
+.ak-code-bar{padding:10px 14px;background:var(--bg2);border-bottom:1px solid var(--border);font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace}
+.ak-code pre{padding:16px 20px;font-family:'JetBrains Mono',monospace;font-size:12.5px;line-height:1.8;color:var(--dim);overflow-x:auto;margin:0;white-space:pre}
+.ak-code .env-key{color:var(--cyan)}.ak-code .env-val{color:var(--green)}.ak-code .env-cm{color:var(--muted);font-style:italic}
+.ak-note{max-width:720px;margin:28px auto 0;padding:16px 20px;border-radius:var(--r);background:rgba(24,255,255,.04);border:1px solid rgba(24,255,255,.12);font-size:13px;color:var(--dim);line-height:1.7;display:flex;gap:12px;align-items:flex-start}
+.ak-note .note-ico{font-size:16px;flex-shrink:0;margin-top:2px}
+
+/* ============ CTA ============ */
+.cta{text-align:center;padding:100px 0 120px;position:relative}
+.cta::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(108,92,231,.05),transparent 70%);pointer-events:none}
+.cta h2{font-size:clamp(28px,4vw,42px);font-weight:900;letter-spacing:-1.5px;margin-bottom:14px}
+.cta p{color:var(--dim);font-size:15px;margin-bottom:36px;max-width:480px;margin-left:auto;margin-right:auto;line-height:1.7}
+
+/* ============ FOOTER ============ */
+.footer{border-top:1px solid var(--border);padding:48px 0 32px;background:var(--bg)}
+.footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:40px;margin-bottom:32px}
+.footer-brand{display:flex;align-items:center;gap:8px;font-weight:800;font-size:17px;margin-bottom:12px}
+.footer-brand .fl{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,var(--accent),var(--accent3));display:flex;align-items:center;justify-content:center;font-size:14px}
+.footer-brand-text{background:linear-gradient(135deg,var(--accent2),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.footer-desc{font-size:13px;color:var(--muted);line-height:1.7;max-width:280px}
+.footer-col h4{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--dim);margin-bottom:14px}
+.footer-col a{display:block;font-size:13px;color:var(--muted);padding:4px 0;transition:color .2s}
+.footer-col a:hover{color:var(--accent2)}
+.footer-bottom{display:flex;justify-content:space-between;align-items:center;padding-top:24px;border-top:1px solid var(--border);font-size:12px;color:var(--muted)}
+.footer-social{display:flex;gap:12px}
+.footer-social a{width:32px;height:32px;border-radius:8px;background:var(--bg2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--muted);transition:all .2s}
+.footer-social a:hover{border-color:var(--accent);color:var(--accent2)}
+.footer-social a svg{width:15px;height:15px}
+
+/* ============ RESPONSIVE ============ */
+@media(max-width:1024px){.feat-grid{grid-template-columns:repeat(2,1fr)}.lang-grid{grid-template-columns:repeat(3,1fr)}.footer-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:768px){
+  .feat-grid,.gs-grid,.ak-grid{grid-template-columns:1fr}
+  .arch-grid,.wf-grid,.hub-intro{grid-template-columns:1fr}
+  .how-steps{grid-template-columns:repeat(2,1fr)}.how-line{display:none}
+  .lang-grid{grid-template-columns:repeat(2,1fr)}
+  .nav-links{display:none}.hamburger{display:block}
+  .footer-grid{grid-template-columns:1fr}
+  section{padding:80px 0}
+  .trusted-logos{gap:20px}
+  .prov-row{gap:12px}.prov-card{min-width:140px;padding:18px 20px}
+}
+@media(max-width:480px){
+  .lang-grid{grid-template-columns:repeat(2,1fr)}
+  .how-steps{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- ======== NAVBAR ======== -->
+<nav class="navbar" id="navbar">
+  <div class="container nav-inner">
+    <a href="#" class="nav-brand">
+      <div class="nav-logo"><img src="logo.svg" alt="LinguClaw"></div>
+      <span class="nav-brand-text">LinguClaw</span>
+    </a>
+    <div class="nav-links" id="navLinks">
+      <a href="#features" class="nav-link">Features</a>
+      <a href="#workflows" class="nav-link">Workflows</a>
+      <a href="#hub" class="nav-link">Hub</a>
+      <a href="#architecture" class="nav-link">Architecture</a>
+      <a href="#apikeys" class="nav-link">API Keys</a>
+      <a href="hub.html" class="nav-link">ClawLing Hub</a>
+      <a href="https://github.com/LinguDeep/LinguClaw" target="_blank" class="nav-cta">
+        <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16" style="width:16px;height:16px"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/></svg>
+        GitHub
+      </a>
+    </div>
+    <button class="hamburger" id="hamburger" aria-label="Menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+  </div>
+</nav>
+
+<!-- ======== HERO ======== -->
+<section class="hero" id="hero">
+  <div class="hero-bg">
+    <div class="hero-grid"></div>
+    <div class="hero-orb a"></div>
+    <div class="hero-orb b"></div>
+    <div class="hero-orb c"></div>
+    <div class="particles" id="particles"></div>
+  </div>
+  <div class="container hero-content">
+    <div class="hero-eyebrow">
+      <span class="tag">v0.4.3</span>
+      <span class="dot"></span>
+      Open Source &middot; Multi-Agent &middot; TypeScript
+    </div>
+    <h1>Build Smarter with<br><span class="grad">AI Agent Teams</span></h1>
+    <p class="sub">Codebase-aware multi-agent orchestration with visual workflows, semantic memory, and a community-driven skill marketplace.</p>
+    <div class="hero-actions">
+      <a href="#getstarted" class="btn-h primary">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21"/></svg>
+        Get Started
+      </a>
+      <a href="https://github.com/LinguDeep/LinguClaw" target="_blank" class="btn-h secondary">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/></svg>
+        Star on GitHub
+      </a>
+    </div>
+    <div class="trusted">
+      <div class="trusted-label">Trusted technologies</div>
+      <div class="trusted-logos">
+        <span>TypeScript</span>
+        <span>Node.js</span>
+        <span>Docker</span>
+        <span>SQLite</span>
+        <span>Express</span>
+        <span>WebSocket</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======== TERMINAL SHOWCASE ======== -->
+<section class="showcase">
+  <div class="container">
+    <div class="sc-terminal reveal-scale">
+      <div class="sc-bar">
+        <div class="sc-dot r"></div><div class="sc-dot y"></div><div class="sc-dot g"></div>
+        <div class="sc-title">linguclaw &mdash; fish</div>
+      </div>
+      <div class="sc-body">
+        <div class="sc-line"><span class="t-prompt">❯</span> <span class="t-cmd">npm install -g linguclaw</span></div>
+        <div class="sc-line"><span class="t-prompt">❯</span> <span class="t-cmd">linguclaw init</span> <span class="t-flag">--provider ollama</span></div>
+        <div class="sc-line"><span class="t-out">🦀 LinguClaw v0.4.3 initialized</span></div>
+        <div class="sc-line"><span class="t-out">   ✓ Multi-agent system ready (Coder, Reviewer, Architect)</span></div>
+        <div class="sc-line"><span class="t-out">   ✓ Semantic memory indexed files across <strong style="color:var(--text)">6</strong> languages</span></div>
+        <div class="sc-line"><span class="t-out">   ✓ Workflow engine loaded <strong style="color:var(--text)">22</strong> node types</span></div>
+        <div class="sc-line"><span class="t-out">   🌐 Web UI → <span class="t-link">http://localhost:3000</span></span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======== FEATURES ======== -->
+<section class="features" id="features">
+  <div class="container">
+    <div class="sh reveal">
+      <div class="sh-badge">✦ Core Features</div>
+      <h2>Everything you need to build intelligent agents</h2>
+      <p>From visual workflows to semantic code search — production-ready out of the box.</p>
+    </div>
+    <div class="feat-grid">
+      <div class="feat reveal d1">
+        <div class="feat-ico">🧠</div>
+        <h3>Multi-Agent Orchestration</h3>
+        <p>Coordinate specialized AI agents — Coder, Reviewer, Architect — working together on complex tasks with shared context.</p>
+        <span class="tag">Alpha-Beta Strategy</span>
+      </div>
+      <div class="feat reveal d2">
+        <div class="feat-ico">⚡</div>
+        <h3>Visual Workflow Editor</h3>
+        <p>Drag-and-drop n8n-style node editor. Build automation pipelines visually with 22 built-in node types.</p>
+        <span class="tag">22 Node Types</span>
+      </div>
+      <div class="feat reveal d3">
+        <div class="feat-ico">🔍</div>
+        <h3>Semantic Code Memory</h3>
+        <p>TF-IDF + cosine similarity search over your entire codebase. The agent actually understands your code structure.</p>
+        <span class="tag">RAG-Powered</span>
+      </div>
+      <div class="feat reveal d1">
+        <div class="feat-ico">🔌</div>
+        <h3>Multi-Provider LLM</h3>
+        <p>OpenRouter, OpenAI, Anthropic, Ollama, LM Studio — switch providers seamlessly with built-in resilience.</p>
+        <span class="tag">5 Providers</span>
+      </div>
+      <div class="feat reveal d2">
+        <div class="feat-ico">💻</div>
+        <h3>6-Language Analysis</h3>
+        <p>Deep AST-level understanding for TypeScript, Python, Rust, Go, Java, and C++. Extract functions, classes, dependencies.</p>
+        <span class="tag">AST-Based</span>
+      </div>
+      <div class="feat reveal d3">
+        <div class="feat-ico">🛡️</div>
+        <h3>Docker Sandboxing</h3>
+        <p>Every command runs inside an isolated Docker container with memory limits, CPU caps, and network restrictions.</p>
+        <span class="tag">Secure Execution</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======== WORKFLOW SHOWCASE ======== -->
+<section class="wf-section" id="workflows">
+  <div class="container">
+    <div class="sh reveal">
+      <div class="sh-badge">🔗 Workflows</div>
+      <h2>Automate anything visually</h2>
+      <p>Build powerful automation pipelines with a drag-and-drop node editor.</p>
+    </div>
+    <div class="wf-grid">
+      <div class="wf-text reveal-left">
+        <h3>n8n-Style Visual Workflows</h3>
+        <p>Create complex automation pipelines by connecting nodes visually. No code required for common tasks — but fully extensible with custom TypeScript nodes.</p>
+        <ul class="wf-features">
+          <li><span class="ico">📥</span> Trigger nodes: HTTP, Cron, Webhook, File Watch</li>
+          <li><span class="ico">🧠</span> AI nodes: LLM, Classifier, Summarizer, Q&amp;A</li>
+          <li><span class="ico">⚙️</span> Logic: Condition, Switch, Loop, Merge, Delay</li>
+          <li><span class="ico">📤</span> Output: Email, Slack, HTTP Request, File Write</li>
+          <li><span class="ico">🧩</span> Custom: Build your own nodes with the Plugin API</li>
+        </ul>
+      </div>
+      <div class="wf-visual reveal-right">
+        <div class="wf-mock">
+          <div class="wf-mock-bar">
+            <div class="wf-mock-dot"></div><div class="wf-mock-dot"></div><div class="wf-mock-dot"></div>
+            <span style="margin-left:auto;font-size:10px;color:var(--muted);font-family:'JetBrains Mono',monospace">workflow-editor</span>
+          </div>
+          <div class="wf-canvas" id="wfCanvas">
+            <svg style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible" id="wfSvg"></svg>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======== LANGUAGES ======== -->
+<section class="langs" id="languages">
+  <div class="container">
+    <div class="sh reveal">
+      <div class="sh-badge">💻 Languages</div>
+      <h2>Deep understanding across 6 languages</h2>
+      <p>AST-level code analysis that truly understands your codebase structure.</p>
+    </div>
+    <div class="lang-grid">
+      <div class="lang-card reveal d1"><span class="lang-icon">🟦</span><div class="lang-name">TypeScript</div><div class="lang-info">Full AST + Types</div></div>
+      <div class="lang-card reveal d2"><span class="lang-icon">🐍</span><div class="lang-name">Python</div><div class="lang-info">Functions + Classes</div></div>
+      <div class="lang-card reveal d3"><span class="lang-icon">🦀</span><div class="lang-name">Rust</div><div class="lang-info">Structs + Traits</div></div>
+      <div class="lang-card reveal d4"><span class="lang-icon">🐹</span><div class="lang-name">Go</div><div class="lang-info">Packages + Interfaces</div></div>
+      <div class="lang-card reveal d5"><span class="lang-icon">☕</span><div class="lang-name">Java</div><div class="lang-info">Classes + Annotations</div></div>
+      <div class="lang-card reveal d6"><span class="lang-icon">⚙️</span><div class="lang-name">C++</div><div class="lang-info">Headers + Templates</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ======== PROVIDERS ======== -->
+<section class="providers">
+  <div class="container">
+    <div class="sh reveal">
+      <div class="sh-badge">🔌 Providers</div>
+      <h2>Works with your favorite LLM</h2>
+      <p>Switch between providers with a single config change. Circuit breakers and retry logic built-in.</p>
+    </div>
+    <div class="prov-row">
+      <div class="prov-card reveal d1"><div class="prov-name">OpenAI</div><div class="prov-type">GPT-4 / o1</div></div>
+      <div class="prov-card reveal d2"><div class="prov-name">Anthropic</div><div class="prov-type">Claude 4</div></div>
+      <div class="prov-card reveal d3"><div class="prov-name">OpenRouter</div><div class="prov-type">100+ Models</div></div>
+      <div class="prov-card reveal d4"><div class="prov-name">Ollama</div><div class="prov-type">Local / Free</div></div>
+      <div class="prov-card reveal d5"><div class="prov-name">LM Studio</div><div class="prov-type">Desktop</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ======== CLAWLING HUB ======== -->
+<section class="hub" id="hub">
+  <div class="container">
+    <div class="sh reveal">
+      <div class="sh-badge">🧩 Community</div>
+      <h2>ClawLing Hub</h2>
+      <p>Discover, share, and install community-built skills. Extend LinguClaw's capabilities with one click.</p>
+    </div>
+
+    <div class="hub-intro">
+      <div class="hub-intro-text reveal-left">
+        <h3>Write skills.<br>Share with the <span class="grad">community</span>.</h3>
+        <p>ClawLing Hub is a marketplace for reusable AI skills. Anyone can publish a skill — from web scraping to sentiment analysis — and the community can install them instantly.</p>
+        <div class="hub-stats">
+          <div class="hs"><div class="val" data-count="49">0</div><div class="lbl">Modules</div></div>
+          <div class="hs"><div class="val" data-count="8">0</div><div class="lbl">Categories</div></div>
+          <div class="hs"><div class="val" data-count="3">0</div><div class="lbl">Plugins</div></div>
+        </div>
+      </div>
+      <div class="hub-code reveal-right">
+        <div class="hub-code-bar"><span class="lang-dot"></span> my-skill.ts</div>
+        <div class="hub-code-body"><span class="kw">import</span> { BaseSkill } <span class="kw">from</span> <span class="str">'linguclaw'</span>;
+
+<span class="kw">export class</span> <span class="fn">WebScraperSkill</span> <span class="kw">extends</span> BaseSkill {
+  NAME = <span class="str">'web-scraper'</span>;
+  DESCRIPTION = <span class="str">'Scrape any website'</span>;
+  VERSION = <span class="str">'1.0.0'</span>;
+  AUTHOR = <span class="str">'LinguClaw'</span>;
+  TYPE = <span class="str">'automation'</span>;
+
+  <span class="kw">async</span> <span class="fn">execute</span>(input: <span class="tp">SkillInput</span>) {
+    <span class="cm">// Your skill logic here</span>
+    <span class="kw">const</span> data = <span class="kw">await</span> this.<span class="fn">scrape</span>(input.url);
+    <span class="kw">return</span> { success: <span class="orange">true</span>, data };
+  }
+}</div>
+      </div>
+    </div>
+
+    <div class="hub-grid" id="hubGrid"></div>
+    <div class="hub-more reveal">
+      <a href="hub.html" class="btn-h primary" style="margin:0 8px">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        Browse All Skills
+      </a>
+      <a href="hub.html" class="btn-h secondary" style="margin:0 8px">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Publish a Skill
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ======== HOW IT WORKS ======== -->
+<section class="how" id="how">
+  <div class="container">
+    <div class="sh reveal">
+      <div class="sh-badge">⚡ Quick Start</div>
+      <h2>Up and running in 4 steps</h2>
+    </div>
+    <div style="position:relative">
+      <div class="how-line"></div>
+      <div class="how-steps">
+        <div class="how-step reveal d1">
+          <div class="step-num">1</div>
+          <h3>Install</h3>
+          <p>One command to install globally via npm. Zero dependencies beyond Node.js.</p>
+        </div>
+        <div class="how-step reveal d2">
+          <div class="step-num">2</div>
+          <h3>Configure</h3>
+          <p>Choose your LLM provider — Ollama for free local models, or any cloud API.</p>
+        </div>
+        <div class="how-step reveal d3">
+          <div class="step-num">3</div>
+          <h3>Build</h3>
+          <p>Create workflows visually, or describe tasks in natural language via CLI.</p>
+        </div>
+        <div class="how-step reveal d4">
+          <div class="step-num">4</div>
+          <h3>Deploy</h3>
+          <p>Run as a daemon, schedule tasks, or integrate via the REST API.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======== ARCHITECTURE ======== -->
+<section class="arch" id="architecture">
+  <div class="container">
+    <div class="sh reveal">
+      <div class="sh-badge">🏗 Architecture</div>
+      <h2>Built for production</h2>
+      <p>A layered architecture with resilience patterns, circuit breakers, and sandboxed execution.</p>
+    </div>
+    <div class="arch-grid">
+      <div class="arch-text reveal-left">
+        <h3>Modular &amp; Extensible</h3>
+        <p>Every component is a first-class module. Swap providers, add skills, extend with plugins. The architecture handles failure gracefully at every layer.</p>
+        <ul class="arch-checks">
+          <li>Circuit breakers on all external calls</li>
+          <li>Exponential backoff + adaptive retry</li>
+          <li>Path traversal &amp; injection protection</li>
+          <li>Privacy-first with local-only mode</li>
+          <li>Plugin system with sandboxed loading</li>
+          <li>Graceful degradation on provider failure</li>
+        </ul>
+      </div>
+      <div class="arch-diagram reveal-right">
+        <div class="ad-label">System Layers</div>
+        <div class="ad-node"><div class="dot" style="background:var(--cyan)"></div><span class="name">CLI / Web UI</span><span class="desc">User Interface</span></div>
+        <div class="ad-node"><div class="dot" style="background:var(--accent2)"></div><span class="name">Orchestrator</span><span class="desc">Task Routing</span></div>
+        <div class="ad-node"><div class="dot" style="background:var(--green)"></div><span class="name">Agent System</span><span class="desc">Multi-Agent Pool</span></div>
+        <div class="ad-node"><div class="dot" style="background:var(--orange)"></div><span class="name">PRISM Engine</span><span class="desc">Faceted Reasoning</span></div>
+        <div class="ad-node"><div class="dot" style="background:var(--pink)"></div><span class="name">Workflow Engine</span><span class="desc">22 Node Types</span></div>
+        <div class="ad-node"><div class="dot" style="background:var(--cyan)"></div><span class="name">Semantic Memory</span><span class="desc">TF-IDF + SQLite</span></div>
+        <div class="ad-node"><div class="dot" style="background:var(--green)"></div><span class="name">Multi-Provider LLM</span><span class="desc">5 Backends</span></div>
+        <div class="ad-node"><div class="dot" style="background:var(--accent2)"></div><span class="name">Docker Sandbox</span><span class="desc">Isolation Layer</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======== GET STARTED ======== -->
+<section class="getstarted" id="getstarted">
+  <div class="container">
+    <div class="sh reveal">
+      <div class="sh-badge">🚀 Get Started</div>
+      <h2>Start building in under a minute</h2>
+      <p>Supports local and cloud LLMs. See dashboard for provider setup.</p>
+    </div>
+    <div class="gs-grid">
+      <div class="gs-card reveal d1">
+        <div class="gs-step">1</div>
+        <h3>Install</h3>
+        <p>Install LinguClaw globally from npm.</p>
+        <code>npm i -g linguclaw</code>
+      </div>
+      <div class="gs-card reveal d2">
+        <div class="gs-step">2</div>
+        <h3>Initialize</h3>
+        <p>Set up your project with your preferred LLM provider. <a href="#apikeys" style="color:var(--accent2);font-weight:600">Configure API keys ↓</a></p>
+        <code>linguclaw init</code>
+      </div>
+      <div class="gs-card reveal d3">
+        <div class="gs-step">3</div>
+        <h3>Launch</h3>
+        <p>Start the web dashboard and begin creating workflows.</p>
+        <code>linguclaw --web</code>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======== API KEY CONFIGURATION ======== -->
+<section class="apikeys" id="apikeys">
+  <div class="container">
+    <div class="sh reveal">
+      <div class="sh-badge">🔑 Configuration</div>
+      <h2>Set up your API keys</h2>
+      <p>Configure cloud LLM providers with API keys, or use Ollama / LM Studio for completely free local inference.</p>
+    </div>
+
+    <div class="ak-methods reveal">
+      <h3><span class="num">1</span> Environment Variables (Recommended)</h3>
+      <div class="ak-code">
+        <div class="ak-code-bar">.env &nbsp;/&nbsp; ~/.bashrc &nbsp;/&nbsp; ~/.zshrc</div>
+        <pre><span class="env-cm"># Cloud Providers — pick one or more</span>
+<span class="env-key">OPENAI_API_KEY</span>=<span class="env-val">"sk-proj-..."</span>
+<span class="env-key">ANTHROPIC_API_KEY</span>=<span class="env-val">"sk-ant-api03-..."</span>
+<span class="env-key">OPENROUTER_API_KEY</span>=<span class="env-val">"sk-or-v1-..."</span>
+<span class="env-key">GOOGLE_API_KEY</span>=<span class="env-val">"AIza..."</span>
+<span class="env-key">XAI_API_KEY</span>=<span class="env-val">"xai-..."</span>
+
+<span class="env-cm"># Optional: Set default provider</span>
+<span class="env-key">LINGUCLAW_PROVIDER</span>=<span class="env-val">"openai"</span></pre>
+      </div>
+    </div>
+
+    <div class="ak-methods reveal">
+      <h3><span class="num">2</span> Interactive Setup via CLI</h3>
+      <div class="ak-code">
+        <div class="ak-code-bar">terminal</div>
+        <pre><span class="env-cm"># Initialize with a specific provider</span>
+<span class="env-key">❯</span> linguclaw init <span class="env-val">--provider openai</span>
+<span class="env-cm"># You'll be prompted for your API key interactively</span>
+
+<span class="env-cm"># Or switch providers anytime</span>
+<span class="env-key">❯</span> linguclaw config <span class="env-val">set provider anthropic</span>
+<span class="env-key">❯</span> linguclaw config <span class="env-val">set api-key sk-ant-...</span></pre>
+      </div>
+    </div>
+
+    <div class="ak-note reveal">
+      <span class="note-ico">💡</span>
+      <span>Using <strong style="color:var(--text)">Ollama</strong> or <strong style="color:var(--text)">LM Studio</strong>? No API key needed — just install and run locally. LinguClaw auto-detects local providers on <code style="color:var(--cyan)">localhost:11434</code> (Ollama) or <code style="color:var(--cyan)">localhost:1234</code> (LM Studio).</span>
+    </div>
+
+    <div class="ak-grid">
+      <div class="ak-card reveal d1">
+        <span class="ak-ico">🤖</span>
+        <div class="ak-name">OpenAI</div>
+        <div class="ak-desc">GPT-4o, o1, GPT-5</div>
+        <div class="ak-env">OPENAI_API_KEY</div>
+      </div>
+      <div class="ak-card reveal d2">
+        <span class="ak-ico">🧠</span>
+        <div class="ak-name">Anthropic</div>
+        <div class="ak-desc">Claude 3.5 / Claude 4</div>
+        <div class="ak-env">ANTHROPIC_API_KEY</div>
+      </div>
+      <div class="ak-card reveal d3">
+        <span class="ak-ico">🌐</span>
+        <div class="ak-name">OpenRouter</div>
+        <div class="ak-desc">100+ models, one key</div>
+        <div class="ak-env">OPENROUTER_API_KEY</div>
+      </div>
+      <div class="ak-card reveal d1">
+        <span class="ak-ico">🔵</span>
+        <div class="ak-name">Google</div>
+        <div class="ak-desc">Gemini 1.5 / 2.5</div>
+        <div class="ak-env">GOOGLE_API_KEY</div>
+      </div>
+      <div class="ak-card reveal d2">
+        <span class="ak-ico">✖️</span>
+        <div class="ak-name">xAI</div>
+        <div class="ak-desc">Grok models</div>
+        <div class="ak-env">XAI_API_KEY</div>
+      </div>
+      <div class="ak-card reveal d3">
+        <span class="ak-ico">🦙</span>
+        <div class="ak-name">Ollama</div>
+        <div class="ak-desc">Free local models</div>
+        <span class="ak-free">No API Key Required</span>
+      </div>
+      <div class="ak-card reveal d1">
+        <span class="ak-ico">💻</span>
+        <div class="ak-name">LM Studio</div>
+        <div class="ak-desc">Desktop local models</div>
+        <span class="ak-free">No API Key Required</span>
+      </div>
+      <div class="ak-card reveal d2">
+        <span class="ak-ico">🌬️</span>
+        <div class="ak-name">Mistral</div>
+        <div class="ak-desc">Mistral AI models</div>
+        <div class="ak-env">MISTRAL_API_KEY</div>
+      </div>
+      <div class="ak-card reveal d3">
+        <span class="ak-ico">🔍</span>
+        <div class="ak-name">DeepSeek</div>
+        <div class="ak-desc">DeepSeek V3 &amp; R1</div>
+        <div class="ak-env">DEEPSEEK_API_KEY</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======== CTA ======== -->
+<section class="cta">
+  <div class="container reveal">
+    <h2>Ready to build with AI agent teams?</h2>
+    <p>Join the growing community of developers automating their workflows with LinguClaw.</p>
+    <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap">
+      <a href="https://github.com/LinguDeep/LinguClaw" target="_blank" class="btn-h primary">
+        <svg viewBox="0 0 24 24" fill="currentColor" style="width:18px;height:18px"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/></svg>
+        View on GitHub
+      </a>
+      <a href="hub.html" class="btn-h secondary">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        Explore ClawLing Hub
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ======== FOOTER ======== -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-brand">
+          <div class="fl"><img src="logo.svg" alt="" style="width:24px;height:24px;filter:brightness(10)"></div>
+          <span class="footer-brand-text">LinguClaw</span>
+        </div>
+        <p class="footer-desc">Open-source AI multi-agent system with visual workflows, semantic memory, and a community skill marketplace.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Product</h4>
+        <a href="#features">Features</a>
+        <a href="#workflows">Workflows</a>
+        <a href="#architecture">Architecture</a>
+        <a href="#getstarted">Get Started</a>
+      </div>
+      <div class="footer-col">
+        <h4>Community</h4>
+        <a href="hub.html">ClawLing Hub</a>
+        <a href="https://github.com/LinguDeep/LinguClaw/blob/main/CONTRIBUTING.md" target="_blank">Contributing</a>
+        <a href="https://github.com/LinguDeep/LinguClaw/blob/main/CHANGELOG.md" target="_blank">Changelog</a>
+      </div>
+      <div class="footer-col">
+        <h4>Resources</h4>
+        <a href="https://github.com/LinguDeep/LinguClaw" target="_blank">GitHub</a>
+        <a href="https://github.com/LinguDeep/LinguClaw/blob/main/LICENSE" target="_blank">MIT License</a>
+        <a href="https://github.com/LinguDeep/LinguClaw/issues" target="_blank">Issues</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; 2026 LinguDeep. Open source under MIT.</span>
+      <div class="footer-social">
+        <a href="https://github.com/LinguDeep/LinguClaw" target="_blank" aria-label="GitHub"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/></svg></a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ===== Particles =====
+!function(){var c=document.getElementById('particles');for(var i=0;i<25;i++){var d=document.createElement('div');d.className='ptcl';d.style.left=Math.random()*100+'%';d.style.top=100+Math.random()*20+'%';d.style.animationDuration=(10+Math.random()*15)+'s';d.style.animationDelay=Math.random()*10+'s';d.style.width=d.style.height=(1+Math.random()*2.5)+'px';c.appendChild(d)}}();
+
+// ===== Navbar =====
+var nb=document.getElementById('navbar');
+window.addEventListener('scroll',function(){nb.classList.toggle('scrolled',window.scrollY>40)});
+
+// ===== Mobile menu =====
+document.getElementById('hamburger').addEventListener('click',function(){
+  var links=document.getElementById('navLinks');
+  var open=links.style.display==='flex';
+  links.style.display=open?'none':'flex';
+  links.style.position='fixed';links.style.top='60px';links.style.left='0';links.style.right='0';
+  links.style.background='rgba(6,6,10,.96)';links.style.flexDirection='column';links.style.padding='16px';
+  links.style.borderBottom='1px solid var(--border)';links.style.backdropFilter='blur(20px)';
+  if(open){links.removeAttribute('style')}
+});
+
+// ===== Reveal =====
+var obs=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('visible');obs.unobserve(e.target)}})},{threshold:.08,rootMargin:'0px 0px -30px 0px'});
+document.querySelectorAll('.reveal,.reveal-left,.reveal-right,.reveal-scale').forEach(function(el){obs.observe(el)});
+
+// ===== Counter animation =====
+var countDone={};
+function animateCount(el){
+  var id=el.textContent+el.parentElement.textContent;
+  if(countDone[id])return;countDone[id]=true;
+  var target=parseInt(el.dataset.count);
+  var dur=1400,start=Date.now();
+  !function tick(){
+    var p=Math.min((Date.now()-start)/dur,1);
+    var e=1-Math.pow(1-p,3);
+    el.textContent=Math.round(target*e).toLocaleString();
+    if(p<1)requestAnimationFrame(tick);
+  }();
+}
+var cObs=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting)animateCount(e.target)})},{threshold:.5});
+document.querySelectorAll('[data-count]').forEach(function(el){cObs.observe(el)});
+
+// ===== Hub skills — real modules from the codebase =====
+var hubSkills=[
+  {name:'Telegram',author:'LinguClaw',icon:'✈️',desc:'Telegram bot integration with markdown formatting and inline keyboards.',tags:['messaging','bot'],lang:'TypeScript',cat:'messaging'},
+  {name:'Apple Notes',author:'LinguClaw',icon:'🍎',desc:'Apple Notes integration for macOS. Read and create notes locally.',tags:['productivity','macos'],lang:'TypeScript',cat:'productivity'},
+  {name:'Home Assistant',author:'LinguClaw',icon:'🏠',desc:'Home Assistant smart home hub. Control devices, scenes, and automations.',tags:['smart-home','iot'],lang:'TypeScript',cat:'smart-home'},
+  {name:'Spotify',author:'LinguClaw',icon:'🎵',desc:'Spotify playback control. Play, pause, skip, and search your library.',tags:['smart-home','music'],lang:'TypeScript',cat:'smart-home'},
+  {name:'1Password',author:'LinguClaw',icon:'🔐',desc:'1Password secrets access via service account tokens.',tags:['utility','secrets'],lang:'TypeScript',cat:'utility'},
+  {name:'Signal',author:'LinguClaw',icon:'🔒',desc:'Signal private messaging via signal-cli. End-to-end encrypted.',tags:['messaging','privacy'],lang:'TypeScript',cat:'messaging'},
+];
+!function(){
+  var g=document.getElementById('hubGrid'),h='';
+  hubSkills.forEach(function(s,i){
+    h+='<div class="hub-card reveal d'+(i%3+1)+'">'
+      +'<div class="hc-head"><div class="hc-ico">'+s.icon+'</div>'
+      +'<div class="hc-meta"><h4>'+s.name+'</h4><div class="author">by '+s.author+'</div></div></div>'
+      +'<div class="hc-body"><p>'+s.desc+'</p></div>'
+      +'<div class="hc-foot">';
+    s.tags.forEach(function(t){h+='<span class="hc-tag">'+t+'</span>'});
+    h+='<span class="hc-tag lang">'+s.lang+'</span>'
+      +'<span class="hc-tag" style="color:var(--accent2)">'+s.cat+'</span></div></div>';
+  });
+  g.innerHTML=h;
+  g.querySelectorAll('.reveal').forEach(function(el){obs.observe(el)});
+}();
+
+// ===== Workflow mock nodes =====
+!function(){
+  var canvas=document.getElementById('wfCanvas');
+  var nodes=[
+    {x:20,y:30,label:'HTTP Trigger',color:'var(--cyan)',delay:0},
+    {x:180,y:20,label:'LLM Process',color:'var(--accent2)',delay:1},
+    {x:340,y:50,label:'Condition',color:'var(--orange)',delay:2},
+    {x:180,y:120,label:'Database',color:'var(--green)',delay:1.5},
+    {x:340,y:160,label:'Send Email',color:'var(--pink)',delay:2.5},
+    {x:500,y:90,label:'Slack Alert',color:'var(--yellow)',delay:3},
+  ];
+  nodes.forEach(function(n){
+    var el=document.createElement('div');
+    el.className='wf-node';
+    el.style.left=n.x+'px';el.style.top=n.y+'px';
+    el.style.animationDelay=n.delay+'s';
+    el.innerHTML='<div class="nd" style="background:'+n.color+'"></div>'+n.label;
+    canvas.appendChild(el);
+  });
+  // draw connections
+  var svg=document.getElementById('wfSvg');
+  var conns=[[0,1],[1,2],[1,3],[2,5],[3,4]];
+  conns.forEach(function(c){
+    var a=nodes[c[0]],b=nodes[c[1]];
+    var x1=a.x+80,y1=a.y+20,x2=b.x,y2=b.y+20;
+    var path=document.createElementNS('http://www.w3.org/2000/svg','path');
+    var mx=(x1+x2)/2;
+    path.setAttribute('d','M'+x1+','+y1+' C'+mx+','+y1+' '+mx+','+y2+' '+x2+','+y2);
+    path.setAttribute('stroke','rgba(108,92,231,.3)');
+    path.setAttribute('stroke-width','2');
+    path.setAttribute('fill','none');
+    svg.appendChild(path);
+  });
+}();
+
+// ===== Smooth scroll =====
+document.querySelectorAll('a[href^="#"]').forEach(function(a){
+  a.addEventListener('click',function(e){
+    var t=document.querySelector(this.getAttribute('href'));
+    if(t){e.preventDefault();t.scrollIntoView({behavior:'smooth',block:'start'})}
+  });
+});
+
+// ===== Active nav on scroll =====
+var sections=document.querySelectorAll('section[id]');
+window.addEventListener('scroll',function(){
+  var y=window.scrollY+100;
+  sections.forEach(function(s){
+    var top=s.offsetTop,h=s.offsetHeight,id=s.id;
+    var link=document.querySelector('.nav-link[href="#'+id+'"]');
+    if(link){
+      if(y>=top&&y<top+h)link.classList.add('active');
+      else link.classList.remove('active');
+    }
+  });
+});
+</script>
+</body>
+</html>
