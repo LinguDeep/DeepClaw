@@ -1,0 +1,66 @@
+# Dependencies
+node_modules/
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+
+# Rust
+target/
+Cargo.lock
+
+# Build outputs
+dist/
+build/
+*.o
+*.so
+*.dylib
+*.dll
+
+# Data files
+data/
+memory/
+sessions/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# OS
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# IDE
+.vscode/
+.idea/
+*.code-workspace
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# Misc
+*.pid
+*.seed
+*.pid.lock
+
+# Workspace files (keep these in local workspace)
+MEMORY.md
+HEARTBEAT.md
+IDENTITY.md
+SOUL.md
+USER.md
