@@ -289,7 +289,7 @@ describe('Real LLM Streaming Integration', () => {
       // Verify that providers have resilience patterns
       const mockProvider = new OpenRouterProvider('fake-key');
       expect(mockProvider.circuitBreaker).toBeDefined();
-      expect(typeof mockProvider.executeWithResilience).toBe('function');
+      expect(typeof (mockProvider as any).executeWithResilience).toBe('function');
     });
   });
 });

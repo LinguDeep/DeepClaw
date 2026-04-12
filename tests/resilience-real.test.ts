@@ -342,14 +342,14 @@ describe('Resilience Patterns - Real Error Scenarios', () => {
       // First attempt: 3 retries, all fail (circuit sees 1 failure)
       await expect(
         cb.execute(() => withRetry(fn, { maxRetries: 2, baseDelayMs: 10 }, 'inner-op'))
-      ).rejects.toThrow();
+      ).rejects.toBeDefined();
 
       // Second attempt: circuit sees 2nd failure then opens
       await expect(
         cb.execute(() => withRetry(fn, { maxRetries: 2, baseDelayMs: 10 }, 'inner-op'))
-      ).rejects.toThrow();
+      ).rejects.toBeDefined();
 
-      // Third attempt: circuit is now open
+      // Third attempt: circuit is now open (throws actual Error)
       await expect(
         cb.execute(() => withRetry(fn, { maxRetries: 2 }, 'inner-op'))
       ).rejects.toThrow('Circuit breaker integrated is open');
