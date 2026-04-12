@@ -164,8 +164,17 @@ program
   .action(async (options) => {
     console.log(chalk.bold.cyan('🌐 Starting LinguClaw Web UI...\n'));
     
-    if (!process.env.OPENROUTER_API_KEY) {
-      console.log(chalk.red('Error: OPENROUTER_API_KEY not set'));
+    // Check if any LLM provider is available (settings, env vars, or local)
+    loadEnvConfig();
+    const pm = new ProviderManager();
+    const provider = pm.createFromEnv();
+    if (!provider) {
+      console.log(chalk.red('Error: No LLM provider configured.'));
+      console.log(chalk.dim('Set up a provider with one of:'));
+      console.log(chalk.dim('  linguclaw settings set llm.provider openrouter'));
+      console.log(chalk.dim('  linguclaw settings set llm.apiKey <your-key>'));
+      console.log(chalk.dim('Or set an env var: OPENROUTER_API_KEY, OPENAI_API_KEY, ANTHROPIC_API_KEY'));
+      console.log(chalk.dim('Or run a local provider: Ollama, LM Studio'));
       process.exit(1);
     }
 

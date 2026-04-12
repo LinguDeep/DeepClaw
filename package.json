@@ -1,6 +1,6 @@
 {
   "name": "linguclaw",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "description": "Codebase-Aware Multi-Agent System - TypeScript Edition",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
