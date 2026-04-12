@@ -32,15 +32,26 @@ impl Default for BridgeConfig {
 #[serde(tag = "type", content = "data")]
 pub enum BridgeRequest {
     /// Execute a bash command
-    BashCommand { command: String, cwd: Option<String> },
+    BashCommand {
+        command: String,
+        cwd: Option<String>,
+    },
     /// Read a file
     ReadFile { path: String },
     /// Write to a file
     WriteFile { path: String, content: String },
     /// Edit a file
-    EditFile { path: String, old_string: String, new_string: String },
+    EditFile {
+        path: String,
+        old_string: String,
+        new_string: String,
+    },
     /// Grep search
-    GrepSearch { pattern: String, path: String, case_sensitive: Option<bool> },
+    GrepSearch {
+        pattern: String,
+        path: String,
+        case_sensitive: Option<bool>,
+    },
     /// Glob search
     GlobSearch { pattern: String, path: String },
     /// Get git context
@@ -68,7 +79,11 @@ pub enum BridgeResponse {
     /// Glob results
     GlobResults { files: Vec<String> },
     /// Git context
-    GitContext { branch: String, commit: String, status: String },
+    GitContext {
+        branch: String,
+        commit: String,
+        status: String,
+    },
     /// Error
     Error { message: String },
 }
@@ -101,9 +116,12 @@ impl WebSocketBridge {
                         while let Some(message) = read.next().await {
                             match message {
                                 Ok(Message::Text(text)) => {
-                                    if let Ok(request) = serde_json::from_str::<BridgeRequest>(&text) {
+                                    if let Ok(request) =
+                                        serde_json::from_str::<BridgeRequest>(&text)
+                                    {
                                         let response = Self::handle_request(request).await;
-                                        if let Ok(response_json) = serde_json::to_string(&response) {
+                                        if let Ok(response_json) = serde_json::to_string(&response)
+                                        {
                                             let _ = write.send(Message::Text(response_json)).await;
                                         }
                                     }
@@ -122,7 +140,10 @@ impl WebSocketBridge {
                     });
                 }
                 Err(e) => {
-                    error!("Failed to upgrade connection from {}: {} (not a WebSocket client)", addr, e);
+                    error!(
+                        "Failed to upgrade connection from {}: {} (not a WebSocket client)",
+                        addr, e
+                    );
                     // Continue accepting other connections
                 }
             }
@@ -148,19 +169,33 @@ impl WebSocketBridge {
                     content: format!("Read from: {}", path),
                 }
             }
-            BridgeRequest::WriteFile { path: _, content: _ } => {
+            BridgeRequest::WriteFile {
+                path: _,
+                content: _,
+            } => {
                 // TODO: Integrate with runtime::write_file
                 BridgeResponse::WriteSuccess
             }
-            BridgeRequest::EditFile { path: _, old_string: _, new_string: _ } => {
+            BridgeRequest::EditFile {
+                path: _,
+                old_string: _,
+                new_string: _,
+            } => {
                 // TODO: Integrate with runtime::edit_file
                 BridgeResponse::EditSuccess
             }
-            BridgeRequest::GrepSearch { pattern: _, path: _, case_sensitive: _ } => {
+            BridgeRequest::GrepSearch {
+                pattern: _,
+                path: _,
+                case_sensitive: _,
+            } => {
                 // TODO: Integrate with runtime::grep_search
                 BridgeResponse::GrepResults { matches: vec![] }
             }
-            BridgeRequest::GlobSearch { pattern: _, path: _ } => {
+            BridgeRequest::GlobSearch {
+                pattern: _,
+                path: _,
+            } => {
                 // TODO: Integrate with runtime::glob_search
                 BridgeResponse::GlobResults { files: vec![] }
             }

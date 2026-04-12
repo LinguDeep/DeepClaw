@@ -3,8 +3,8 @@
 //! This binary starts the WebSocket server that bridges the Rust engine
 //! with the TypeScript agent brain.
 
-use websocket_bridge::{BridgeConfig, WebSocketBridge};
 use anyhow::Result;
+use websocket_bridge::{BridgeConfig, WebSocketBridge};
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -12,14 +12,16 @@ async fn main() -> Result<()> {
     tracing_subscriber::fmt::init();
 
     // Read configuration from environment variables
-    let host = std::env::var("ENGINE_BRIDGE_HOST")
-        .unwrap_or_else(|_| "127.0.0.1".to_string());
+    let host = std::env::var("ENGINE_BRIDGE_HOST").unwrap_or_else(|_| "127.0.0.1".to_string());
     let port = std::env::var("ENGINE_BRIDGE_PORT")
         .unwrap_or_else(|_| "9000".to_string())
         .parse::<u16>()
         .unwrap_or(9000);
 
-    let config = BridgeConfig { host: host.clone(), port };
+    let config = BridgeConfig {
+        host: host.clone(),
+        port,
+    };
     let bridge = WebSocketBridge::new(config);
 
     println!("Starting DeepClaw Engine Bridge on {}:{}", host, port);
