@@ -53,27 +53,27 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18'
-          cache: 'pnpm'
-          cache-dependency-path: brain/pnpm-lock.yaml
-      
+
       - name: Install pnpm
-        run: npm install -g pnpm
-      
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
       - name: Install dependencies
         run: |
           cd brain
           pnpm install
-      
+
       - name: Build Brain
         run: |
           cd brain
           pnpm build
-      
+
       - name: Test Brain
         run: |
           cd brain

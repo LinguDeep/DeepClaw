@@ -1,20 +1,27 @@
-# DeepClaw
+<div align="center">
 
-<p align="center">
-  <img src="assets/deepclaw-hero.png" alt="DeepClaw" width="300" />
-</p>
+# 🦾 DeepClaw
 
-<p align="center">
-  <strong>The Unified AI Engineering Assistant</strong>
-</p>
+**The Unified AI Engineering Assistant**
 
-DeepClaw is a deeply integrated AI assistant that combines high-performance engineering precision with autonomous assistant capabilities. It merges three powerful projects into a unified system:
+A powerful, deeply integrated AI assistant that combines high-performance engineering precision with autonomous agent capabilities.
 
-- **The Engine (Claw)**: High-performance Rust/Python terminal handlers, filesystem manipulators, and repo-mapping logic from the Claude Code source
-- **The Intelligence (Brain)**: Autonomous agent logic and skill framework from DeepClaw
-- **The Command Center (Face)**: Visual GUI for monitoring and control from the DeepClaw Dashboard
+[![CI](https://github.com/LinguDeep/DeepClaw/workflows/DeepClaw%20CI/badge.svg)](https://github.com/LinguDeep/DeepClaw/actions)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Rust](https://img.shields.io/badge/rust-1.70%2B-orange.svg)](https://www.rust-lang.org)
+[![Node.js](https://img.shields.io/badge/node.js-18%2B-green.svg)](https://nodejs.org)
 
-## Architecture
+</div>
+
+## 🚀 Overview
+
+DeepClaw is a next-generation AI engineering assistant that seamlessly integrates:
+
+- **🔧 High-Performance Engine** - Rust-powered terminal handlers, filesystem operations, and intelligent codebase navigation
+- **🧠 Intelligent Brain** - TypeScript-based autonomous agent with extensible skill framework and multi-channel support
+- **📊 Visual Dashboard** - Real-time monitoring, file exploration, and comprehensive system control
+
+## 🏗️ Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -32,43 +39,43 @@ DeepClaw is a deeply integrated AI assistant that combines high-performance engi
 └─────────────────┘          └─────────────────────┘
 ```
 
-## Components
+## 📦 Components
 
-### Engine (`/engine`)
+### 🔧 Engine (`/engine`)
 The Rust workspace provides the foundational core:
-- **Terminal handlers**: High-performance command execution and output streaming
-- **Filesystem manipulators**: Safe, efficient file operations
-- **Repo-mapper**: Intelligent codebase navigation and understanding
-- **API clients**: Multi-provider LLM integration (Anthropic, OpenAI, Google, etc.)
+- **Terminal Handlers** - High-performance command execution with real-time output streaming
+- **Filesystem Operations** - Safe, efficient file operations with context awareness
+- **Repo-Mapper** - Intelligent codebase navigation and understanding
+- **Multi-Provider API** - Support for Anthropic, OpenAI, Google, xAI, and more
 
-### Brain (`/brain`)
+### 🧠 Brain (`/brain`)
 The TypeScript agent framework provides intelligent capabilities:
-- **Skill framework**: Extensible skill system for custom capabilities
-- **Channel integration**: Multi-platform messaging (WhatsApp, Telegram, Slack, Discord, etc.)
-- **Gateway protocol**: WebSocket-based control plane
-- **Agent runtime**: Session management, tool orchestration, and reasoning
+- **Skill Framework** - Extensible system for custom capabilities
+- **Channel Integration** - Multi-platform messaging (WhatsApp, Telegram, Slack, Discord, Signal, etc.)
+- **Gateway Protocol** - WebSocket-based control plane for agent communication
+- **Agent Runtime** - Session management, tool orchestration, and advanced reasoning
 
-### Dashboard (`/dashboard`)
+### 📊 Dashboard (`/dashboard`)
 The visual interface provides real-time monitoring:
-- **Terminal logs**: Live display of Rust engine terminal output
-- **File explorer**: Repository browser powered by the repo-mapper
-- **Settings panel**: API key management and configuration
-- **Session monitoring**: Track agent sessions, costs, and usage
+- **Live Terminal Logs** - Real-time display of engine terminal output
+- **File Explorer** - Repository browser with intelligent navigation
+- **Settings Panel** - API key management and system configuration
+- **Session Monitoring** - Track agent sessions, costs, and usage analytics
 
-## Quick Start
+## 🚀 Quick Start
 
 ### Prerequisites
 
 - **Rust** 1.70+ (for the engine)
-- **Node.js** 24+ or 22.16+ (for the brain and dashboard)
+- **Node.js** 18+ (for the brain and dashboard)
 - **pnpm** (recommended for TypeScript dependencies)
 
 ### Installation
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-org/deepclaw.git
-cd deepclaw
+git clone https://github.com/LinguDeep/DeepClaw.git
+cd DeepClaw
 
 # Build the Rust engine
 cd engine
@@ -81,10 +88,9 @@ pnpm install
 # Build the brain
 pnpm build
 
-# Start the dashboard
+# Install dashboard dependencies
 cd ../dashboard
 npm install
-node server.js
 ```
 
 ### Configuration
@@ -111,42 +117,40 @@ Create your configuration file at `~/.deepclaw/config.json`:
 ### Running DeepClaw
 
 ```bash
-# Start the Rust engine (terminal handler)
-./engine/target/release/deepclaw engine --port 9000
+# Start the Rust engine bridge (in one terminal)
+make run-engine
 
-# Start the agent brain (in a new terminal)
-cd brain
-pnpm start
+# Start the dashboard (in another terminal)
+make run-dashboard
 
-# Start the dashboard (in a new terminal)
-cd dashboard
-node server.js
+# Or start all components at once
+make run-dev
 ```
 
 Visit `http://localhost:7000` to access the dashboard.
 
-## Features
+## ✨ Features
 
-### Engineering Precision (from Claude Code)
-- **High-performance terminal**: Rust-based command execution with real-time output
-- **Intelligent file operations**: Context-aware file editing and manipulation
-- **Repository understanding**: Automatic codebase mapping and navigation
-- **Multi-provider support**: Anthropic, OpenAI, Google, xAI, and more
+### 🔧 High-Performance Engine
+- **Lightning-fast terminal execution** - Rust-powered command execution with real-time output streaming
+- **Intelligent file operations** - Context-aware file editing and manipulation
+- **Smart codebase navigation** - Automatic repository mapping and understanding
+- **Multi-provider support** - Anthropic, OpenAI, Google, xAI, and more
 
-### Autonomous Assistant (from DeepClaw)
-- **Multi-channel inbox**: WhatsApp, Telegram, Slack, Discord, Google Chat, Signal, and more
-- **Skill system**: Extensible framework for custom capabilities
-- **Session management**: Isolated agent sessions with context preservation
-- **Tool orchestration**: Browser control, canvas, nodes, cron, and webhooks
+### 🧠 Autonomous Agent
+- **Multi-channel communication** - WhatsApp, Telegram, Slack, Discord, Google Chat, Signal, and more
+- **Extensible skill system** - Build custom capabilities with the skill framework
+- **Advanced session management** - Isolated agent sessions with context preservation
+- **Powerful tool orchestration** - Browser control, canvas, nodes, cron jobs, and webhooks
 
-### Visual Control (from Dashboard)
-- **Real-time logs**: Live terminal output from the Rust engine
-- **File explorer**: Browse and edit workspace files
-- **Cost tracking**: Monitor API usage and spending
-- **System health**: CPU, RAM, disk, and temperature monitoring
-- **Security dashboard**: UFW rules, open ports, and audit logs
+### 📊 Visual Dashboard
+- **Real-time log streaming** - Live terminal output from the Rust engine
+- **Interactive file explorer** - Browse and edit workspace files with ease
+- **Cost tracking** - Monitor API usage and spending in real-time
+- **System health monitoring** - CPU, RAM, disk, and temperature metrics
+- **Security dashboard** - UFW rules, open ports, and audit logs
 
-## Development
+## 🛠️ Development
 
 ### Building from Source
 
@@ -157,26 +161,31 @@ make build
 # Run tests
 make test
 
-# Development mode with hot reload
-make dev
+# Clean build artifacts
+make clean
+
+# Development setup
+make setup
 ```
 
 ### Project Structure
 
 ```
-deepclaw/
-├── engine/          # Rust workspace (Claude Code source)
+DeepClaw/
+├── engine/          # Rust workspace
 │   ├── crates/
 │   │   ├── api/           # API clients and providers
 │   │   ├── runtime/       # Core runtime logic
 │   │   ├── tools/         # Tool implementations
+│   │   ├── websocket-bridge/  # WebSocket bridge server
 │   │   └── rusty-claude-cli/  # CLI interface
 │   └── Cargo.toml
-├── brain/           # TypeScript agent (DeepClaw source)
+├── brain/           # TypeScript agent
 │   ├── src/
 │   │   ├── agents/        # Agent runtime
 │   │   ├── gateway/       # Gateway protocol
 │   │   ├── channels/      # Channel integrations
+│   │   ├── deepclaw-bridge/  # Bridge client for Rust engine
 │   │   └── skills/        # Skill framework
 │   ├── packages/          # Workspace packages
 │   └── package.json
@@ -184,20 +193,21 @@ deepclaw/
 │   ├── server.js           # Dashboard server
 │   ├── index.html          # Dashboard UI
 │   └── scripts/            # Utility scripts
-├── config/          # Shared configuration
+├── Makefile         # Unified build system
+├── .github/         # GitHub Actions workflows
 └── README.md
 ```
 
-## Integration Architecture
+## 🔌 Integration Architecture
 
 The DeepClaw integration layer bridges the Rust engine and TypeScript agent:
 
-1. **WebSocket Bridge**: The Rust engine exposes a WebSocket API that the TypeScript agent connects to
-2. **Tool Proxy**: Agent tools are proxied through the Rust engine for execution
-3. **Log Streaming**: Terminal output from Rust is streamed to the dashboard in real-time
-4. **File Operations**: File edits are coordinated between the engine's filesystem manipulator and the agent's tool layer
+1. **WebSocket Bridge** - The Rust engine exposes a WebSocket API that the TypeScript agent connects to
+2. **Tool Proxy** - Agent tools are proxied through the Rust engine for execution
+3. **Log Streaming** - Terminal output from Rust is streamed to the dashboard in real-time
+4. **File Operations** - File edits are coordinated between the engine's filesystem manipulator and the agent's tool layer
 
-## Configuration
+## ⚙️ Configuration
 
 ### API Keys
 
@@ -248,35 +258,37 @@ Configure messaging channels:
 }
 ```
 
-## Security
+## 🔒 Security
 
-- **Local-first**: All data stays on your machine by default
-- **Secure auth**: PBKDF2 password hashing with 100,000 iterations
-- **Rate limiting**: Protection against brute-force attacks
-- **Audit logging**: All actions logged for security review
-- **Sandboxing**: Optional Docker sandboxing for non-main sessions
+- **Local-first** - All data stays on your machine by default
+- **Secure authentication** - PBKDF2 password hashing with 100,000 iterations
+- **Rate limiting** - Protection against brute-force attacks
+- **Audit logging** - All actions logged for security review
+- **Sandboxing** - Optional Docker sandboxing for non-main sessions
 
-## Contributing
+## 🤝 Contributing
 
 Contributions are welcome! Please read our contributing guidelines before submitting PRs.
 
-## License
+## 📄 License
 
 MIT License - see LICENSE file for details.
 
-## Acknowledgments
+## 📚 Documentation
 
-DeepClaw is built on the shoulders of giants:
+For more detailed information, check out:
+- [Integration Guide](INTEGRATION.md) - Detailed integration documentation
+- [Architecture Overview](docs/architecture.md) - System architecture details
 
-- **Claude Code** (ultraworkers/claw-code) - The Rust engine foundation
-- **DeepClaw** (openclaw/openclaw) - The agent framework and skills
-- **DeepClaw Dashboard** (tugcantopaloglu/openclaw-dashboard) - The visual interface
+## 🆘 Support
 
-## Support
-
-- **Issues**: [GitHub Issues](https://github.com/LinguDeep/deepclaw/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/LinguDeep/deepclaw/discussions)
+- **Issues**: [GitHub Issues](https://github.com/LinguDeep/DeepClaw/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/LinguDeep/DeepClaw/discussions)
 
 ---
 
+<div align="center">
+
 Made with ✨ by the DeepClaw community
+
+</div>
