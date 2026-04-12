@@ -1,6 +1,7 @@
 <div align="center">
 
 # 🦾 DeepClaw
+![Image_fx](https://github.com/user-attachments/assets/b9803bee-bb76-461d-8891-3a08368829fc)
 
 **The Unified AI Engineering Assistant**
 
