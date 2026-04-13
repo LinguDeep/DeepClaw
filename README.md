@@ -3,6 +3,11 @@
 # 🦾 DeepClaw
 ![Image_fx(1)](https://github.com/user-attachments/assets/9e81ac57-84fd-4903-accc-a97989811887)
 
+
+https://github.com/user-attachments/assets/e03c22f9-908e-426b-bc2e-a3a3264de891
+
+
+
 **The Unified AI Engineering Assistant**
 
 A powerful, deeply integrated AI assistant that combines high-performance engineering precision with autonomous agent capabilities.
