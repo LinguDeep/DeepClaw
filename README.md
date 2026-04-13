@@ -295,7 +295,10 @@ For more detailed information, check out:
 ---
 
 <div align="center">
-https://github.com/user-attachments/assets/db063551-ec7a-493b-90af-98281d920e9b
+
+
+https://github.com/user-attachments/assets/b7e470fa-d2b8-4f96-89be-8fba2bbba806
+
 
 
 Made with ✨ by the DeepClaw community
