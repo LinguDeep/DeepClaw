@@ -4,8 +4,6 @@
 ![Image_fx(1)](https://github.com/user-attachments/assets/9e81ac57-84fd-4903-accc-a97989811887)
 
 
-https://github.com/user-attachments/assets/db063551-ec7a-493b-90af-98281d920e9b
-
 
 
 
@@ -297,6 +295,8 @@ For more detailed information, check out:
 ---
 
 <div align="center">
+https://github.com/user-attachments/assets/db063551-ec7a-493b-90af-98281d920e9b
+
 
 Made with ✨ by the DeepClaw community
 
